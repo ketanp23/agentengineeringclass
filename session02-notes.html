@@ -1,0 +1,2152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 02 — How LLMs Work · Session Notes</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Space+Mono:wght@400;700&display=swap');
+
+:root{
+  --paper:#EDEAE0;
+  --panel:#FBFAF4;
+  --ink:#1E1B18;
+  --ink2:#5D564D;
+  --blue:#2F4B8F;
+  --pink:#E8348B;
+  --yellow:#FFD400;
+  --rule:rgba(30,27,24,.15);
+  --rule2:rgba(30,27,24,.36);
+  --disp:'Bricolage Grotesque','Arial Black',sans-serif;
+  --body:'Newsreader',Georgia,serif;
+  --mono:'Space Mono',ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:88px}
+body{
+  margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6;
+  background-image:radial-gradient(rgba(30,27,24,.09) 1px,transparent 1.1px);
+  background-size:9px 9px;
+}
+h1,h2,h3,h4{font-family:var(--disp);line-height:1.03;margin:0;letter-spacing:-.015em}
+p{margin:0 0 .85em}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
+
+/* top bar */
+.bar{position:sticky;top:0;z-index:40;background:rgba(237,234,224,.94);backdrop-filter:blur(6px);border-bottom:2px solid var(--ink)}
+.bar-in{max-width:1280px;margin:0 auto;padding:8px 20px;display:flex;gap:16px;align-items:center}
+.bar-tag{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;background:var(--pink);color:#fff;padding:3px 7px}
+.bar-t{font-family:var(--disp);font-weight:800;font-size:15px;margin-right:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-p{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;color:var(--ink2)}
+.ptrack{width:120px;height:6px;background:rgba(30,27,24,.14)}
+.pfill{height:100%;width:0;background:var(--blue);transition:width .25s}
+
+.shell{max-width:1280px;margin:0 auto;padding:0 20px 90px;display:grid;grid-template-columns:210px 1fr;gap:44px}
+.rail{position:sticky;top:88px;align-self:start;padding-top:26px}
+.rail-h{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink2);
+  border-bottom:2px solid var(--ink);padding-bottom:6px;margin-bottom:10px}
+.rail a{display:flex;gap:9px;padding:4px 0;text-decoration:none;color:var(--ink2);font-family:var(--disp);font-size:14.5px;font-weight:600}
+.rail a em{font-family:var(--mono);font-style:normal;font-size:9.5px;color:var(--pink);min-width:34px;padding-top:3px}
+.rail a:hover{color:var(--ink)}
+.rail a.on{color:var(--ink)}
+.rail a.on em{background:var(--pink);color:#fff}
+
+/* hero */
+.hero{padding:34px 0 6px}
+.kick{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--blue)}
+.hero h1{font-size:clamp(38px,7vw,80px);font-weight:800;margin:12px 0 8px}
+.hero h1 mark,.mod h2 mark{background:var(--yellow);color:var(--ink);padding:0 .08em;box-decoration-break:clone}
+.hero h1 span,.mod h2 span{color:var(--pink)}
+.lede{font-size:19px;max-width:60ch;color:var(--ink2)}
+
+/* modules */
+.mod{border-top:2px solid var(--ink);margin-top:48px;padding-top:34px}
+.mod-h{display:flex;gap:14px;align-items:flex-start;margin-bottom:18px}
+.mod-t{font-family:var(--mono);font-size:10px;letter-spacing:.12em;background:var(--ink);color:var(--paper);padding:4px 7px;margin-top:6px;white-space:nowrap}
+.mod h2{font-size:clamp(26px,4vw,42px);font-weight:800}
+.mod-k{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--pink);margin-bottom:5px}
+.big{font-size:19.5px;max-width:68ch}
+
+.box{background:var(--panel);border:2px solid var(--ink);padding:20px 22px;margin:20px 0;box-shadow:5px 5px 0 rgba(47,75,143,.16)}
+.box-t{font-family:var(--disp);font-weight:800;font-size:17px;display:flex;align-items:center;gap:9px;margin-bottom:14px;
+  padding-bottom:9px;border-bottom:1px solid var(--rule)}
+.box-t::before{content:"";width:11px;height:11px;background:var(--pink);flex:none}
+.box-t small{margin-left:auto;font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);font-weight:400}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+
+ul.kl{list-style:none;padding:0;margin:0}
+ul.kl li{padding:8px 0 8px 22px;border-bottom:1px dotted var(--rule2);position:relative}
+ul.kl li:last-child{border-bottom:0}
+ul.kl li::before{content:"→";position:absolute;left:0;color:var(--pink);font-family:var(--mono);font-size:12px;top:9px}
+ul.kl b{font-family:var(--disp);font-weight:700}
+.quote{border-left:5px solid var(--yellow);padding:4px 0 4px 15px;margin:16px 0;font-size:18.5px}
+.flag{background:rgba(232,52,139,.09);border:1.5px solid var(--pink);padding:12px 15px;font-size:15.5px;margin:16px 0}
+.flag b{font-family:var(--disp);color:var(--pink)}
+.mono{font-family:var(--mono);font-size:12.5px}
+
+table.t{width:100%;border-collapse:collapse;font-size:15px}
+table.t th{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;text-align:left;padding:8px;
+  border-bottom:2px solid var(--ink);color:var(--ink2)}
+table.t td{padding:8px;border-bottom:1px solid var(--rule);vertical-align:top}
+table.t td.hl{color:var(--blue);font-weight:600}
+table.t tr:hover td{background:rgba(255,212,0,.16)}
+
+button.chip{font-family:var(--disp);font-weight:600;font-size:14px;padding:6px 12px;background:transparent;
+  border:2px solid var(--rule2);color:var(--ink2);cursor:pointer}
+button.chip:hover{border-color:var(--ink);color:var(--ink)}
+button.chip.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+button.chip.pink.on{background:var(--pink);border-color:var(--pink)}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.slider{margin:12px 0}
+.slider label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink2);margin-bottom:5px}
+.slider input[type=range]{width:100%;accent-color:var(--pink)}
+.slider output{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--pink)}
+input[type=number],input[type=text],textarea,select{font-family:var(--mono);font-size:13px;padding:6px 8px;border:2px solid var(--rule2);background:#fff;width:100%}
+textarea{font-family:var(--mono);line-height:1.6;resize:vertical}
+.field{margin-bottom:10px}
+.field label{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink2);margin-bottom:3px}
+
+.reads{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:2px;background:var(--ink);border:2px solid var(--ink)}
+.read{background:var(--panel);padding:10px 12px}
+.read i{font-style:normal;display:block;font-family:var(--mono);font-size:9px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink2)}
+.read b{display:block;font-family:var(--disp);font-size:25px;font-weight:800;line-height:1.15}
+.read b s{text-decoration:none;font-size:12px;color:var(--ink2);font-weight:600}
+.read.good b{color:var(--blue)} .read.warn b{color:#B8860B} .read.bad b{color:var(--pink)}
+
+.detail{margin-top:14px;border-top:1px solid var(--rule);padding-top:12px;min-height:96px}
+.detail h4{font-size:19px;margin-bottom:4px}
+.detail .spec{font-family:var(--mono);font-size:11px;color:var(--pink);letter-spacing:.05em;margin-bottom:7px}
+
+/* predictor */
+.pred{display:grid;grid-template-columns:1fr 300px;gap:22px}
+.pred-txt{background:#fff;border:2px solid var(--ink);padding:16px 18px;font-family:var(--mono);font-size:14px;line-height:1.85;min-height:190px;white-space:pre-wrap}
+.pred-txt .new{background:var(--yellow)}
+.cand{margin-bottom:7px}
+.cand .row{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11.5px;margin-bottom:2px}
+.cand .track{height:13px;background:rgba(30,27,24,.09)}
+.cand .fill{height:100%;background:var(--blue);transition:width .25s}
+.cand.pick .fill{background:var(--pink)}
+.cand.pick .row{font-weight:700;color:var(--pink)}
+
+/* token chips */
+.tok{display:flex;flex-wrap:wrap;gap:3px;margin-top:10px}
+.tok span{font-family:var(--mono);font-size:12px;padding:2px 5px;background:rgba(47,75,143,.13);border-bottom:2px solid var(--blue);white-space:pre}
+.tok span:nth-child(even){background:rgba(232,52,139,.13);border-color:var(--pink)}
+
+/* grounding bar */
+.gbar{display:flex;height:38px;border:2px solid var(--ink);margin:14px 0;font-family:var(--mono);font-size:10.5px}
+.gbar div{display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;transition:width .3s}
+.g1{background:var(--blue);color:#fff}
+.g2{background:var(--yellow)}
+.g3{background:var(--pink);color:#fff}
+.glegend{display:flex;flex-wrap:wrap;gap:14px;font-family:var(--mono);font-size:10.5px;color:var(--ink2)}
+.glegend i{font-style:normal;display:inline-block;width:11px;height:11px;margin-right:5px;vertical-align:-1px}
+
+/* cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:13px}
+.card{border:2px solid var(--ink);background:var(--panel);padding:15px;cursor:pointer}
+.card:hover{box-shadow:4px 4px 0 var(--pink)}
+.card h4{font-size:17px;margin-bottom:5px}
+.card .tag{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--pink)}
+.card p{font-size:14.5px;margin:7px 0 0;color:var(--ink2)}
+.card .more{display:none;margin-top:9px;padding-top:9px;border-top:1px dotted var(--rule2);font-size:14px}
+.card.open .more{display:block}
+.card.open{box-shadow:4px 4px 0 var(--blue)}
+
+/* bars for engagement */
+.wf{font-family:var(--mono);font-size:11.5px}
+.wf .row{display:grid;grid-template-columns:190px 1fr 74px;gap:10px;align-items:center;padding:5px 0;border-bottom:1px dotted var(--rule)}
+.wf .bars{position:relative;height:20px}
+.wf .b1,.wf .b2{position:absolute;height:9px;transition:width .35s}
+.wf .b1{top:0;background:rgba(30,27,24,.3)}
+.wf .b2{top:11px;background:var(--pink)}
+.wf .b2.up{background:var(--blue)}
+
+/* quiz */
+.q{border-bottom:1px solid var(--rule);padding:14px 0}
+.q p.stem{font-weight:600;margin-bottom:8px}
+.opt{display:block;width:100%;text-align:left;font-family:var(--body);font-size:15px;padding:7px 11px;margin-bottom:5px;
+  background:#fff;border:2px solid var(--rule);cursor:pointer;color:var(--ink)}
+.opt:hover{border-color:var(--ink2)}
+.opt.right{border-color:var(--blue);background:rgba(47,75,143,.1);font-weight:600}
+.opt.wrong{border-color:var(--pink);background:rgba(232,52,139,.09);text-decoration:line-through}
+.exp{display:none;font-size:14px;color:var(--ink2);border-left:4px solid var(--yellow);padding-left:12px;margin-top:8px}
+.exp.show{display:block}
+
+/* how-it-works steps */
+.how{font-family:var(--disp);font-weight:800;font-size:15px;letter-spacing:.02em;margin:18px 0 2px;
+  padding-top:12px;border-top:2px solid var(--ink)}
+.steps{counter-reset:st;margin:6px 0 0;padding:0;list-style:none}
+.steps li{counter-increment:st;position:relative;padding:9px 0 9px 40px;border-bottom:1px dotted var(--rule);font-size:15.5px}
+.steps li:last-child{border-bottom:0}
+.steps li::before{content:counter(st);position:absolute;left:0;top:9px;width:25px;height:25px;background:var(--ink);
+  color:var(--paper);font-family:var(--mono);font-size:11px;display:flex;align-items:center;justify-content:center}
+.steps b{font-family:var(--disp);font-weight:700}
+.analogy{background:rgba(255,212,0,.28);border:2px solid var(--ink);padding:13px 16px;margin:16px 0;font-size:16px}
+.analogy b{font-family:var(--disp);font-weight:800;display:block;margin-bottom:3px}
+
+/* figures */
+.fig{margin:22px 0;border:2px solid var(--ink);background:var(--panel);padding:16px 18px 12px}
+.fig svg{display:block;width:100%;height:auto}
+.fig figcaption{margin-top:11px;padding-top:9px;border-top:1px solid var(--rule);font-family:var(--mono);font-size:10.5px;
+  letter-spacing:.04em;color:var(--ink2);line-height:1.55}
+.fig figcaption b{color:var(--pink);letter-spacing:.12em;margin-right:6px}
+
+/* takeaways + glossary */
+.tk{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:2px;background:var(--ink);border:2px solid var(--ink)}
+.tk-item{background:var(--panel);padding:16px 18px;display:flex;gap:13px}
+.tk-item i{font-style:normal;font-family:var(--disp);font-size:28px;font-weight:800;color:var(--pink);line-height:.95;min-width:34px}
+.tk-item h4{font-size:16px;margin-bottom:5px}
+.tk-item p{font-size:14.5px;margin:0;color:var(--ink2)}
+.headline{border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:20px 22px;margin:20px 0}
+.headline h3{font-size:clamp(19px,2.6vw,27px);color:var(--paper);margin-bottom:9px}
+.headline p{margin:0;font-size:17px}
+.headline b{color:var(--yellow)}
+.gloss{column-count:2;column-gap:28px}
+.gloss div{break-inside:avoid;padding:5px 0;border-bottom:1px dotted var(--rule);font-size:14.5px;line-height:1.45}
+.gloss b{font-family:var(--mono);font-size:12px;color:var(--pink)}
+input.search{margin-bottom:14px}
+
+/* activities */
+.actv{border:2px solid var(--ink);background:var(--panel);padding:18px 20px;margin:18px 0;box-shadow:6px 6px 0 rgba(232,52,139,.18)}
+.actv .head{display:flex;gap:11px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.actv .num{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;background:var(--pink);color:#fff;padding:3px 7px}
+.actv h3{font-size:20px;font-weight:800;margin-right:auto}
+.tmr{font-family:var(--mono);font-size:12px;font-weight:700;border:2px solid var(--ink);background:#fff;padding:4px 10px;cursor:pointer}
+.tmr.run{background:var(--yellow)} .tmr.done{background:var(--pink);color:#fff}
+.brief{background:rgba(47,75,143,.07);border-left:5px solid var(--blue);padding:11px 14px;font-size:15px;margin:12px 0}
+.sent{cursor:pointer;border-bottom:2px solid transparent;padding:1px 0}
+.sent:hover{background:rgba(255,212,0,.4)}
+.sent.mark{background:rgba(232,52,139,.16);border-bottom-color:var(--pink)}
+.sent.hit{background:rgba(47,75,143,.14);border-bottom-color:var(--blue)}
+.sent.miss{background:rgba(232,52,139,.3);border-bottom-color:var(--pink)}
+.why{display:none;font-family:var(--mono);font-size:12px;color:var(--ink2);border-left:4px solid var(--yellow);padding:5px 0 5px 11px;margin:6px 0}
+.why.show{display:block}
+.chk{display:block;padding:6px 0;border-bottom:1px dotted var(--rule);cursor:pointer;font-size:15px}
+.chk input{margin-right:9px;accent-color:var(--pink)}
+.ctxbar{display:flex;height:36px;border:2px solid var(--ink);margin:12px 0;overflow:hidden;background:repeating-linear-gradient(45deg,rgba(30,27,24,.05) 0 6px,transparent 6px 12px)}
+.ctxbar div{font-family:var(--mono);font-size:9.5px;display:flex;align-items:center;justify-content:center;color:#fff;overflow:hidden;white-space:nowrap}
+.tag-row{display:flex;flex-wrap:wrap;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--ink2)}
+.tag-row span{border:1px solid var(--rule2);padding:2px 7px}
+.sentence-demo{font-family:var(--mono);font-size:14px;line-height:2.2;background:#fff;border:2px solid var(--ink);padding:14px 16px}
+.sentence-demo b{font-weight:400;padding:3px 4px}
+.s-prompt{background:rgba(47,75,143,.85);color:#fff}
+.s-pattern{background:rgba(255,212,0,.75)}
+.s-memory{background:rgba(232,52,139,.85);color:#fff}
+
+abbr[title]{border-bottom:2px dotted var(--pink);text-decoration:none;cursor:help}
+abbr[title]:hover{background:rgba(232,52,139,.12)}
+.abbr-pop{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:var(--paper);
+  font-family:var(--mono);font-size:12.5px;padding:9px 15px;z-index:60;max-width:min(92vw,540px);opacity:0;pointer-events:none;
+  transition:opacity .18s;border-left:5px solid var(--yellow)}
+.abbr-pop.on{opacity:1}
+.src{font-family:var(--mono);font-size:10.5px;color:var(--ink2);letter-spacing:.03em}
+.foot{margin-top:52px;border-top:2px solid var(--ink);padding-top:16px;font-family:var(--mono);font-size:10.5px;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between}
+
+@media(max-width:980px){
+  .bar-t{font-size:12px}
+  .shell{grid-template-columns:1fr;gap:0}
+  .rail{position:static;padding:14px 0 0;display:flex;gap:8px;overflow-x:auto;border-bottom:1px solid var(--rule)}
+  .rail-h{display:none}
+  .rail a{flex:none;border:2px solid var(--rule2);padding:4px 9px;font-size:13px}
+  .two,.three,.pred{grid-template-columns:1fr}
+  .gloss{column-count:1}
+  .wf .row{grid-template-columns:130px 1fr 60px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="bar-in">
+    <span class="bar-tag">Session 02</span>
+    <span class="bar-t">Module 1: Foundations of Generative AI · Session 02: How LLMs Work?</span>
+    <div class="bar-p"><span id="ptxt">0%</span><div class="ptrack"><div class="pfill" id="pfill"></div></div></div>
+  </div>
+</div>
+
+<div class="shell">
+  <nav class="rail no-abbr" id="rail">
+    <div class="rail-h">Contents</div>
+    <a href="#m1"><em>01</em>Counting words</a>
+    <a href="#m2"><em>02</em>Meaning as numbers</a>
+    <a href="#m3"><em>03</em>Reading in order</a>
+    <a href="#m4"><em>04</em>Q1 · Attention</a>
+    <a href="#m5"><em>05</em>The Transformer</a>
+    <a href="#m6"><em>06</em>Two branches</a>
+    <a href="#m7"><em>07</em>Why large matters</a>
+    <a href="#m8"><em>08</em>From model to product</a>
+    <a href="#m9"><em>09</em>Q2 · The cut-off</a>
+    <a href="#m10"><em>10</em>Where it gets used</a>
+    <a href="#m11"><em>11</em>Answering in the room</a>
+    <a href="#m12"><em>12</em>Takeaways</a>
+  </nav>
+
+  <main>
+  <header class="hero">
+    <div class="kick">MICA Ahmedabad · Business analysis &amp; consulting · Session 02</div>
+    <h1>From a <span>bag of words</span><br>to something that <mark>writes your memo</mark>.</h1>
+    <p class="lede">One question runs through this whole session: <b>how do you turn words into numbers a computer can work with, without losing what they mean?</b> Every method here is a better answer than the one before it. We start by counting words in a bag and end with a machine that drafts your memo. Two discussion questions sit at the end.</p>
+
+    <div class="box">
+      <div class="box-t">The whole story on one line <small>click a stop</small></div>
+      <div class="ctl" id="timeCtl"></div>
+      <div id="timeArt" style="background:#fff;border:2px solid var(--ink);padding:10px;margin:14px 0"></div>
+      <div class="detail" id="timeDet"></div>
+      <div class="how">The whole session in five sentences</div>
+      <ul class="steps">
+        <li><b>Count the words.</b> Turn a sentence into a row of numbers by counting how often each word appears. Simple, and it loses the word order completely.</li>
+        <li><b>Give each word its own numbers.</b> Words that appear beside the same other words get similar numbers. Now the machine can tell that "client" and "customer" are related.</li>
+        <li><b>Read the sentence in order.</b> Better, but the model has to squeeze everything into one small summary, so it forgets the start of long text.</li>
+        <li><b>Let every word look at every other word.</b> This is attention. Nothing gets forgotten, however far apart the words are.</li>
+        <li><b>Make it enormous.</b> Once step four removed the need to read in order, training could be split across thousands of machines — so the models grew, and started drafting memos.</li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- ============ M1 ============ -->
+  <section class="mod" id="m1">
+    <div class="mod-h"><div class="mod-t">01</div><div>
+      <div class="mod-k">Where it starts</div><h2>Counting words in a bag</h2></div></div>
+
+    <p class="big">A computer cannot read. It can only do sums. So the first problem was never intelligence — it was arithmetic: how do you turn a sentence into numbers? The first real answer arrived in the 1950s and it is as simple as it sounds.</p>
+
+    <div class="analogy"><b>The picture to hold on to</b>Tip the sentence into a shopping bag. Shake it. Count what fell out. That is bag-of-words — and once you have counts, you have numbers, and once you have numbers a computer can finally do something with language.</div>
+
+    <figure class="fig">
+      <svg viewBox="0 0 900 340" font-family="Space Mono,monospace" font-size="10" fill="#1E1B18" role="img" aria-label="A worked example turning two sentences into rows of numbers">
+        <defs><marker id="b1" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#1E1B18"/></marker></defs>
+        <text x="20" y="20" font-size="10" font-weight="700" letter-spacing="1.2">STEP 1 — TWO SENTENCES</text>
+        <rect x="20" y="30" width="400" height="26" fill="#FFFFFF" stroke="#2F4B8F" stroke-width="2"/>
+        <text x="30" y="47" font-size="11" fill="#2F4B8F">A · the store was clean and busy</text>
+        <rect x="440" y="30" width="440" height="26" fill="#FFFFFF" stroke="#E8348B" stroke-width="2"/>
+        <text x="450" y="47" font-size="11" fill="#E8348B">B · the store was busy but not clean</text>
+
+        <text x="20" y="82" font-size="10" font-weight="700" letter-spacing="1.2">STEP 2 — CUT INTO WORDS (TOKENS)</text>
+        <g font-size="10">
+          <g fill="rgba(47,75,143,.14)" stroke="#2F4B8F" stroke-width="1">
+            <rect x="20" y="90" width="44" height="20"/><rect x="70" y="90" width="52" height="20"/><rect x="128" y="90" width="44" height="20"/>
+            <rect x="178" y="90" width="52" height="20"/><rect x="236" y="90" width="38" height="20"/><rect x="280" y="90" width="44" height="20"/>
+          </g>
+          <g text-anchor="middle"><text x="42" y="104">the</text><text x="96" y="104">store</text><text x="150" y="104">was</text><text x="204" y="104">clean</text><text x="255" y="104">and</text><text x="302" y="104">busy</text></g>
+        </g>
+
+        <text x="20" y="140" font-size="10" font-weight="700" letter-spacing="1.2">STEP 3 — ONE SHARED VOCABULARY, ONE COLUMN PER WORD</text>
+        <g font-size="10">
+          <g fill="rgba(30,27,24,.07)" stroke="#5D564D" stroke-width="1">
+            <rect x="150" y="150" width="88" height="22"/><rect x="242" y="150" width="88" height="22"/><rect x="334" y="150" width="88" height="22"/>
+            <rect x="426" y="150" width="88" height="22"/><rect x="518" y="150" width="88" height="22"/><rect x="610" y="150" width="88" height="22"/>
+            <rect x="702" y="150" width="88" height="22"/><rect x="794" y="150" width="86" height="22"/>
+          </g>
+          <g text-anchor="middle" font-size="9.5"><text x="194" y="165">the</text><text x="286" y="165">store</text><text x="378" y="165">was</text><text x="470" y="165">clean</text>
+            <text x="562" y="165">and</text><text x="654" y="165">busy</text><text x="746" y="165">but</text><text x="837" y="165">not</text></g>
+        </g>
+
+        <text x="20" y="200" font-size="10" font-weight="700" letter-spacing="1.2">STEP 4 — COUNT. THE SENTENCE IS NOW A ROW OF NUMBERS</text>
+        <text x="20" y="226" font-size="11" font-weight="700" fill="#2F4B8F">SENTENCE A</text>
+        <g font-size="13" font-weight="700" text-anchor="middle" fill="#2F4B8F">
+          <g fill="rgba(47,75,143,.13)" stroke="#2F4B8F" stroke-width="1.4">
+            <rect x="150" y="210" width="88" height="24"/><rect x="242" y="210" width="88" height="24"/><rect x="334" y="210" width="88" height="24"/>
+            <rect x="426" y="210" width="88" height="24"/><rect x="518" y="210" width="88" height="24"/><rect x="610" y="210" width="88" height="24"/>
+            <rect x="702" y="210" width="88" height="24"/><rect x="794" y="210" width="86" height="24"/>
+          </g>
+          <text x="194" y="227">1</text><text x="286" y="227">1</text><text x="378" y="227">1</text><text x="470" y="227">1</text>
+          <text x="562" y="227">1</text><text x="654" y="227">1</text><text x="746" y="227" fill="#5D564D">0</text><text x="837" y="227" fill="#5D564D">0</text>
+        </g>
+        <text x="20" y="256" font-size="11" font-weight="700" fill="#E8348B">SENTENCE B</text>
+        <g font-size="13" font-weight="700" text-anchor="middle" fill="#E8348B">
+          <g fill="rgba(232,52,139,.12)" stroke="#E8348B" stroke-width="1.4">
+            <rect x="150" y="240" width="88" height="24"/><rect x="242" y="240" width="88" height="24"/><rect x="334" y="240" width="88" height="24"/>
+            <rect x="426" y="240" width="88" height="24"/><rect x="518" y="240" width="88" height="24"/><rect x="610" y="240" width="88" height="24"/>
+            <rect x="702" y="240" width="88" height="24"/><rect x="794" y="240" width="86" height="24"/>
+          </g>
+          <text x="194" y="257">1</text><text x="286" y="257">1</text><text x="378" y="257">1</text><text x="470" y="257">1</text>
+          <text x="562" y="257" fill="#5D564D">0</text><text x="654" y="257">1</text><text x="746" y="257">1</text><text x="837" y="257">1</text>
+        </g>
+
+        <rect x="20" y="282" width="860" height="46" fill="rgba(255,212,0,.30)" stroke="#1E1B18" stroke-width="1.4"/>
+        <text x="34" y="300" font-size="10.5" font-weight="700">WHAT THE MACHINE NOW BELIEVES</text>
+        <text x="34" y="318" font-size="9.5" fill="#5D564D">That these two sentences are almost the same, because six of their eight columns match. One says the store was clean. The other says it was not.</text>
+      </svg>
+      <figcaption><b>FIG 1</b>Bag-of-words, worked all the way through. Notice step 4: once the sentence becomes a row of counts, the original word order is gone forever — and no method built on top of these numbers can ever recover it.</figcaption>
+    </figure>
+
+    <div class="box">
+      <div class="box-t">Lab · the bag-of-words machine <small>edit the sentences</small></div>
+      <p style="margin-bottom:10px">Two sentences go in. The machine splits them into tokens, collects every distinct word into a shared vocabulary, and counts how often each one appears in each sentence. Those counts are the numbers — the vector — that stand in for the sentence from then on.</p>
+      <div class="two">
+        <div class="field"><label>Sentence A</label><input type="text" id="bowA" value="The store visit was good, not bad"></div>
+        <div class="field"><label>Sentence B</label><input type="text" id="bowB" value="The store visit was bad, not good"></div>
+      </div>
+      <div id="bowArt" style="background:#fff;border:2px solid var(--ink);padding:10px;margin:14px 0"></div>
+      <div class="reads" style="grid-template-columns:repeat(4,1fr)">
+        <div class="read"><i>Vocabulary size</i><b id="bowV">—</b></div>
+        <div class="read"><i>Tokens in A</i><b id="bowTA">—</b></div>
+        <div class="read"><i>Tokens in B</i><b id="bowTB">—</b></div>
+        <div class="read"><i>Similarity</i><b id="bowSim">—</b></div>
+      </div>
+      <div class="detail" id="bowDet"></div>
+      <div class="how">How it works, step by step</div>
+      <ul class="steps">
+        <li><b>Split the sentence into words.</b> "The store visit was good" becomes five separate pieces. These pieces are called <em>tokens</em>. Splitting on spaces is the usual method — though it fails for languages like Mandarin that do not put spaces between words.</li>
+        <li><b>Make one shared list of every word used.</b> Both sentences pool their words into a single list, with no duplicates. This list is the <em>vocabulary</em>, and every word in it becomes a column.</li>
+        <li><b>Count.</b> For each sentence, count how many times each word in the vocabulary appears. Most counts are zero.</li>
+        <li><b>Keep the counts and throw the sentence away.</b> From here on the sentence <em>is</em> that row of numbers. Everything downstream — sorting, searching, classifying — works from the counts alone.</li>
+        <li><b>Notice what just vanished.</b> Word order. "Good, not bad" and "bad, not good" contain exactly the same words, so they produce exactly the same numbers. The machine now believes two opposite sentences are identical.</li>
+      </ul>
+    </div>
+
+    <div class="two">
+      <div class="box">
+        <div class="box-t">What it got right</div>
+        <ul class="kl">
+          <li><b>It made language computable.</b> Once a document is a row of numbers you can sort it, cluster it, search it and feed it to a statistical model. Everything that follows depends on that one move.</li>
+          <li><b>It is fast and transparent.</b> You can read the vector and see exactly why a document was classified the way it was — a property most of what came later quietly lost.</li>
+          <li><b>It still works.</b> Spam filters, document routing, and the keyword half of modern search engines all still count words. When a partner asks whether you need a large language model to tag five thousand support tickets, the honest answer is often no.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <div class="box-t">What it gets wrong</div>
+        <ul class="kl">
+          <li><b>Order is thrown away.</b> "Good, not bad" and "bad, not good" produce identical numbers. Try it in the lab above. For a consultant reading customer verbatims, that is not a rounding error — it is the opposite conclusion.</li>
+          <li><b>Meaning is invisible.</b> "Client", "customer" and "buyer" are three unrelated columns. Nothing in the numbers knows they are near-synonyms.</li>
+          <li><b>The vocabulary explodes.</b> A real corpus has tens of thousands of distinct words, so almost every number in every vector is a zero. Vast, empty and dumb.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="flag"><b>The problem this leaves behind.</b> Bag-of-words tells you <em>which</em> words are present. It has no way of knowing that two different words mean nearly the same thing, or that the same word means two different things. Every advance for the next fifty years is an attempt to fix exactly that.</div>
+  </section>
+
+  <!-- ============ M2 ============ -->
+  <section class="mod" id="m2">
+    <div class="mod-h"><div class="mod-t">02</div><div>
+      <div class="mod-k">2013 · word2vec</div><h2>Meaning, written down as numbers</h2></div></div>
+
+    <p class="big">The fix came in 2013, and it rests on one simple observation: <b>you can tell what a word means by the company it keeps.</b> "Invoice" turns up near "payment". "Payment" turns up near "terms". Words that keep the same company probably mean related things.</p>
+
+    <div class="analogy"><b>The picture to hold on to</b>Think of a seating plan at a large wedding. Nobody wrote down who is related to whom — but if you watch who sits with whom over many weddings, the families become obvious. Embeddings are that seating plan, worked out by watching billions of sentences.</div>
+
+    <div class="def"><b>An embedding</b> is that list of numbers — usually a few hundred of them — standing for one word, one sentence or one whole document. Nobody chooses what the numbers mean. They come out of the training process, and their only job is to place similar things near each other in a space with far more than three dimensions.</div>
+
+    <div class="box">
+      <div class="box-t">Lab · what an embedding actually looks like <small>the numbers themselves</small></div>
+      <p style="margin-bottom:10px">People say "the word becomes numbers" and move on. Here are the numbers. Pick two words and compare their rows — the closer the two words are in meaning, the more the two rows look alike.</p>
+      <div class="ctl" id="numCtlA"></div>
+      <div class="ctl" id="numCtlB"></div>
+      <div id="numArt" style="background:#fff;border:2px solid var(--ink);padding:10px;margin:12px 0"></div>
+      <div class="reads" style="grid-template-columns:repeat(3,1fr)">
+        <div class="read"><i>Numbers shown here</i><b>8</b></div>
+        <div class="read"><i>Numbers in a real one</i><b>300 – 1,500</b></div>
+        <div class="read"><i>How alike the two rows are</i><b id="numSim">—</b></div>
+      </div>
+      <div class="detail" id="numDet"></div>
+      <div class="how">Four things to notice</div>
+      <ul class="steps">
+        <li><b>No single number means anything.</b> The third number is not "formality" and the fifth is not "money". Ask what one of them stands for and there is no answer — the meaning lives in the pattern of all of them together.</li>
+        <li><b>Similar words have similar rows.</b> Compare "invoice" with "payment" and the bars rise and fall together. Compare either with "monsoon" and they go their own way.</li>
+        <li><b>Nobody typed these in.</b> They started as random numbers and got nudged, a fraction at a time, across billions of sentences, until words that keep the same company ended up with matching rows.</li>
+        <li><b>Real ones are much longer.</b> Eight numbers here so you can see them. A real embedding has several hundred, which is why it can hold far finer distinctions than a picture on a page can show.</li>
+      </ul>
+    </div>
+
+    <div class="box">
+      <div class="box-t">Lab · the meaning map <small>click a word</small></div>
+      <p style="margin-bottom:10px">A real embedding space has hundreds of dimensions, which nobody can draw. This is a flattened version with the same property: distance means similarity. Click any word to see its nearest neighbours and what the model has effectively learned about it.</p>
+      <div id="embArt" style="background:#fff;border:2px solid var(--ink);padding:10px;margin:12px 0"></div>
+      <div class="ctl" id="embCtl"></div>
+      <div class="detail" id="embDet"></div>
+      <div class="how">How a model learns this, step by step</div>
+      <ul class="steps">
+        <li><b>Give every word a random list of numbers.</b> Fifty or so numbers each, meaning nothing at all to begin with. This is the starting point, and it is deliberately random.</li>
+        <li><b>Take two words from a real sentence.</b> Ask the model a yes-or-no question: are these two likely to be neighbours?</li>
+        <li><b>Check the answer against reality.</b> The sentence already tells you whether they were neighbours or not. So you know immediately whether the guess was right.</li>
+        <li><b>Nudge the numbers.</b> If two words really do appear together, shift their number-lists slightly closer. If they do not, shift them apart. One tiny nudge per pair.</li>
+        <li><b>Repeat a few billion times.</b> Words that keep the same company drift together; words that never co-occur drift apart. Nobody ever told it that "invoice" and "payment" are related — that fell out of the counting.</li>
+      </ul>
+    </div>
+
+    <div class="two">
+      <div class="box">
+        <div class="box-t">Why this mattered to the work you will do</div>
+        <ul class="kl">
+          <li><b>Search stopped needing the exact word.</b> Ask for "supplier payment delays" and a document saying "vendor invoice arrears" now comes back. Every semantic search and retrieval system in a consulting firm rests on this.</li>
+          <li><b>Clustering became meaningful.</b> Four hundred open-ended survey answers group themselves by what respondents meant, not by which words they happened to use.</li>
+          <li><b>Classification got cheap.</b> Turn a document into an embedding, and a simple statistical model on top can sort it — no rules, no keyword lists to maintain.</li>
+          <li><b>Levels of abstraction.</b> Embeddings exist for words, sentences, whole documents, and for images and audio too. Bag-of-words was always a document-level embedding; word2vec gave us word-level ones.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <div class="box-t">The flaw it could not fix</div>
+        <p>A word2vec embedding is <b>static</b>. The word "bank" gets one list of numbers, downloaded once, used everywhere. But look at these two sentences:</p>
+        <div class="sentence-demo" style="font-size:13px">
+          <b class="s-prompt">We should approach the <u>bank</u> about refinancing.</b><br>
+          <b class="s-memory">The plant sits on the <u>bank</u> of the Sabarmati.</b>
+        </div>
+        <p style="margin-top:12px">One word, two unrelated meanings, one frozen set of numbers that has to serve both. The same problem hits every word that matters in business writing: "interest", "capital", "margin", "security", "returns", "charge". The meaning is decided by the sentence around the word — and word2vec never looks at the sentence.</p>
+        <p class="mono" style="color:var(--ink2)">Fixing this is what the next decade of work was about, and it is the direct ancestor of the thing you type into today.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ M3 ============ -->
+  <section class="mod" id="m3">
+    <div class="mod-h"><div class="mod-t">03</div><div>
+      <div class="mod-k">Recurrent networks</div><h2>Reading in order, and forgetting</h2></div></div>
+
+    <p class="big">If meaning depends on the sentence, the machine has to actually read the sentence. So the next design did: one word at a time, left to right, keeping a running summary in its head as it went. Two of these working together could translate — one reads the English, one writes the Dutch.</p>
+
+    <div class="analogy"><b>The picture to hold on to</b>Chinese whispers. A message is passed down a line of people, each one hearing it, holding it, and passing it on. With five people it arrives fine. With fifty, the beginning is long gone — and nobody in the line knows anything has been lost.</div>
+
+    <figure class="fig">
+      <svg viewBox="0 0 900 330" font-family="Space Mono,monospace" font-size="10" fill="#1E1B18" role="img" aria-label="An encoder reads a sentence one word at a time into a single summary, which a decoder then writes out">
+        <defs><marker id="r1" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#1E1B18"/></marker>
+        <marker id="r2" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#E8348B"/></marker></defs>
+        <text x="20" y="22" font-size="10" font-weight="700" letter-spacing="1.2" fill="#2F4B8F">THE ENCODER READS, ONE WORD AT A TIME</text>
+        <g fill="#FBFAF4" stroke="#2F4B8F" stroke-width="2">
+          <rect x="20" y="36" width="90" height="40"/><rect x="126" y="36" width="90" height="40"/><rect x="232" y="36" width="90" height="40"/>
+        </g>
+        <g text-anchor="middle" font-size="11" font-weight="700"><text x="65" y="61">I</text><text x="171" y="61">love</text><text x="277" y="61">llamas</text></g>
+        <g stroke="#2F4B8F" stroke-width="2" marker-end="url(#r1)"><line x1="110" y1="56" x2="120" y2="56"/><line x1="216" y1="56" x2="226" y2="56"/><line x1="322" y1="56" x2="368" y2="56"/></g>
+        <g fill="#5D564D" font-size="9" text-anchor="middle"><text x="65" y="90">step 1</text><text x="171" y="90">step 2</text><text x="277" y="90">step 3</text></g>
+
+        <rect x="374" y="26" width="150" height="60" fill="rgba(255,212,0,.34)" stroke="#B8860B" stroke-width="2"/>
+        <text x="449" y="50" text-anchor="middle" font-size="10.5" font-weight="700">ONE SUMMARY</text>
+        <text x="449" y="64" text-anchor="middle" font-size="9" fill="#5D564D">everything the sentence</text>
+        <text x="449" y="76" text-anchor="middle" font-size="9" fill="#5D564D">meant, in one list of numbers</text>
+
+        <g stroke="#2F4B8F" stroke-width="2" marker-end="url(#r1)"><line x1="524" y1="56" x2="570" y2="56"/></g>
+        <text x="600" y="22" font-size="10" font-weight="700" letter-spacing="1.2" fill="#E8348B">THE DECODER WRITES</text>
+        <g fill="#FBFAF4" stroke="#E8348B" stroke-width="2">
+          <rect x="576" y="36" width="72" height="40"/><rect x="656" y="36" width="72" height="40"/><rect x="736" y="36" width="66" height="40"/><rect x="810" y="36" width="72" height="40"/>
+        </g>
+        <g text-anchor="middle" font-size="10.5" font-weight="700"><text x="612" y="61">Ik</text><text x="692" y="61">hou</text><text x="769" y="61">van</text><text x="846" y="61">lama's</text></g>
+        <path d="M612 80 L612 96 L692 96 L692 80" fill="none" stroke="#E8348B" stroke-width="1.4" marker-end="url(#r2)"/>
+        <path d="M692 80 L692 104 L769 104 L769 80" fill="none" stroke="#E8348B" stroke-width="1.4" marker-end="url(#r2)"/>
+        <path d="M769 80 L769 112 L846 112 L846 80" fill="none" stroke="#E8348B" stroke-width="1.4" marker-end="url(#r2)"/>
+        <text x="576" y="128" font-size="9" fill="#E8348B">each word it writes becomes the input for the next one</text>
+
+        <rect x="20" y="150" width="862" height="70" fill="rgba(232,52,139,.10)" stroke="#E8348B" stroke-width="1.4"/>
+        <text x="34" y="170" font-size="10.5" font-weight="700" fill="#E8348B">THE BOTTLENECK — AND IT IS THE WHOLE PROBLEM</text>
+        <text x="34" y="188" font-size="9.5" fill="#5D564D">Everything the input meant has to squeeze through that single yellow box. Three words is fine. A forty-word clause is not: by the</text>
+        <text x="34" y="202" font-size="9.5" fill="#5D564D">time the encoder reaches the end, the beginning has faded. The model does not tell you it has forgotten. It just translates worse.</text>
+        <text x="34" y="214" font-size="9.5" fill="#5D564D">And because each step waits for the one before it, none of this can be done in parallel — which caps how big the model can get.</text>
+
+        <text x="20" y="248" font-size="10" font-weight="700">WHAT THIS FEELS LIKE IN PRACTICE</text>
+        <text x="20" y="268" font-size="9.5" fill="#5D564D">Ask a 2015-era system to summarise a two-page memo and the first paragraph is well covered, the last paragraph is well covered,</text>
+        <text x="20" y="282" font-size="9.5" fill="#5D564D">and the middle turns to mush. Ask it who "the aforementioned party" refers to eleven sentences later and it has no idea.</text>
+        <text x="20" y="302" font-size="9.5" fill="#2F4B8F">This is the failure that attention was invented to fix — and the reason your tools can now hold a whole contract in view at once.</text>
+      </svg>
+      <figcaption><b>FIG 2</b>The encoder–decoder pair, and its fatal squeeze. The architecture is autoregressive: every word the decoder writes is fed back in before it writes the next one — which is exactly how the tool on your laptop still works today.</figcaption>
+    </figure>
+
+    <div class="box">
+      <div class="box-t">Lab · watch the bottleneck bite <small>drag the slider</small></div>
+      <p style="margin-bottom:6px">One fixed-size summary has to carry the whole input. Lengthen the input and see what survives.</p>
+      <div class="slider"><label for="rnnLen">Length of the sentence going in, in words <output id="rnnLenO">6</output></label>
+        <input type="range" id="rnnLen" min="3" max="60" step="1" value="6"></div>
+      <div id="rnnArt" style="background:#fff;border:2px solid var(--ink);padding:10px;margin:12px 0"></div>
+      <div class="detail" id="rnnDet"></div>
+      <div class="how">Why long text broke it, step by step</div>
+      <ul class="steps">
+        <li><b>The reader takes one word at a time.</b> After each word it updates a single running summary — one fixed-size list of numbers, no bigger for a long sentence than a short one.</li>
+        <li><b>Each new word writes over the summary.</b> The summary has to make room, so the oldest information gets faded to fit the newest.</li>
+        <li><b>At the end, that one summary is all the writer gets.</b> Everything the input meant has to pass through it. Three words fit comfortably. Forty do not.</li>
+        <li><b>The writer produces one word at a time too.</b> Each word it writes is fed back in before the next is chosen — which is still exactly how your tools work today.</li>
+        <li><b>Nothing warns you.</b> The output is fluent either way. It simply gets quietly worse as the input gets longer, which is the hardest kind of failure to notice.</li>
+      </ul>
+      <div class="flag" style="margin-bottom:0"><b>And a second problem, which turned out to matter more.</b> Because word two cannot start until word one is finished, none of this can be split across machines. That single constraint is what capped how big these models could ever get.</div>
+    </div>
+  </section>
+
+  <!-- ============ M4 ============ -->
+  <section class="mod" id="m4">
+    <div class="mod-h"><div class="mod-t">04</div><div>
+      <div class="mod-k">Discussion question 1</div><h2>Attention: what it lets a model do that nothing before could</h2></div></div>
+
+    <p class="big">You are at a noisy party. Someone says: <em>"The animal didn't cross the road because it was too tired."</em> You know instantly that "it" means the animal. You did not re-read the sentence from the start — you just looked back at the right word. That is the whole idea, and in 2014 someone worked out how to give it to a machine.</p>
+
+    <div class="analogy"><b>The picture to hold on to</b>Looking something up in a library. You have a topic in mind. You scan the labels on the spines. The ones that match get most of your attention, the rest get almost none — and what you walk away with is a blend of the few books that actually matched.</div>
+
+    <div class="quote">Attention lets every word in a sentence look at every other word and decide which ones matter to it — directly, at any distance, without having to remember its way back there.</div>
+
+    <figure class="fig">
+      <svg viewBox="0 0 900 400" font-family="Space Mono,monospace" font-size="10" fill="#1E1B18" role="img" aria-label="Attention explained as a library lookup in four steps">
+        <defs><marker id="a1x" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#1E1B18"/></marker></defs>
+        <text x="20" y="20" font-size="10.5" font-weight="700" letter-spacing="1.2">THE SENTENCE — AND THE WORD DOING THE LOOKING</text>
+        <g font-size="10.5">
+          <g fill="rgba(30,27,24,.06)" stroke="#5D564D" stroke-width="1">
+            <rect x="20" y="30" width="56" height="26"/><rect x="82" y="30" width="76" height="26"/><rect x="164" y="30" width="70" height="26"/>
+            <rect x="240" y="30" width="62" height="26"/><rect x="308" y="30" width="56" height="26"/><rect x="370" y="30" width="62" height="26"/>
+            <rect x="438" y="30" width="82" height="26"/>
+          </g>
+          <rect x="526" y="30" width="44" height="26" fill="#E8348B"/>
+          <g text-anchor="middle"><text x="48" y="47">the</text><text x="120" y="47">animal</text><text x="199" y="47">didn't</text><text x="271" y="47">cross</text>
+            <text x="336" y="47">the</text><text x="401" y="47">road</text><text x="479" y="47">because</text>
+            <text x="548" y="47" fill="#FFFFFF" font-weight="700">it</text></g>
+        </g>
+        <text x="590" y="47" font-size="10" fill="#E8348B">← this word needs to know what it refers to</text>
+
+        <rect x="20" y="78" width="205" height="128" fill="rgba(47,75,143,.10)" stroke="#2F4B8F" stroke-width="2"/>
+        <text x="32" y="98" font-size="10.5" font-weight="700" fill="#2F4B8F">1 · THREE ROLES</text>
+        <text x="32" y="116" font-size="9.5" fill="#5D564D">Every word plays three parts:</text>
+        <text x="32" y="132" font-size="9.5">• what it is looking for</text>
+        <text x="32" y="147" font-size="9.5">• a label saying what it offers</text>
+        <text x="32" y="162" font-size="9.5">• the information it hands over</text>
+        <text x="32" y="184" font-size="9" fill="#2F4B8F">Like a library: your topic, the</text>
+        <text x="32" y="196" font-size="9" fill="#2F4B8F">spine labels, the contents.</text>
+
+        <rect x="243" y="78" width="205" height="128" fill="rgba(47,75,143,.10)" stroke="#2F4B8F" stroke-width="2"/>
+        <text x="255" y="98" font-size="10.5" font-weight="700" fill="#2F4B8F">2 · COMPARE</text>
+        <text x="255" y="116" font-size="9.5" fill="#5D564D">"it" checks itself against every</text>
+        <text x="255" y="130" font-size="9.5" fill="#5D564D">other word's label and gets a</text>
+        <text x="255" y="144" font-size="9.5" fill="#5D564D">match score for each one.</text>
+        <text x="255" y="168" font-size="9.5">animal ████████  high</text>
+        <text x="255" y="184" font-size="9.5">road   ███       some</text>
+        <text x="255" y="200" font-size="9.5">the    █         almost none</text>
+
+        <rect x="466" y="78" width="205" height="128" fill="rgba(255,212,0,.30)" stroke="#B8860B" stroke-width="2"/>
+        <text x="478" y="98" font-size="10.5" font-weight="700" fill="#8A6A00">3 · SPLIT 100% OF FOCUS</text>
+        <text x="478" y="116" font-size="9.5" fill="#5D564D">The scores become percentages</text>
+        <text x="478" y="130" font-size="9.5" fill="#5D564D">that add up to one hundred.</text>
+        <g font-size="10">
+          <rect x="478" y="142" width="100" height="14" fill="#B8860B" fill-opacity=".8"/><text x="586" y="153">animal 42%</text>
+          <rect x="478" y="160" width="43" height="14" fill="#B8860B" fill-opacity=".55"/><text x="586" y="171">tired 18%</text>
+          <rect x="478" y="178" width="26" height="14" fill="#B8860B" fill-opacity=".4"/><text x="586" y="189">road 11%</text>
+        </g>
+
+        <rect x="689" y="78" width="191" height="128" fill="rgba(232,52,139,.12)" stroke="#E8348B" stroke-width="2"/>
+        <text x="701" y="98" font-size="10.5" font-weight="700" fill="#E8348B">4 · BLEND</text>
+        <text x="701" y="116" font-size="9.5" fill="#5D564D">"it" takes a mixture of the</text>
+        <text x="701" y="130" font-size="9.5" fill="#5D564D">other words' information,</text>
+        <text x="701" y="144" font-size="9.5" fill="#5D564D">weighted by those shares.</text>
+        <text x="701" y="168" font-size="10" font-weight="700" fill="#E8348B">Result: "it" now</text>
+        <text x="701" y="182" font-size="10" font-weight="700" fill="#E8348B">carries the meaning</text>
+        <text x="701" y="196" font-size="10" font-weight="700" fill="#E8348B">of "animal".</text>
+
+        <g stroke="#1E1B18" stroke-width="1.6" marker-end="url(#a1x)">
+          <line x1="227" y1="142" x2="239" y2="142"/><line x1="450" y1="142" x2="462" y2="142"/><line x1="673" y1="142" x2="685" y2="142"/>
+        </g>
+
+        <rect x="20" y="226" width="860" height="72" fill="#FBFAF4" stroke="#1E1B18" stroke-width="1.6"/>
+        <text x="34" y="246" font-size="10.5" font-weight="700">CHANGE ONE WORD AND THE WHOLE THING RE-POINTS</text>
+        <text x="34" y="266" font-size="10" fill="#2F4B8F">"The animal didn't cross the road because it was too <tspan font-weight="700">tired</tspan>."  →  "it" = the animal</text>
+        <text x="34" y="284" font-size="10" fill="#E8348B">"The animal didn't cross the road because it was too <tspan font-weight="700">wide</tspan>."   →  "it" = the road</text>
+
+        <text x="20" y="326" font-size="10.5" font-weight="700">WHY THIS IS THE WHOLE GAME</text>
+        <text x="20" y="346" font-size="9.5" fill="#5D564D">Nobody wrote a grammar rule. The model works it out from the other words present — which means it also works when the two words are</text>
+        <text x="20" y="360" font-size="9.5" fill="#5D564D">twelve thousand words apart, as they are when a clause on page 31 of a tender refers to a penalty defined on page 4.</text>
+        <text x="20" y="384" font-size="9.5" fill="#2F4B8F">Every word in the sentence does this lookup at the same time — not just "it". That simultaneity is what older designs could never do.</text>
+      </svg>
+      <figcaption><b>FIG 3</b>Attention as a library lookup. Steps 1 to 4 are the entire mechanism; everything else in a modern model is plumbing around this.</figcaption>
+    </figure>
+
+    <div class="box">
+      <div class="box-t">Lab · look at what the model looks at <small>pick a sentence, click a word</small></div>
+      <div class="ctl" id="attCtl"></div>
+      <div id="attArt" style="background:#fff;border:2px solid var(--ink);padding:12px;margin:12px 0"></div>
+      <div class="detail" id="attDet"></div>
+      <div class="how">How attention works, step by step</div>
+      <ul class="steps">
+        <li><b>Every word plays three parts.</b> What it is <em>looking for</em>, a <em>label</em> advertising what it offers, and the <em>information</em> it hands over if chosen. Exactly like a library search: your topic, the labels on the spines, and the contents inside. (Their technical names are query, key and value — you can safely forget those.)</li>
+        <li><b>Compare.</b> The word doing the looking — say "it" — checks itself against every other word's label and gets a match score for each.</li>
+        <li><b>Turn the scores into percentages.</b> The scores become a split of attention that adds up to 100%. Perhaps 42% on "animal", 18% on "tired", 3% on "the".</li>
+        <li><b>Blend.</b> The word takes a mixture of the other words' information, weighted by those percentages. Because most of the weight landed on "animal", the word "it" quietly picks up the meaning of "animal".</li>
+        <li><b>Do this for every word, all at once.</b> Not just for "it" — every word in the sentence does the same lookup simultaneously. That is the step that older designs could never take.</li>
+      </ul>
+    </div>
+
+    <div class="two">
+      <div class="box">
+        <div class="box-t">The business-writing example to use in the room</div>
+        <p>A tender document, page 4:</p>
+        <div class="sentence-demo" style="font-size:13px"><b class="s-prompt">"Late delivery shall attract a penalty of 0.5% of contract value per week, capped at 10%."</b></div>
+        <p style="margin-top:12px">Page 31, twenty-seven pages later:</p>
+        <div class="sentence-demo" style="font-size:13px"><b class="s-memory">"The aforementioned penalties shall not apply where delay is attributable to the Purchaser."</b></div>
+        <p style="margin-top:12px">To answer "what is our worst-case penalty exposure?", something has to connect those two sentences. A bag-of-words model cannot — it has no order at all. A sequential model reading page by page has long since forgotten page 4 by the time it reaches page 31.</p>
+        <p><b>Attention just reaches back.</b> The words "the aforementioned penalties" look across the entire document, find the clause on page 4, and bind to it — at a distance of twelve thousand words, in one step, at no extra cost. That is the capability. Everything you find useful about these tools follows from it.</p>
+      </div>
+      <div class="box">
+        <div class="box-t">Three more places you will see it working</div>
+        <ul class="kl">
+          <li><b>Pronouns and referents in interview notes.</b> "She said the plant had raised it twice already" — attention is what binds "it" to the issue mentioned four sentences earlier, which is how thirty transcripts become a coherent theme table.</li>
+          <li><b>Tone carried across a document.</b> Ask for a rewrite "for a sceptical chief financial officer" and every sentence attends back to that instruction, four pages later, without you repeating it.</li>
+          <li><b>Contradiction spotting.</b> "Where do these two reports disagree?" is a question about relationships between distant passages. Attention is the mechanism that makes it answerable at all.</li>
+        </ul>
+        <div class="flag" style="margin-bottom:0"><b>Say it this way in an exam or an interview.</b> Older approaches either ignored word order entirely, or read in order and forgot. Attention lets the model weigh every word against every other word at once, so meaning that depends on something far away in the text finally survives.</div>
+      </div>
+    </div>
+
+    <div class="box">
+      <div class="box-t">Lab · the whole picture at once <small>every word against every word</small></div>
+      <p style="margin-bottom:10px">The viewer above shows one word looking around. This shows <b>all of them at the same time</b>. Read a row: that is one word, and how it splits its attention across the sentence. Brighter means more attention. Click any row label to follow it, or click a single square to read it out in words.</p>
+      <div class="ctl" id="mxCtl"></div>
+      <div id="mxArt" style="background:#fff;border:2px solid var(--ink);padding:10px;margin:12px 0"></div>
+      <div class="detail" id="mxDet"></div>
+      <div class="how">How to read this grid, step by step</div>
+      <ul class="steps">
+        <li><b>Every row is one word doing the looking.</b> The row labelled "it" shows where the word "it" sends its attention.</li>
+        <li><b>Every column is one word being looked at.</b> A bright column means lots of other words care about that word.</li>
+        <li><b>Each row adds up to 100%.</b> A word has a fixed amount of attention to spend, so giving more to one word means giving less to another. That is why the bright squares are so few.</li>
+        <li><b>The diagonal is a word looking at itself.</b> Usually a little bright — a word's own meaning matters to its own meaning — but rarely the brightest thing in the row.</li>
+        <li><b>The one bright square off the diagonal is the interesting one.</b> In row "it", it sits under "animal". That single square is the model resolving what "it" refers to, and it is the whole reason this mechanism exists.</li>
+        <li><b>Real models run several of these grids at once.</b> One might track grammar, another track what refers to what, another track verbs and their objects. The results get combined. Same picture, several times over.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ M5 ============ -->
+  <section class="mod" id="m5">
+    <div class="mod-h"><div class="mod-t">05</div><div>
+      <div class="mod-k">2017 · Attention Is All You Need</div><h2>The Transformer, drawn out</h2></div></div>
+
+    <p class="big">For three years attention was a helper bolted onto the read-one-word-at-a-time design. In 2017 a paper asked the obvious question: if attention is doing the real work, why keep the reading-in-order part at all? They removed it. What was left is called the Transformer, and it is the T in GPT.</p>
+
+    <div class="analogy"><b>The picture to hold on to</b>A factory line with two halves. On the left, a team of readers takes the input apart and works out what it means. On the right, a team of writers builds the output one word at a time, glancing back at the readers' notes whenever they need to. Each team has several identical stations stacked one above the other, and the work passes upward through them.</div>
+
+    <figure class="fig">
+      <svg viewBox="0 0 900 470" font-family="Space Mono,monospace" font-size="10" fill="#1E1B18" role="img" aria-label="The Transformer as stacked encoder and decoder blocks">
+        <defs><marker id="t1" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#1E1B18"/></marker>
+        <marker id="t2" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#B8860B"/></marker></defs>
+
+        <text x="120" y="22" font-size="10.5" font-weight="700" letter-spacing="1.2" fill="#2F4B8F">THE READERS · ENCODER STACK</text>
+        <text x="560" y="22" font-size="10.5" font-weight="700" letter-spacing="1.2" fill="#E8348B">THE WRITERS · DECODER STACK</text>
+
+        <g fill="rgba(47,75,143,.13)" stroke="#2F4B8F" stroke-width="2">
+          <rect x="120" y="300" width="230" height="46"/><rect x="120" y="242" width="230" height="46"/>
+          <rect x="120" y="184" width="230" height="46"/><rect x="120" y="126" width="230" height="46"/>
+        </g>
+        <g text-anchor="middle" font-size="10.5" font-weight="700" fill="#2F4B8F">
+          <text x="235" y="328">READER 1</text><text x="235" y="270">READER 2</text><text x="235" y="212">READER 3</text><text x="235" y="154">READER 6</text>
+        </g>
+        <text x="235" y="182" text-anchor="middle" font-size="14" fill="#2F4B8F">⋮</text>
+
+        <g fill="rgba(232,52,139,.12)" stroke="#E8348B" stroke-width="2">
+          <rect x="560" y="300" width="230" height="46"/><rect x="560" y="242" width="230" height="46"/>
+          <rect x="560" y="184" width="230" height="46"/><rect x="560" y="126" width="230" height="46"/>
+        </g>
+        <g text-anchor="middle" font-size="10.5" font-weight="700" fill="#E8348B">
+          <text x="675" y="328">WRITER 1</text><text x="675" y="270">WRITER 2</text><text x="675" y="212">WRITER 3</text><text x="675" y="154">WRITER 6</text>
+        </g>
+        <text x="675" y="182" text-anchor="middle" font-size="14" fill="#E8348B">⋮</text>
+
+        <g stroke="#2F4B8F" stroke-width="2" marker-end="url(#t1)" fill="none">
+          <line x1="235" y1="300" x2="235" y2="292"/><line x1="235" y1="242" x2="235" y2="234"/><line x1="235" y1="184" x2="235" y2="176"/>
+        </g>
+        <g stroke="#E8348B" stroke-width="2" marker-end="url(#t1)" fill="none">
+          <line x1="675" y1="300" x2="675" y2="292"/><line x1="675" y1="242" x2="675" y2="234"/><line x1="675" y1="184" x2="675" y2="176"/>
+        </g>
+
+        <rect x="120" y="376" width="230" height="40" fill="#FFFFFF" stroke="#1E1B18" stroke-width="2"/>
+        <text x="235" y="392" text-anchor="middle" font-size="10" font-weight="700">THE INPUT, AS NUMBERS</text>
+        <text x="235" y="408" text-anchor="middle" font-size="9" fill="#5D564D">"I love llamas" + position markers</text>
+        <line x1="235" y1="376" x2="235" y2="354" stroke="#1E1B18" stroke-width="2" marker-end="url(#t1)"/>
+
+        <rect x="560" y="376" width="230" height="40" fill="#FFFFFF" stroke="#1E1B18" stroke-width="2"/>
+        <text x="675" y="392" text-anchor="middle" font-size="10" font-weight="700">WHAT IT HAS WRITTEN SO FAR</text>
+        <text x="675" y="408" text-anchor="middle" font-size="9" fill="#5D564D">"Ik hou van" — nothing ahead</text>
+        <line x1="675" y1="376" x2="675" y2="354" stroke="#1E1B18" stroke-width="2" marker-end="url(#t1)"/>
+
+        <rect x="560" y="62" width="230" height="40" fill="rgba(255,212,0,.34)" stroke="#B8860B" stroke-width="2"/>
+        <text x="675" y="78" text-anchor="middle" font-size="10" font-weight="700">THE NEXT WORD</text>
+        <text x="675" y="94" text-anchor="middle" font-size="9" fill="#5D564D">"lama's"</text>
+        <line x1="675" y1="126" x2="675" y2="110" stroke="#1E1B18" stroke-width="2" marker-end="url(#t1)"/>
+
+        <path d="M350 149 L440 149 L440 205 L470 205" fill="none" stroke="#B8860B" stroke-width="2.4" marker-end="url(#t2)"/>
+        <path d="M470 205 L470 323 L556 323" fill="none" stroke="#B8860B" stroke-width="2.4" marker-end="url(#t2)"/>
+        <path d="M470 265 L556 265" fill="none" stroke="#B8860B" stroke-width="2.4" marker-end="url(#t2)"/>
+        <path d="M470 207 L556 207" fill="none" stroke="#B8860B" stroke-width="2.4" marker-end="url(#t2)"/>
+        <path d="M470 149 L556 149" fill="none" stroke="#B8860B" stroke-width="2.4" marker-end="url(#t2)"/>
+        <text x="378" y="140" font-size="9" fill="#8A6A00">the readers' finished notes go</text>
+        <text x="378" y="128" font-size="9" fill="#8A6A00">to every writer, not just the last</text>
+
+        <path d="M790 82 L840 82 L840 396 L794 396" fill="none" stroke="#E8348B" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#t1)"/>
+        <text x="848" y="240" font-size="9" fill="#E8348B" transform="rotate(90 848 240)">each word written is added to the input and the whole thing runs again</text>
+
+        <text x="20" y="446" font-size="9" fill="#5D564D">Six stations each in the original design; today's models stack dozens. Every station has the same shape — what differs is what each has learned to notice.</text>
+        <text x="20" y="462" font-size="9.5" fill="#2F4B8F">All the readers work at the same instant. The writers must take turns, because each new word depends on the one before it.</text>
+      </svg>
+      <figcaption><b>FIG 4</b>The whole architecture. Readers on the left, writers on the right, and the yellow line is the handover — the readers' notes are available to every writer station, which is how the output stays anchored to the input.</figcaption>
+    </figure>
+
+    <div class="box">
+      <div class="box-t">Step through the architecture <small>twelve steps · press next, or play all</small></div>
+      <div class="brief" style="background:rgba(47,75,143,.07);border-left:5px solid var(--blue);padding:11px 14px;font-size:15px;margin:0 0 14px">
+        <b>What is being traced.</b> One short sentence — "I love llamas" — going in as English and coming out as Dutch. The diagram above, lit up one piece at a time, with a close-up of each step on the right.</div>
+      <div id="txArt" style="background:#fff;border:2px solid var(--ink);padding:10px"></div>
+      <div class="two" style="grid-template-columns:1fr 1fr;align-items:start;margin-top:14px">
+        <div>
+          <div class="tag-row" id="txDots" style="margin-bottom:12px"></div>
+          <h4 id="txTitle" style="font-size:20px;margin-bottom:5px"></h4>
+          <div class="mono" id="txWho" style="color:var(--pink);margin-bottom:9px"></div>
+          <p id="txWhat"></p>
+          <p id="txWhy" style="color:var(--ink2)"></p>
+          <p id="txPlain" style="background:rgba(255,212,0,.28);border-left:5px solid var(--ink);padding:10px 13px;font-size:15px"></p>
+          <div class="ctl" style="margin-top:12px">
+            <button class="chip" id="txPrev">Back</button>
+            <button class="chip pink on" id="txNext">Next step</button>
+            <button class="chip" id="txAuto">Play all</button>
+          </div>
+        </div>
+        <div>
+          <div class="mono" style="color:var(--ink2);margin-bottom:6px">What the machine is holding at this point</div>
+          <div id="txState" style="background:#FBFAF4;border:2px solid var(--rule2);padding:12px 14px;font-family:var(--mono);font-size:12px;line-height:1.75;white-space:pre-wrap;min-height:150px"></div>
+        </div>
+      </div>
+    </div>
+
+    <figure class="fig">
+      <svg viewBox="0 0 900 400" font-family="Space Mono,monospace" font-size="10" fill="#1E1B18" role="img" aria-label="Inside one reader station and one writer station">
+        <defs><marker id="t3" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#1E1B18"/></marker></defs>
+        <text x="20" y="20" font-size="10.5" font-weight="700" letter-spacing="1.2">OPEN UP ONE STATION AND THIS IS WHAT IS INSIDE</text>
+
+        <rect x="20" y="34" width="400" height="300" fill="rgba(47,75,143,.07)" stroke="#2F4B8F" stroke-width="2"/>
+        <text x="36" y="56" font-size="10.5" font-weight="700" fill="#2F4B8F">A READER STATION — TWO PARTS</text>
+
+        <rect x="44" y="234" width="352" height="52" fill="#FFFFFF" stroke="#2F4B8F" stroke-width="1.8"/>
+        <text x="220" y="256" text-anchor="middle" font-size="11" font-weight="700">1 · LOOK AROUND</text>
+        <text x="220" y="272" text-anchor="middle" font-size="9" fill="#5D564D">every word checks every other word · attention</text>
+
+        <rect x="44" y="150" width="352" height="52" fill="#FFFFFF" stroke="#2F4B8F" stroke-width="1.8"/>
+        <text x="220" y="172" text-anchor="middle" font-size="11" font-weight="700">2 · THINK IT OVER</text>
+        <text x="220" y="188" text-anchor="middle" font-size="9" fill="#5D564D">a small network digests what was found</text>
+
+        <line x1="220" y1="234" x2="220" y2="210" stroke="#1E1B18" stroke-width="2" marker-end="url(#t3)"/>
+        <line x1="220" y1="150" x2="220" y2="126" stroke="#1E1B18" stroke-width="2" marker-end="url(#t3)"/>
+        <text x="220" y="118" text-anchor="middle" font-size="9.5" fill="#2F4B8F">up to the next station</text>
+        <line x1="220" y1="320" x2="220" y2="292" stroke="#1E1B18" stroke-width="2" marker-end="url(#t3)"/>
+        <text x="220" y="332" text-anchor="middle" font-size="9.5" fill="#5D564D">in from below</text>
+        <text x="36" y="360" font-size="9.5" fill="#5D564D">It may look in both directions. Nothing is hidden,</text>
+        <text x="36" y="374" font-size="9.5" fill="#5D564D">because a reader is never asked to predict anything.</text>
+
+        <rect x="460" y="34" width="420" height="300" fill="rgba(232,52,139,.08)" stroke="#E8348B" stroke-width="2"/>
+        <text x="476" y="56" font-size="10.5" font-weight="700" fill="#E8348B">A WRITER STATION — THE SAME, PLUS ONE</text>
+
+        <rect x="484" y="248" width="372" height="46" fill="#FFFFFF" stroke="#E8348B" stroke-width="1.8"/>
+        <text x="670" y="268" text-anchor="middle" font-size="11" font-weight="700">1 · LOOK BACK ONLY</text>
+        <text x="670" y="283" text-anchor="middle" font-size="9" fill="#5D564D">attention, with everything ahead covered up</text>
+
+        <rect x="484" y="180" width="372" height="46" fill="rgba(255,212,0,.34)" stroke="#B8860B" stroke-width="1.8"/>
+        <text x="670" y="200" text-anchor="middle" font-size="11" font-weight="700">2 · CHECK THE READERS' NOTES</text>
+        <text x="670" y="215" text-anchor="middle" font-size="9" fill="#5D564D">the extra step — attention pointed at the input</text>
+
+        <rect x="484" y="112" width="372" height="46" fill="#FFFFFF" stroke="#E8348B" stroke-width="1.8"/>
+        <text x="670" y="132" text-anchor="middle" font-size="11" font-weight="700">3 · THINK IT OVER</text>
+        <text x="670" y="147" text-anchor="middle" font-size="9" fill="#5D564D">the same small network as the reader has</text>
+
+        <g stroke="#1E1B18" stroke-width="2" marker-end="url(#t3)">
+          <line x1="670" y1="248" x2="670" y2="232"/><line x1="670" y1="180" x2="670" y2="164"/><line x1="670" y1="112" x2="670" y2="92"/>
+        </g>
+        <text x="670" y="84" text-anchor="middle" font-size="9.5" fill="#E8348B">up to the next station</text>
+        <line x1="670" y1="320" x2="670" y2="300" stroke="#1E1B18" stroke-width="2" marker-end="url(#t3)"/>
+        <text x="670" y="332" text-anchor="middle" font-size="9.5" fill="#5D564D">in from below</text>
+        <text x="476" y="360" font-size="9.5" fill="#5D564D">Step 2 is the only difference between the two stations, and</text>
+        <text x="476" y="374" font-size="9.5" fill="#5D564D">it is what keeps the translation tied to the original sentence.</text>
+      </svg>
+      <figcaption><b>FIG 5</b>Inside a station. A reader has two parts; a writer has the same two plus a middle step that looks back at the input. That is the entire difference — and it is why a model with no readers at all, which is what GPT is, has no middle step either.</figcaption>
+    </figure>
+
+    <div class="box">
+      <div class="box-t">Lab · inside the block <small>click a part</small></div>
+      <div class="ctl" id="trCtl"></div>
+      <div class="detail" id="trDet" style="min-height:150px"></div>
+      <div class="how">What one block does, step by step</div>
+      <ul class="steps">
+        <li><b>Look up each word's numbers.</b> Every token is swapped for its list of numbers — the grandchild of the 2013 idea, except these are learned inside the model rather than downloaded separately.</li>
+        <li><b>Add the position.</b> Since every word is now handled at the same time, the model would otherwise have no idea which came first. So a marker for "I am word number seven" gets added to each one.</li>
+        <li><b>Run attention.</b> Every word looks at every other word and blends in what it found. Several of these run side by side, each learning to spot a different kind of link — one tracks grammar, another tracks what "it" refers to.</li>
+        <li><b>Think about what was found.</b> A small network digests the result. Attention decides <em>what to look at</em>; this step decides <em>what to make of it</em>.</li>
+        <li><b>Do it again, dozens of times.</b> Block after block. Early blocks catch surface patterns, later ones handle meaning and structure. Nobody assigned those jobs — they emerged.</li>
+        <li><b>When writing, cover the future.</b> A model learning to predict the next word must not be allowed to peek at it, so attention to anything ahead is switched off. That one rule is why text is generated strictly left to right.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ M6 ============ -->
+  <section class="mod" id="m6">
+    <div class="mod-h"><div class="mod-t">06</div><div>
+      <div class="mod-k">2018 · the fork in the road</div><h2>Two branches: BERT and GPT</h2></div></div>
+
+    <p class="big">The original design had two halves, because translation needs both: one to read the English, one to write the Dutch. In 2018 two teams each threw one half away — and those two halves are still the two families you will meet today.</p>
+
+    <div class="analogy"><b>The picture to hold on to</b>A librarian and a writer. The librarian reads everything and can tell you which shelf a thing belongs on, what it resembles, and where to find more like it — but never writes you a page. The writer produces the page, but has to be handed the material first. Different jobs, different budgets, and clients regularly hire the writer to do the librarian's work.</div>
+
+    <figure class="fig">
+      <svg viewBox="0 0 900 330" font-family="Space Mono,monospace" font-size="10" fill="#1E1B18" role="img" aria-label="The librarian and the writer: encoder-only and decoder-only models side by side">
+        <text x="20" y="20" font-size="10.5" font-weight="700" letter-spacing="1.2" fill="#2F4B8F">THE LIBRARIAN · ENCODER-ONLY · BERT AND ITS FAMILY</text>
+        <rect x="20" y="30" width="420" height="120" fill="rgba(47,75,143,.09)" stroke="#2F4B8F" stroke-width="2"/>
+        <g font-size="10">
+          <g fill="#FFFFFF" stroke="#2F4B8F" stroke-width="1.4">
+            <rect x="36" y="48" width="62" height="24"/><rect x="104" y="48" width="76" height="24"/><rect x="186" y="48" width="62" height="24"/>
+            <rect x="254" y="48" width="76" height="24"/><rect x="336" y="48" width="88" height="24"/>
+          </g>
+          <g text-anchor="middle"><text x="67" y="64">the</text><text x="142" y="64">store</text><text x="217" y="64">was</text><text x="292" y="64">[BLANK]</text><text x="380" y="64">and busy</text></g>
+        </g>
+        <g stroke="#2F4B8F" stroke-width="1.2" fill="none" opacity=".65">
+          <path d="M292 48 Q217 24 142 48"/><path d="M292 48 Q254 30 217 48"/><path d="M292 48 Q336 30 380 48"/><path d="M292 48 Q180 18 67 48"/>
+        </g>
+        <text x="36" y="94" font-size="9" fill="#5D564D">Trained by blanking out a word and making the model guess it, so it must</text>
+        <text x="36" y="107" font-size="9" fill="#5D564D">use words on both sides. It looks forward and back, never having to write.</text>
+        <text x="36" y="134" font-size="9.5" font-weight="700" fill="#2F4B8F">Gives you numbers standing for meaning — search, sorting, grouping.</text>
+
+        <text x="460" y="20" font-size="10.5" font-weight="700" letter-spacing="1.2" fill="#E8348B">THE WRITER · DECODER-ONLY · GPT AND ITS FAMILY</text>
+        <rect x="460" y="30" width="420" height="120" fill="rgba(232,52,139,.10)" stroke="#E8348B" stroke-width="2"/>
+        <g font-size="10">
+          <g fill="#FFFFFF" stroke="#E8348B" stroke-width="1.4">
+            <rect x="476" y="48" width="62" height="24"/><rect x="544" y="48" width="76" height="24"/><rect x="626" y="48" width="62" height="24"/>
+          </g>
+          <g fill="rgba(30,27,24,.10)" stroke="#5D564D" stroke-width="1" stroke-dasharray="3 2">
+            <rect x="694" y="48" width="76" height="24"/><rect x="776" y="48" width="88" height="24"/>
+          </g>
+          <g text-anchor="middle"><text x="507" y="64">the</text><text x="582" y="64">store</text><text x="657" y="64">was</text>
+            <text x="732" y="64" fill="#5D564D">?</text><text x="820" y="64" fill="#5D564D">?</text></g>
+        </g>
+        <g stroke="#E8348B" stroke-width="1.2" fill="none" opacity=".65">
+          <path d="M657 48 Q582 26 507 48"/><path d="M657 48 Q620 30 582 48"/>
+        </g>
+        <line x1="690" y1="40" x2="690" y2="80" stroke="#5D564D" stroke-width="1.6" stroke-dasharray="4 3"/>
+        <text x="700" y="88" font-size="9" fill="#5D564D">everything ahead is covered up</text>
+        <text x="476" y="108" font-size="9" fill="#5D564D">Trained by predicting the next word — so anything ahead must be</text>
+        <text x="476" y="121" font-size="9" fill="#5D564D">hidden, or the answer would sit in plain view. It reads backwards only.</text>
+        <text x="476" y="140" font-size="9.5" font-weight="700" fill="#E8348B">Gives you text — drafting, summarising, rewriting, explaining.</text>
+
+        <rect x="20" y="172" width="860" height="60" fill="rgba(255,212,0,.30)" stroke="#1E1B18" stroke-width="1.6"/>
+        <text x="34" y="192" font-size="10.5" font-weight="700">AND THE PAIRING YOU WILL ACTUALLY BUILD</text>
+        <text x="34" y="211" font-size="9.5" fill="#5D564D">"Answer questions about our past engagements" needs both: the librarian finds the six relevant decks out of four thousand, then hands them</text>
+        <text x="34" y="225" font-size="9.5" fill="#5D564D">to the writer, who reads only those and answers with citations. That two-step is what "retrieval" means when a vendor says it.</text>
+
+        <text x="20" y="262" font-size="10.5" font-weight="700">THE COMMERCIAL POINT</text>
+        <text x="20" y="282" font-size="9.5" fill="#5D564D">Librarian models are small — often a few hundred megabytes — so they run on your client's own servers and nothing leaves the building.</text>
+        <text x="20" y="296" font-size="9.5" fill="#5D564D">Writer models are large and rented by the token. Tagging 40,000 support tickets is librarian work, and clients routinely buy the writer for it.</text>
+        <text x="20" y="318" font-size="9.5" fill="#2F4B8F">Knowing which family a problem belongs to is worth more in a scoping meeting than knowing how attention works.</text>
+      </svg>
+      <figcaption><b>FIG 6</b>One design, split in two in 2018. The difference is not the architecture so much as what each half is allowed to see during training — everything, or only what came before.</figcaption>
+    </figure>
+
+    <div class="box">
+      <div class="box-t">The two families, side by side</div>
+      <table class="t">
+        <tr><th>&nbsp;</th><th style="color:#2F4B8F">Encoder-only · BERT and its descendants</th><th style="color:#E8348B">Decoder-only · GPT and its descendants</th></tr>
+        <tr><td class="hl">Called</td><td>Representation models</td><td>Generative models</td></tr>
+        <tr><td class="hl">What it produces</td><td>An embedding — a set of numbers standing for the meaning of the text</td><td>Text, one token at a time</td></tr>
+        <tr><td class="hl">How it reads</td><td>Both directions at once. The whole input is there, so nothing is hidden from it</td><td>Left to right only, with everything ahead masked off</td></tr>
+        <tr><td class="hl">How it was trained</td><td>Words are blanked out of real sentences and it has to guess them — "masked language modelling"</td><td>Given everything so far, predict the next token. Repeat across a very large amount of text</td></tr>
+        <tr><td class="hl">Then what</td><td>Fine-tuned onto your specific task with a modest number of labelled examples</td><td>Prompted. Instruction-tuned once by the lab, then steered by whatever you type</td></tr>
+        <tr><td class="hl">Use it for</td><td>Search and retrieval, classification, clustering, tagging, deduplication, similarity, routing</td><td>Drafting, summarising, rewriting, translating, extracting, explaining, coding</td></tr>
+        <tr><td class="hl">In an engagement</td><td>Sorting 400 survey responses into themes; finding which of 4,000 past slides are relevant; flagging near-duplicate contracts</td><td>Turning nine interview transcripts into a one-page note; drafting the client email; rewriting a finding for three audiences</td></tr>
+        <tr><td class="hl">Size and cost</td><td>Small — often a few hundred megabytes. Runs on a laptop or a modest server</td><td>Large to enormous. Usually rented through an interface or an interface to somebody else's machine</td></tr>
+      </table>
+      <p class="mono" style="color:var(--ink2);margin-top:12px">Note the first line of GPT's history: it was trained on 7,000 books plus a large crawl of the web, and it had 117 million parameters. That was 2018, and it was considered big.</p>
+    </div>
+
+    <div class="box">
+      <div class="box-t">The one you actually use: a stack of writers, and nothing else</div>
+      <p>Take the picture from the last module and delete the entire left-hand side. No readers, no handover, no middle step. Just writer stations, stacked, each one looking backwards only. That is GPT — and it is the shape of every tool you have typed into.</p>
+
+      <figure class="fig" style="margin:16px 0 0">
+        <svg viewBox="0 0 900 496" font-family="Space Mono,monospace" font-size="10" fill="#1E1B18" role="img" aria-label="The decoder-only stack generating one word at a time">
+          <defs><marker id="g1" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#1E1B18"/></marker></defs>
+
+          <text x="20" y="20" font-size="10.5" font-weight="700" letter-spacing="1.2">ONE TRIP THROUGH THE STACK PRODUCES EXACTLY ONE WORD</text>
+
+          <rect x="40" y="404" width="330" height="44" fill="#FFFFFF" stroke="#1E1B18" stroke-width="2"/>
+          <text x="205" y="422" text-anchor="middle" font-size="10" font-weight="700">WHAT IT HAS SO FAR</text>
+          <text x="205" y="438" text-anchor="middle" font-size="10" fill="#2F4B8F">"The margin decline is driven mainly by"</text>
+          <line x1="205" y1="404" x2="205" y2="386" stroke="#1E1B18" stroke-width="2" marker-end="url(#g1)"/>
+
+          <rect x="40" y="340" width="330" height="42" fill="rgba(47,75,143,.12)" stroke="#2F4B8F" stroke-width="2"/>
+          <text x="205" y="358" text-anchor="middle" font-size="10" font-weight="700">TURN WORDS INTO NUMBERS</text>
+          <text x="205" y="373" text-anchor="middle" font-size="9" fill="#5D564D">plus a marker saying where each word sits</text>
+          <line x1="205" y1="340" x2="205" y2="322" stroke="#1E1B18" stroke-width="2" marker-end="url(#g1)"/>
+
+          <g fill="rgba(232,52,139,.12)" stroke="#E8348B" stroke-width="2">
+            <rect x="40" y="272" width="330" height="44"/><rect x="40" y="216" width="330" height="44"/><rect x="40" y="160" width="330" height="44"/>
+          </g>
+          <g text-anchor="middle" font-size="10" font-weight="700" fill="#E8348B">
+            <text x="205" y="292">WRITER STATION 1</text><text x="205" y="236">WRITER STATION 2</text><text x="205" y="180">WRITER STATION 96</text>
+          </g>
+          <g text-anchor="middle" font-size="8.5" fill="#5D564D">
+            <text x="205" y="306">look back · think it over</text><text x="205" y="250">look back · think it over</text><text x="205" y="194">look back · think it over</text>
+          </g>
+          <text x="205" y="212" text-anchor="middle" font-size="14" fill="#E8348B">⋮</text>
+          <g stroke="#1E1B18" stroke-width="2" marker-end="url(#g1)">
+            <line x1="205" y1="272" x2="205" y2="262"/><line x1="205" y1="216" x2="205" y2="206"/><line x1="205" y1="160" x2="205" y2="142"/>
+          </g>
+
+          <rect x="40" y="96" width="330" height="42" fill="rgba(255,212,0,.34)" stroke="#B8860B" stroke-width="2"/>
+          <text x="205" y="114" text-anchor="middle" font-size="10" font-weight="700">SCORE EVERY POSSIBLE NEXT WORD</text>
+          <text x="205" y="129" text-anchor="middle" font-size="9" fill="#5D564D">about 100,000 candidates, each with a percentage</text>
+          <line x1="205" y1="96" x2="205" y2="78" stroke="#1E1B18" stroke-width="2" marker-end="url(#g1)"/>
+
+          <rect x="40" y="34" width="330" height="40" fill="#1E1B18"/>
+          <text x="205" y="50" text-anchor="middle" font-size="10" font-weight="700" fill="#FBFAF4">PICK ONE</text>
+          <text x="205" y="66" text-anchor="middle" font-size="10" fill="#FBFAF4">"freight"</text>
+
+          <path d="M370 54 L420 54 L420 426 L374 426" fill="none" stroke="#E8348B" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#g1)"/>
+          <text x="432" y="330" font-size="9" fill="#E8348B">the chosen word is</text>
+          <text x="432" y="343" font-size="9" fill="#E8348B">added to the input</text>
+          <text x="432" y="356" font-size="9" fill="#E8348B">and the whole trip</text>
+          <text x="432" y="369" font-size="9" fill="#E8348B">runs again</text>
+
+          <rect x="560" y="96" width="320" height="180" fill="#FBFAF4" stroke="#1E1B18" stroke-width="1.6"/>
+          <text x="576" y="118" font-size="10" font-weight="700">WHAT "LOOK BACK ONLY" MEANS</text>
+          <g font-size="9">
+            <text x="576" y="140">The</text><text x="640" y="140">margin</text><text x="712" y="140">is</text><text x="760" y="140">driven</text><text x="836" y="140">by</text>
+          </g>
+          <g stroke="#1E1B18" stroke-width="1">
+            <rect x="570" y="150" width="60" height="22" fill="rgba(232,52,139,.35)"/><rect x="634" y="150" width="60" height="22" fill="rgba(30,27,24,.06)"/>
+            <rect x="698" y="150" width="60" height="22" fill="rgba(30,27,24,.06)"/><rect x="762" y="150" width="60" height="22" fill="rgba(30,27,24,.06)"/>
+            <rect x="570" y="176" width="60" height="22" fill="rgba(232,52,139,.35)"/><rect x="634" y="176" width="60" height="22" fill="rgba(232,52,139,.35)"/>
+            <rect x="698" y="176" width="60" height="22" fill="rgba(30,27,24,.06)"/><rect x="762" y="176" width="60" height="22" fill="rgba(30,27,24,.06)"/>
+            <rect x="570" y="202" width="60" height="22" fill="rgba(232,52,139,.35)"/><rect x="634" y="202" width="60" height="22" fill="rgba(232,52,139,.35)"/>
+            <rect x="698" y="202" width="60" height="22" fill="rgba(232,52,139,.35)"/><rect x="762" y="202" width="60" height="22" fill="rgba(30,27,24,.06)"/>
+            <rect x="570" y="228" width="60" height="22" fill="rgba(232,52,139,.35)"/><rect x="634" y="228" width="60" height="22" fill="rgba(232,52,139,.35)"/>
+            <rect x="698" y="228" width="60" height="22" fill="rgba(232,52,139,.35)"/><rect x="762" y="228" width="60" height="22" fill="rgba(232,52,139,.35)"/>
+          </g>
+          <text x="576" y="260" font-size="8.5" fill="#5D564D">pink = allowed to look · grey = covered up</text>
+          <text x="576" y="271" font-size="8.5" fill="#5D564D">each row is one word: it sees itself and all before it</text>
+
+          <rect x="560" y="292" width="320" height="120" fill="rgba(255,212,0,.28)" stroke="#1E1B18" stroke-width="1.6"/>
+          <text x="576" y="314" font-size="10" font-weight="700">WHY COVER THE FUTURE UP AT ALL?</text>
+          <text x="576" y="334" font-size="9.5" fill="#5D564D">Because it is trained by hiding the next word and</text>
+          <text x="576" y="347" font-size="9.5" fill="#5D564D">asking it to guess. If it could see ahead, the answer</text>
+          <text x="576" y="360" font-size="9.5" fill="#5D564D">would be sitting right there and it would learn nothing.</text>
+          <text x="576" y="382" font-size="9.5" fill="#1E1B18">One rule, one consequence: text comes out strictly</text>
+          <text x="576" y="395" font-size="9.5" fill="#1E1B18">left to right, one word at a time, forever.</text>
+
+          <text x="40" y="472" font-size="9" fill="#5D564D">GPT-1 stacked twelve of these stations and had 117 million dials. The shape has not changed since — only the number of stations, the number</text>
+          <text x="40" y="484" font-size="9" fill="#5D564D">of dials, and the amount of text they were set on.</text>
+        </svg>
+        <figcaption><b>FIG 7</b>The decoder-only stack. This single diagram explains four things you already knew from using these tools: why answers appear word by word, why a long answer takes longer, why it never revises what it has already written, and why the whole conversation has to be re-read on every turn.</figcaption>
+      </figure>
+
+      <div class="how">Watch one word get produced, step by step</div>
+      <ul class="steps">
+        <li><b>Everything so far goes in at the bottom.</b> Your instructions, any document you pasted, the conversation, and whatever it has written of this answer already. All of it, every time.</li>
+        <li><b>Each word becomes numbers, plus a note of its position.</b> Without the position note the model would not know which word came first, because it handles them all at once.</li>
+        <li><b>The stack of stations runs.</b> At each station every word looks back at the earlier words and blends in what matters, then thinks it over. Dozens of stations, one after another.</li>
+        <li><b>At the top, every possible next word gets a score.</b> Roughly a hundred thousand candidates, turned into percentages that add up to one hundred.</li>
+        <li><b>One is picked.</b> Usually the top one; at higher temperature, sometimes a runner-up. This is the only place chance enters.</li>
+        <li><b>That word is added to the input, and the whole trip runs again.</b> A four-hundred-word answer means roughly five hundred and fifty complete trips through the stack.</li>
+      </ul>
+
+      <div class="analogy" style="margin-top:16px"><b>What this explains about the tool on your desk</b>It answers word by word because it literally produces one word per trip. It cannot go back and fix an earlier sentence, because that sentence is now part of its input. A long reply costs more and takes longer in direct proportion to its length. And it re-reads your entire conversation on every single turn — which is why a long chat over a big document quietly gets expensive.</div>
+    </div>
+
+    <div class="box">
+      <div class="box-t">Lab · which family does this task need? <small>pick a task</small></div>
+      <div class="ctl" id="famCtl"></div>
+      <div class="detail" id="famDet" style="min-height:150px"></div>
+      <div class="how">How to tell which one you need, step by step</div>
+      <ul class="steps">
+        <li><b>Ask what you are handing the client.</b> A label, a number, a group or a ranking? That is the librarian — an encoder model. A page of prose? That is the writer — a decoder model.</li>
+        <li><b>Ask how many times you will do it.</b> Forty thousand tickets is librarian territory: small model, your own servers, pennies. Nine transcripts into one note is writer territory.</li>
+        <li><b>Ask where the answer has to come from.</b> If it must come from your own documents, you almost always need both — the librarian finds the right pages, the writer turns them into an answer. That two-step is what "retrieval" actually means.</li>
+        <li><b>Then check the data can leave.</b> Encoder models are small enough to run inside your client's network. That single fact settles a lot of procurement conversations before they start.</li>
+      </ul>
+    </div>
+
+    <div class="flag"><b>Why a consultant should care about a distinction this technical.</b> Because the answer changes the budget. "Tag every one of our 40,000 support tickets by issue type" sounds like a job for the tool everyone is talking about, and it is not — a small encoder model does it faster, cheaper, on your own servers, with no data leaving the building. Knowing which branch a problem belongs to is worth more in a scoping meeting than knowing how attention works.</p></div>
+  </section>
+
+  <!-- ============ M7 ============ -->
+  <section class="mod" id="m7">
+    <div class="mod-h"><div class="mod-t">07</div><div>
+      <div class="mod-k">Scale</div><h2>Why "large" is in the name</h2></div></div>
+
+    <p class="big">Almost nothing about the design changed after 2017. What changed was size. More dials, more text, more computers — and on the way up, abilities nobody asked for started appearing. A small model finishes your sentence. A large one drafts your memo. Neither was taught to do anything except guess the next word.</p>
+
+    <div class="analogy"><b>The picture to hold on to</b>Parameters are dials. Billions of them, each set automatically during training, none of them labelled. More dials means more room to store patterns — grammar, genre, facts, the shape of an argument. It also means you can never open the machine and turn one dial to fix a wrong fact, because no single dial holds it.</div>
+
+    <div class="box">
+      <div class="box-t">Lab · turn the dial <small>drag through six years of growth</small></div>
+      <div class="slider"><label for="scaleS">Model size, in parameters <output id="scaleO">117 million</output></label>
+        <input type="range" id="scaleS" min="0" max="5" step="1" value="0"></div>
+      <div id="scaleArt" style="background:#fff;border:2px solid var(--ink);padding:10px;margin:12px 0"></div>
+      <div class="detail" id="scaleDet"></div>
+      <div class="how">Three things to say about scale without getting caught out</div>
+      <ul class="steps">
+        <li><b>The early numbers are public; the recent ones are not.</b> GPT-1 at 117 million and GPT-2 at 1.5 billion are documented. Today's frontier labs stopped publishing. If you see a figure quoted in the trillions, say "estimated" or say nothing.</li>
+        <li><b>Bigger is not automatically the right buy.</b> Large models cost more per question and answer more slowly. For sorting, tagging and extracting, a small model often matches them. The big one earns its price on long documents and hard reasoning.</li>
+        <li><b>Scale did not fix invention.</b> A larger model is wrong less often and more convincingly. Everything you learned last session about checking still applies, at every size.</li>
+      </ul>
+    </div>
+
+    <div class="two">
+      <div class="box">
+        <div class="box-t">What a parameter actually is</div>
+        <p>A dial. Billions of them, set during training, each one a number that shifts how strongly one part of the network responds to another. Nobody assigns meanings to them and nobody can read them back out. "More parameters" means more capacity to store patterns — grammar, genre, world knowledge, the shape of an argument — in a compressed and unreadable form.</p>
+        <p class="mono" style="color:var(--ink2)">This is also why you cannot open a model up and correct a fact. The fact is not stored anywhere you can point to. It is smeared across a great many dials.</p>
+      </div>
+      <div class="box">
+        <div class="box-t">Three honest cautions on scale</div>
+        <ul class="kl">
+          <li><b>Published numbers stopped being published.</b> GPT-1 at 117 million and GPT-2 at 1.5 billion are documented. For the recent frontier models the labs no longer disclose parameter counts — figures you see quoted in the trillions are estimates, not facts. Say "we do not know" rather than repeat a number you cannot source.</li>
+          <li><b>Bigger is not always the right buy.</b> Larger costs more per query, responds more slowly, and for extraction or classification work a small model often matches it. The frontier model earns its price on reasoning and long documents, not on tagging tickets.</li>
+          <li><b>Scale did not fix invention.</b> A bigger model is wrong less often and more convincingly. The verification habit from Session 01 does not get retired at any size.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ M8 ============ -->
+  <section class="mod" id="m8">
+    <div class="mod-h"><div class="mod-t">08</div><div>
+      <div class="mod-k">The part vendors sell you</div><h2>From a raw model to something a business can use</h2></div></div>
+
+    <p class="big">A model fresh out of training is not a product. It will happily carry on your sentence, but nobody has told it that a question wants an answer. It has no access to your files and no memory. Everything between that raw model and the helpful assistant on your screen was added afterwards, on purpose, by people.</p>
+
+    <div class="analogy"><b>The picture to hold on to</b>An engine is not a car. The engine is the expensive part and somebody else already built it. What turns it into something you can drive — the steering, the brakes, the fuel line to your own tank — is what you are actually buying when a vendor pitches you.</div>
+
+    <div class="box">
+      <div class="box-t">Lab · build the stack <small>switch layers on and off</small></div>
+      <p style="margin-bottom:10px">Start with the raw model and add the layers one at a time. Watch what the same request produces at each stage.</p>
+      <div class="ctl" id="stackCtl"></div>
+      <div id="stackArt" style="background:#fff;border:2px solid var(--ink);padding:10px;margin:12px 0"></div>
+      <div class="detail" id="stackDet"></div>
+      <div class="how">What each layer adds, step by step</div>
+      <ul class="steps">
+        <li><b>Raw model.</b> Guesses the next word. Ask it to summarise something and it will continue the phrase "summarise this" rather than doing it.</li>
+        <li><b>Instruction tuning.</b> Trained on examples of instructions and good answers. Now it answers instead of continuing. Done once, by the lab.</li>
+        <li><b>Human preference training.</b> People rank alternative answers and the model is nudged towards the preferred ones. This is where the politeness, the hedging and the refusals come from.</li>
+        <li><b>House-style tuning.</b> Extra training on your firm's documents so output arrives in your structure and voice. Buys manner, not knowledge — and this is the layer most often over-sold.</li>
+        <li><b>Tools.</b> Web search for recent facts, your own document store for private ones, a calculator so the arithmetic is actually calculated. This is where most real value gets added.</li>
+        <li><b>Your prompt.</b> The brief you write, every single time. Costs nothing, changes the output the most, and is the only layer you fully control.</li>
+      </ul>
+    </div>
+
+    <div class="box">
+      <div class="box-t">The layers, in plain language</div>
+      <table class="t">
+        <tr><th>Layer</th><th>What is done</th><th>What it buys</th><th>Who does it</th></tr>
+        <tr><td class="hl">Pre-training</td><td>Predict the next token across an enormous pile of text, for months</td><td>Grammar, genre, world knowledge, the shape of reasoning</td><td>The lab. Costs are enormous and this happens once</td></tr>
+        <tr><td class="hl">Instruction tuning</td><td>Further training on examples of instructions and good responses</td><td>It starts answering questions instead of continuing them</td><td>The lab</td></tr>
+        <tr><td class="hl">Learning from human preference</td><td>People rank alternative answers; the model is nudged towards the preferred ones</td><td>Helpfulness, tone, refusals — the personality you experience</td><td>The lab</td></tr>
+        <tr><td class="hl">Corpus tuning</td><td>Extra training on a specific domain or house style</td><td>It sounds like your sector, or your firm</td><td>A vendor or your own team. Expensive, and it does not add facts</td></tr>
+        <tr><td class="hl">External assets</td><td>Bolt on search, your document store, a database, a calculator, a code interpreter</td><td>Current facts, private facts, and arithmetic it can be trusted on</td><td>Your firm. This is where most real value gets added</td></tr>
+        <tr><td class="hl">Prompt engineering</td><td>The brief you write, plus whatever hidden instructions the product wraps around it</td><td>Focus, format, audience, constraints</td><td>You, every single time</td></tr>
+      </table>
+      <p style="margin-top:12px"><b>Where to spend, in a client conversation:</b> the top two rows are done and paid for. The bottom two are yours, cost the least, and change the output the most. The corpus-tuning row is the one that gets over-sold — it buys manner, not knowledge, which is exactly the trap the ladder in Session 01 was built to avoid.</p>
+    </div>
+  </section>
+
+  <!-- ============ M9 ============ -->
+  <section class="mod" id="m9">
+    <div class="mod-h"><div class="mod-t">09</div><div>
+      <div class="mod-k">Discussion question 2</div><h2>It stopped reading on a particular day</h2></div></div>
+
+    <p class="big">All of that happened before you opened the app. Training ended on a particular date and stopped. From that moment the model's picture of the world is a <b>photograph, not a window</b>.</p>
+
+    <div class="analogy"><b>The picture to hold on to</b>Someone brilliant who read every newspaper up to a certain date, then went into a room with no windows. Ask about anything before that date and they are superb. Ask what happened last week and they will still answer, in the same confident voice, because they do not know they are in a room. And they have never seen your company's accounts at all — those were never in any newspaper.</div>
+
+    <figure class="fig">
+      <svg viewBox="0 0 900 300" font-family="Space Mono,monospace" font-size="10" fill="#1E1B18" role="img" aria-label="A timeline showing what a model knows, what happened after its cut-off, and what it never saw">
+        <defs><marker id="c1" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#1E1B18"/></marker></defs>
+        <rect x="20" y="60" width="480" height="52" fill="rgba(47,75,143,.14)" stroke="#2F4B8F" stroke-width="2"/>
+        <rect x="500" y="60" width="380" height="52" fill="rgba(232,52,139,.12)" stroke="#E8348B" stroke-width="2" stroke-dasharray="7 5"/>
+        <line x1="500" y1="46" x2="500" y2="126" stroke="#1E1B18" stroke-width="2.4"/>
+        <text x="500" y="40" text-anchor="middle" font-size="10.5" font-weight="700">THE CUT-OFF</text>
+        <text x="34" y="82" font-size="10.5" font-weight="700" fill="#2F4B8F">IT READ EVERYTHING HERE</text>
+        <text x="34" y="99" font-size="9.5" fill="#5D564D">public web, books, code, forums — up to a date the lab chose</text>
+        <text x="516" y="82" font-size="10.5" font-weight="700" fill="#E8348B">IT SAW NONE OF THIS</text>
+        <text x="516" y="99" font-size="9.5" fill="#5D564D">and will answer about it anyway, in the same voice</text>
+        <line x1="20" y1="140" x2="880" y2="140" stroke="#1E1B18" stroke-width="1.6" marker-end="url(#c1)"/>
+        <text x="20" y="156" font-size="9" fill="#5D564D">older</text><text x="874" y="156" font-size="9" fill="#5D564D" text-anchor="end">today</text>
+
+        <rect x="20" y="176" width="860" height="52" fill="rgba(255,212,0,.30)" stroke="#B8860B" stroke-width="2"/>
+        <text x="34" y="196" font-size="10.5" font-weight="700">AND RUNNING UNDERNEATH THE WHOLE LINE — EVERYTHING PRIVATE</text>
+        <text x="34" y="214" font-size="9.5" fill="#5D564D">your client's numbers, your firm's past work, what was said on the call. Never public, never in the training data, at any date.</text>
+
+        <text x="20" y="256" font-size="9.5" fill="#5D564D">Three different kinds of not-knowing, one identical tone of voice. A consultant's fact-checking has to start by asking which kind</text>
+        <text x="20" y="270" font-size="9.5" fill="#5D564D">of claim is in front of them, because the check is different for each — and for the third kind, there is no check, only a document.</text>
+        <text x="20" y="290" font-size="9.5" fill="#2F4B8F">Tools that search the web patch the middle band. They do nothing for the yellow one.</text>
+      </svg>
+      <figcaption><b>FIG 8</b>The three zones. Anything dated, numeric, recent or client-specific sits outside the blue band — and the model's confidence is identical across all three.</figcaption>
+    </figure>
+
+    <div class="box">
+      <div class="box-t">Lab · which zone is this claim in? <small>pick a question a client might ask</small></div>
+      <div class="ctl" id="cutCtl"></div>
+      <div class="detail" id="cutDet" style="min-height:170px"></div>
+      <div class="how">How to fact-check, step by step</div>
+      <ul class="steps">
+        <li><b>Sort the claim first.</b> Is it a timeless idea, a current fact, or something private to your client? You cannot choose a check until you know which of the three you are holding.</li>
+        <li><b>Treat anything with a date or a decimal point as unverified.</b> Market sizes, growth rates, tax rates, prices, headcounts. Precision is a writing style the model can produce; it is not evidence.</li>
+        <li><b>Ask what would have changed since.</b> Leadership, ownership, regulation, pricing, product names. If the honest answer is "this changes every year", the model's version is out of date by construction.</li>
+        <li><b>Use a tool that shows its sources — then open them.</b> A model with search gives you links. Links you have not opened are not sources.</li>
+        <li><b>For anything about the client, stop asking and start attaching.</b> No prompt reaches a document you did not provide. There is no clever wording that fixes this.</li>
+      </ul>
+    </div>
+
+    <div class="two">
+      <div class="box">
+        <div class="box-t">The fact-checking protocol, in order</div>
+        <ul class="kl">
+          <li><b>1 · Sort the claim before you check it.</b> Timeless idea, current fact, or private fact? Only the middle one is worth a web search; the first rarely needs checking and the third can never be checked, only supplied.</li>
+          <li><b>2 · Assume anything with a date or a decimal point is unverified.</b> Market sizes, growth rates, regulations, prices, headcounts, "as of" statements. Precision is a style the model can produce; it is not evidence.</li>
+          <li><b>3 · Ask what would have changed since.</b> Leadership, ownership, regulation, pricing, market share, product names. If the answer is "this changes yearly", the model's version is stale by construction.</li>
+          <li><b>4 · Prefer tools that show their sources.</b> A model with search attached gives you links you can open. One without gives you the same sentence with nothing behind it.</li>
+          <li><b>5 · Never cite what you have not opened.</b> Session 01's rule, and the reason a consulting firm refunded part of a government fee.</li>
+          <li><b>6 · For anything about the client, stop asking and start attaching.</b> No amount of prompting reaches a document you did not provide.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <div class="box-t">How to say this to a client</div>
+        <p>"The model has read an enormous amount, but it stopped reading on a date, and it has never read anything of yours. So we use it where the answer is a transformation of material we give it, and we source everything else independently. That is not a limitation we are working around quietly — it is written into how we quality-check the work."</p>
+        <p style="color:var(--ink2)">Two follow-ups worth preparing for. <b>"Can't you just connect it to the internet?"</b> — yes, and that fixes recency but not privacy, and it introduces whatever the internet got wrong. <b>"Then what are we paying for?"</b> — the judgement about which claims need checking, and the accountability for the ones that went out unchecked.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ M10 ============ -->
+  <section class="mod" id="m10">
+    <div class="mod-h"><div class="mod-t">10</div><div>
+      <div class="mod-k">The map</div><h2>Where all of this actually gets used</h2></div></div>
+
+    <p class="big">Generative AI is the wider family — images, audio, video, molecules, 3D. Language models are the text branch. Clients routinely conflate the two, and the distinction matters because they have different vendors, different risks and different budgets.</p>
+
+    <div class="box">
+      <div class="box-t">Lab · by sector <small>pick an industry</small></div>
+      <div class="ctl" id="appCtl"></div>
+      <div class="two" id="appOut" style="align-items:start"></div>
+      <div class="detail" id="appDet"></div>
+    </div>
+  </section>
+
+  <!-- ============ M11 ============ -->
+  <section class="mod" id="m11">
+    <div class="mod-h"><div class="mod-t">11</div><div>
+      <div class="mod-k">For the discussion</div><h2>Answering the two questions well</h2></div></div>
+
+    <div class="two">
+      <div class="box">
+        <div class="box-t">Q1 · What does attention let a model do that older approaches could not?</div>
+        <p class="mono" style="color:var(--ink2)">Structure: what came before and why it failed → what attention does → a business-writing example → the consequence for the work.</p>
+        <ul class="kl">
+          <li><b>Name both older failures, not one.</b> Bag-of-words ignored order completely. Sequential models respected order but forgot the beginning by the time they reached the end. Attention fixes both at once — and mentioning both is what separates a good answer from a repeated headline.</li>
+          <li><b>Say what it does in one sentence.</b> Every word can look at every other word directly and weigh how much each one matters, at any distance, in a single step.</li>
+          <li><b>Use a document example, not a toy sentence.</b> "The aforementioned penalties shall not apply" on page 31 binding back to the penalty clause on page 4. That is a real thing you will be asked to do, and it is the capability in one image.</li>
+          <li><b>Close on the consequence.</b> Because attention removed the sequential bottleneck, training could run in parallel — which is why models could grow, and why the tool works on a whole contract rather than a paragraph.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <div class="box-t">Q2 · How should the cut-off shape the way a consultant fact-checks?</div>
+        <p class="mono" style="color:var(--ink2)">Structure: what a cut-off is → the three zones → the protocol → what changes in your working method.</p>
+        <ul class="kl">
+          <li><b>Start with the mechanism.</b> Training ended on a date and froze. The model is not connected to anything unless a tool has been bolted on.</li>
+          <li><b>Then split it into three, not two.</b> Inside the training window, after it, and never in it at all because it is private. Most people remember the first two and forget the third, which is the one that hurts on an engagement.</li>
+          <li><b>Give a rule someone can apply on Monday.</b> Anything with a date, a decimal point or a proper noun attached to it gets sourced independently. Everything about the client gets attached rather than asked.</li>
+          <li><b>Say what does not change.</b> A tool with web search fixes recency, not privacy, and it inherits whatever the internet got wrong. The checking step is not overhead you can automate away — it is the part you are accountable for.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="flag"><b>Three answers that will sound thin.</b> "It pays attention to important words" — that is the word restated, not explained; say what it can now do that it could not before. "It doesn't know recent things" — true and incomplete; the private-data zone is the one that costs money. "You should always double-check AI" — everyone says this; what makes it an answer is naming <em>which</em> claims, in <em>what</em> order, against <em>what</em> source.</div>
+  </section>
+
+  <!-- ============ M12 ============ -->
+  <section class="mod" id="m12">
+    <div class="mod-h"><div class="mod-t">12</div><div>
+      <div class="mod-k">Landing</div><h2>Key takeaways &amp; glossary</h2></div></div>
+
+    <div class="headline">
+      <h3>If you remember only one thing</h3>
+      <p>Every step in this story is an attempt to answer one question: <b>how do you turn meaning into numbers without losing it?</b> Counting words lost the order. Embeddings caught the meaning of words but not of sentences. Reading in order caught the sentence but forgot the paragraph. <b>Attention finally let every part of a text weigh every other part</b> — and once that no longer had to happen in sequence, the models could grow until they could write your first draft.</p>
+    </div>
+
+    <div class="tk">
+      <div class="tk-item"><i>01</i><div><h4>Language became arithmetic</h4><p>Bag-of-words made text computable by counting. Crude, fast, still in production — and it threw away word order, which for a consultant reading verbatims can invert the finding.</p></div></div>
+      <div class="tk-item"><i>02</i><div><h4>Embeddings are meaning as coordinates</h4><p>Words used in similar company end up near each other. This is what makes semantic search, clustering and retrieval possible — the plumbing under every "ask our documents" tool.</p></div></div>
+      <div class="tk-item"><i>03</i><div><h4>Static embeddings could not handle context</h4><p>One frozen set of numbers for "bank", "interest", "margin", "security". Meaning depends on the sentence, and word2vec never read the sentence.</p></div></div>
+      <div class="tk-item"><i>04</i><div><h4>Reading in order meant forgetting</h4><p>Everything the input meant had to squeeze through one fixed summary. Long inputs degraded silently, and the sequential design capped how large models could get.</p></div></div>
+      <div class="tk-item"><i>05</i><div><h4>Attention is selective focus, at any distance</h4><p>Every word looks at every other word and weighs which matter. A clause on page 31 can bind to one on page 4 in a single step. That is the answer to Q1.</p></div></div>
+      <div class="tk-item"><i>06</i><div><h4>Removing sequence unlocked scale</h4><p>The Transformer's real gift was parallel training. Not just better quality — the ability to grow by four orders of magnitude in six years.</p></div></div>
+      <div class="tk-item"><i>07</i><div><h4>Two branches, two budgets</h4><p>Encoder-only models understand and are small and cheap; decoder-only models write and are large and rented. Tagging 40,000 tickets is the first kind, and clients routinely buy the second.</p></div></div>
+      <div class="tk-item"><i>08</i><div><h4>Parameters are unreadable dials</h4><p>Which is why you cannot open the model and fix a fact. And why recent parameter counts quoted in the trillions are estimates, not published figures.</p></div></div>
+      <div class="tk-item"><i>09</i><div><h4>The raw model is not the product</h4><p>Instruction tuning, preference training, domain tuning, tools, and your prompt sit between it and you. The last two are yours, cost least, and change the output most.</p></div></div>
+      <div class="tk-item"><i>10</i><div><h4>The cut-off creates three zones</h4><p>Read, not read, and never public. The tone of voice is identical across all three, which is the entire fact-checking problem in one sentence.</p></div></div>
+      <div class="tk-item"><i>11</i><div><h4>Search fixes recency, not privacy</h4><p>Connecting a model to the web patches the middle zone. Your client's numbers were never on the web, so they need attaching, not searching.</p></div></div>
+      <div class="tk-item"><i>12</i><div><h4>Nothing here retires the verification habit</h4><p>Bigger models are wrong less often and more persuasively. Everything from Session 01 about checking, sourcing and accountability still stands.</p></div></div>
+    </div>
+
+    <div class="box">
+      <div class="box-t">Glossary <small>type to filter · hover or tap any underlined term on this page</small></div>
+      <input class="search" id="glossQ" type="search" placeholder="Search a term or its meaning — try embedding, attention, masked">
+      <div class="gloss no-abbr" id="gloss"></div>
+    </div>
+
+    <div class="box">
+      <div class="box-t">Where this material comes from</div>
+      <ul class="kl">
+        <li><b>Session deck</b> <span class="src">"What is Language AI?" — the arc from bag-of-words through word2vec, recurrent networks, attention and the Transformer to BERT and GPT, plus the applications map in the closing table.</span></li>
+        <li><b>Vaswani et al. (2017)</b> <span class="src">"Attention Is All You Need" — the paper that removed recurrence and proposed the Transformer.</span></li>
+        <li><b>Mikolov et al. (2013)</b> <span class="src">word2vec — the first widely successful attempt at capturing meaning in embeddings.</span></li>
+        <li><b>Devlin et al. (2018)</b> <span class="src">BERT — bidirectional encoder representations, trained by masking words and predicting them.</span></li>
+        <li><b>Radford et al. (2018)</b> <span class="src">GPT-1 — decoder-only generative pre-training, 7,000 books plus a web crawl, 117 million parameters.</span></li>
+      </ul>
+    </div>
+
+    <div class="foot">
+      <span>Module 1 · Session 02 · How LLMs work</span>
+      <span>Interactive notes · figures illustrative · check any statistic before it enters a deliverable</span>
+    </div>
+  </section>
+
+  </main>
+</div>
+
+<script>
+(function(){
+"use strict";
+const $=(s,r)=>(r||document).querySelector(s), $$=(s,r)=>[...(r||document).querySelectorAll(s)];
+const fmt=(n,d)=>Number(n).toFixed(d===undefined?1:d);
+const INK='#1E1B18', INK2='#5D564D', BLUE='#2F4B8F', PINK='#E8348B', YEL='#FFD400', P='#FBFAF4';
+
+/* rail + progress */
+const mods=$$(".mod"), links=$$("#rail a");
+function onScroll(){
+  const y=window.scrollY+150; let cur=null;
+  mods.forEach(m=>{ if(m.offsetTop<=y) cur=m.id; });
+  links.forEach(a=>{ const h=a.getAttribute("href");
+    a.classList.toggle("on", h.charAt(0)==="#" && h.slice(1)===cur); });
+  const d=document.documentElement;
+  const p=Math.min(100,Math.max(0,(window.scrollY/(d.scrollHeight-d.clientHeight))*100));
+  $("#pfill").style.width=p+"%"; $("#ptxt").textContent=Math.round(p)+"%";
+}
+window.addEventListener("scroll",onScroll,{passive:true}); onScroll();
+
+function chipGroup(host,items,render,initial){
+  const el=$(host); el.innerHTML="";
+  items.forEach((it,i)=>{
+    const b=document.createElement("button"); b.className="chip"; b.textContent=it.label;
+    b.addEventListener("click",()=>{ $$("button",el).forEach(x=>x.classList.remove("on")); b.classList.add("on"); render(it,i); });
+    el.appendChild(b);
+  });
+  const j=initial||0; const b=$$("button",el)[j]; if(b){b.classList.add("on"); render(items[j],j);}
+}
+const svgWrap=(vb,body)=>'<svg viewBox="'+vb+'" font-family="Space Mono,monospace" font-size="10" fill="'+INK+'" style="display:block;width:100%;height:auto">'+body+'</svg>';
+
+/* ---------- HERO timeline ---------- */
+const stops=[
+ {label:"1950s–2000s · Bag-of-words",x:70,
+  e:"A spam filter counting how many times an email says “free”, “winner” and “click”. It never reads the sentence — it just counts.",
+  d:"Split the text into words, count them, and represent the document as a row of numbers. The first time language became something a computer could calculate with. It threw away word order entirely — which is why 'good, not bad' and 'bad, not good' came out identical."},
+ {label:"2013 · word2vec",x:230,
+  e:"You search your files for “supplier payment delays” and a document saying “vendor invoice arrears” comes back. No shared words; the machine knew they meant the same thing.",
+  d:"Give every word a short list of numbers, learned by looking at which words it appears beside. Words with similar neighbours end up with similar numbers, so meaning finally has coordinates. This is what makes semantic search and clustering possible."},
+ {label:"2014 · Attention",x:400,
+  e:"Translating a long sentence and getting the ending right, because the machine could look back at the beginning instead of relying on a fading memory of it.",
+  d:"Bolted onto a sequential model: instead of squeezing a whole sentence into one summary, let the writing half look back at every word of the input and weigh which ones matter right now. Translation quality on long sentences jumped."},
+ {label:"2017 · The Transformer",x:560,
+  e:"Paste a forty-page contract and ask what the penalty cap is. It finds the clause, wherever it sits, because every word can see every other word.",
+  d:"Remove the sequential machinery entirely and keep only attention. Every word sees every other word in one step, so training can run in parallel — which is what allowed models to grow enormous. The 'T' in GPT."},
+ {label:"2018 · BERT and GPT",x:715,
+  e:"BERT sorts four hundred survey answers into eight themes. GPT writes the summary of those themes. Two different jobs, two different tools.",
+  d:"The architecture splits into two families. Keep the encoder and you get a model that represents meaning — search, classification, clustering. Keep the decoder and you get one that generates text. GPT-1 had 117 million parameters and read 7,000 books."},
+ {label:"2020s · Large language models",x:855,
+  e:"You paste nine interview transcripts and ask for a one-page note for the chief operating officer, and get something you can edit rather than rewrite.",
+  d:"Same architecture, vastly more scale, plus instruction tuning, preference training and tools bolted on. Abilities nobody explicitly trained for — drafting, reasoning, coding — appear on the way up."}
+];
+function timeArt(sel){
+  let s='<line x1="40" y1="96" x2="880" y2="96" stroke="'+INK+'" stroke-width="2.4"/>';
+  stops.forEach((st,i)=>{
+    const on=(i===sel);
+    s+='<line x1="'+st.x+'" y1="82" x2="'+st.x+'" y2="110" stroke="'+INK+'" stroke-width="'+(on?3:1.4)+'"/>';
+    s+='<circle cx="'+st.x+'" cy="96" r="'+(on?11:6)+'" fill="'+(on?PINK:P)+'" stroke="'+INK+'" stroke-width="2"/>';
+    const yr=st.label.split(" · ")[0], nm=st.label.split(" · ")[1];
+    s+='<text x="'+st.x+'" y="'+(i%2?66:140)+'" text-anchor="middle" font-size="9.5" font-weight="700" fill="'+(on?PINK:INK)+'">'+yr+'</text>';
+    s+='<text x="'+st.x+'" y="'+(i%2?52:154)+'" text-anchor="middle" font-size="8.5" fill="'+INK2+'">'+nm+'</text>';
+  });
+  s+='<text x="40" y="182" font-size="9.5" fill="'+INK2+'">One question runs through all six stops: how do you turn meaning into numbers without losing it? Each stop keeps more of the meaning than the last.</text>';
+  return svgWrap("0 0 920 195",s);
+}
+chipGroup("#timeCtl",stops,(it,i)=>{
+  $("#timeArt").innerHTML=timeArt(i);
+  $("#timeDet").innerHTML="<h4>"+it.label+"</h4><p>"+it.d+"</p>"+
+    "<p style='background:rgba(255,212,0,.28);border-left:5px solid var(--ink);padding:10px 13px;font-size:15px'><b style='font-family:var(--disp)'>What that looks like — </b>"+it.e+"</p>";
+},0);
+
+/* ---------- M1 bag of words ---------- */
+function tok(s){ return (s.toLowerCase().match(/[a-z']+/g)||[]); }
+function bowRender(){
+  const A=tok($("#bowA").value), B=tok($("#bowB").value);
+  const vocab=[...new Set(A.concat(B))].sort();
+  const cnt=(arr,w)=>arr.filter(x=>x===w).length;
+  const va=vocab.map(w=>cnt(A,w)), vb=vocab.map(w=>cnt(B,w));
+  const dot=va.reduce((s,x,i)=>s+x*vb[i],0);
+  const ma=Math.sqrt(va.reduce((s,x)=>s+x*x,0)), mb=Math.sqrt(vb.reduce((s,x)=>s+x*x,0));
+  const sim=(ma&&mb)?dot/(ma*mb):0;
+  const colW=Math.min(78,Math.max(44,760/Math.max(1,vocab.length)));
+  let s='<text x="14" y="20" font-size="10" font-weight="700" letter-spacing="1">THE SHARED VOCABULARY — EVERY DISTINCT WORD BECOMES A COLUMN</text>';
+  vocab.forEach((w,i)=>{
+    const x=14+i*colW;
+    s+='<rect x="'+x+'" y="30" width="'+(colW-4)+'" height="22" fill="rgba(30,27,24,.07)" stroke="'+INK2+'" stroke-width="1"/>';
+    s+='<text x="'+(x+(colW-4)/2)+'" y="45" text-anchor="middle" font-size="'+(colW<56?8:9)+'">'+w.slice(0,9)+'</text>';
+    [[va[i],62,BLUE],[vb[i],92,PINK]].forEach(([v,y,c])=>{
+      s+='<rect x="'+x+'" y="'+y+'" width="'+(colW-4)+'" height="24" fill="'+c+'" fill-opacity="'+(v?0.22:0.04)+'" stroke="'+c+'" stroke-width="1"/>';
+      s+='<text x="'+(x+(colW-4)/2)+'" y="'+(y+16)+'" text-anchor="middle" font-size="11" font-weight="700" fill="'+(v?c:INK2)+'">'+v+'</text>';
+    });
+  });
+  s+='<text x="14" y="132" font-size="9.5" fill="'+BLUE+'">▲ sentence A, as numbers</text>';
+  s+='<text x="240" y="132" font-size="9.5" fill="'+PINK+'">▲ sentence B, as numbers</text>';
+  s+='<text x="14" y="156" font-size="9.5" fill="'+INK2+'">From here on, the sentence is gone. Only these two rows of counts survive — and everything downstream works from them.</text>';
+  $("#bowArt").innerHTML=svgWrap("0 0 920 170",s);
+  $("#bowV").textContent=vocab.length; $("#bowTA").textContent=A.length; $("#bowTB").textContent=B.length;
+  $("#bowSim").innerHTML=Math.round(sim*100)+' <s>%</s>';
+  $("#bowSim").parentElement.className="read "+(sim>0.97?"bad":sim>0.6?"warn":"good");
+  let v;
+  if(sim>0.97) v="<b style='color:var(--pink)'>The machine cannot tell these apart.</b> Identical counts, so identical vectors, so a similarity of one hundred per cent — even if the two sentences say opposite things. Every model built on top of this inherits the blindness. Now imagine it is four hundred customer verbatims and the finding is whether people liked the store.";
+  else if(sim>0.6) v="Substantial overlap. The two sentences share most of their words, so bag-of-words sees them as near-identical regardless of how they are arranged or what they claim.";
+  else v="Low overlap, so the machine calls them different — but notice <em>why</em>: they use different words. It is not reading meaning, it is matching spellings. Two sentences saying the same thing in different words would score just as low.";
+  $("#bowDet").innerHTML="<h4>Reading the numbers</h4><p>"+v+"</p><p style='color:var(--ink2)'>Word order, grammar, negation and meaning are all discarded at the counting step. That is the whole method, and it is why the next fifty years of work happened.</p>";
+}
+["bowA","bowB"].forEach(id=>$("#"+id).addEventListener("input",bowRender));
+bowRender();
+
+/* ---------- shared: word vectors (used by both M2 labs) ---------- */
+const anchors=[[120,70],[430,60],[790,80],[130,300],[450,190],[820,300],[300,150],[650,260]];
+function vecOf(w){
+  const sig=140;
+  const raw=anchors.map(a=>Math.exp(-((w.x-a[0])*(w.x-a[0])+(w.y-a[1])*(w.y-a[1]))/(2*sig*sig)));
+  const m=raw.reduce((s,x)=>s+x,0)/raw.length;
+  return raw.map(v=>+((v-m)*1.6).toFixed(2));
+}
+function cos(a,b){
+  const d=a.reduce((s,v,i)=>s+v*b[i],0);
+  const m=Math.sqrt(a.reduce((s,v)=>s+v*v,0))*Math.sqrt(b.reduce((s,v)=>s+v*v,0));
+  return m?d/m:0;
+}
+/* ---------- M2 embedding map ---------- */
+const words=[
+ {w:"invoice",x:170,y:90,g:0},{w:"payment",x:230,y:120,g:0},{w:"billing",x:150,y:150,g:0},{w:"receipt",x:250,y:60,g:0},
+ {w:"client",x:470,y:80,g:1},{w:"customer",x:530,y:110,g:1},{w:"buyer",x:450,y:140,g:1},{w:"account",x:560,y:60,g:1},
+ {w:"forecast",x:760,y:100,g:2},{w:"projection",x:820,y:130,g:2},{w:"estimate",x:730,y:160,g:2},{w:"outlook",x:830,y:70,g:2},
+ {w:"warehouse",x:300,y:250,g:3},{w:"logistics",x:360,y:280,g:3},{w:"shipment",x:280,y:300,g:3},
+ {w:"monsoon",x:650,y:280,g:4},{w:"cricket",x:720,y:300,g:4}
+];
+const gcol=[BLUE,PINK,'#8A6A00',INK2,'#B8860B'];
+let embSel=0;
+function embArt(){
+  const sel=words[embSel];
+  let s='<text x="14" y="18" font-size="10" font-weight="700" letter-spacing="1">A MEANING MAP — DISTANCE IS SIMILARITY</text>';
+  const near=words.map((w,i)=>({i,d:Math.hypot(w.x-sel.x,w.y-sel.y)})).filter(o=>o.i!==embSel).sort((a,b)=>a.d-b.d).slice(0,3);
+  near.forEach(n=>{ s+='<line x1="'+sel.x+'" y1="'+sel.y+'" x2="'+words[n.i].x+'" y2="'+words[n.i].y+'" stroke="'+PINK+'" stroke-width="1.6" stroke-dasharray="4 3" opacity=".7"/>'; });
+  words.forEach((w,i)=>{
+    const on=(i===embSel);
+    s+='<circle cx="'+w.x+'" cy="'+w.y+'" r="'+(on?9:5)+'" fill="'+(on?PINK:gcol[w.g])+'" opacity="'+(on?1:.5)+'"/>';
+    s+='<text x="'+w.x+'" y="'+(w.y-13)+'" text-anchor="middle" font-size="9.5" font-weight="'+(on?700:400)+'" fill="'+(on?PINK:INK)+'">'+w.w+'</text>';
+  });
+  s+='<text x="14" y="340" font-size="9.5" fill="'+INK2+'">Nobody labelled these groups. They emerged from counting which words turn up beside which other words across billions of sentences.</text>';
+  return svgWrap("0 0 920 350",s);
+}
+chipGroup("#embCtl",words.map(w=>({label:w.w})),(it,i)=>{
+  embSel=i; $("#embArt").innerHTML=embArt();
+  const sel=words[i];
+  const near=words.map((w,k)=>({w:w.w,d:Math.hypot(w.x-sel.x,w.y-sel.y),k})).filter(o=>o.k!==i).sort((a,b)=>a.d-b.d);
+  const vs=v=>v.map(x=>(x<0?"":"+")+x.toFixed(2)).join("  ");
+  $("#embDet").innerHTML="<h4>"+sel.w+"</h4><div class='spec'>nearest: "+near.slice(0,3).map(n=>n.w).join(" · ")+"  |  furthest: "+near[near.length-1].w+"</div>"+
+   "<div class='mono' style='background:#fff;border:2px solid var(--rule2);padding:9px 11px;font-size:12px;margin-bottom:10px'>"+
+   "<b>"+sel.w+"</b>  "+vs(vecOf(sel))+"<br><b style='color:var(--ink2)'>"+near[0].w+"</b>  <span style='color:var(--ink2)'>"+vs(vecOf(words[near[0].k]))+"</span></div>"+
+   "<p>Search for <b>"+sel.w+"</b> in a system built on embeddings and you also get documents containing <b>"+near[0].w+"</b> and <b>"+near[1].w+"</b>, because their number-lists sit close together. A keyword search would have missed every one of them.</p>"+
+   "<p style='color:var(--ink2)'>This is the single most useful property for consulting work: your client writes 'vendor arrears', your team wrote 'supplier payment delay', and the system connects them without anybody maintaining a synonym list.</p>";
+},0);
+
+/* ---------- M2 the numbers themselves ---------- */
+let numA=0, numB=1;
+function numArt(){
+  const A=words[numA], B=words[numB], va=vecOf(A), vb=vecOf(B);
+  const X=150, W=88;
+  let s='<text x="14" y="20" font-size="10" font-weight="700" letter-spacing="1">EIGHT NUMBERS PER WORD — THE BAR SHOWS THE VALUE</text>';
+  [[A,va,BLUE,54],[B,vb,PINK,150]].forEach(([w,v,col,y0])=>{
+    s+='<text x="14" y="'+(y0+22)+'" font-size="12" font-weight="700" fill="'+col+'">'+w.w+'</text>';
+    v.forEach((val,i)=>{
+      const x=X+i*W, mid=y0+34, hgt=Math.abs(val)*26;
+      s+='<line x1="'+x+'" y1="'+mid+'" x2="'+(x+W-14)+'" y2="'+mid+'" stroke="'+INK2+'" stroke-width=".7" opacity=".5"/>';
+      s+='<rect x="'+(x+6)+'" y="'+(val>=0?mid-hgt:mid)+'" width="'+(W-26)+'" height="'+Math.max(1.5,hgt)+'" fill="'+col+'" fill-opacity=".65"/>';
+      s+='<text x="'+(x+(W-14)/2)+'" y="'+(y0+72)+'" text-anchor="middle" font-size="10" font-weight="700" fill="'+col+'">'+val.toFixed(2)+'</text>';
+      if(y0===54) s+='<text x="'+(x+(W-14)/2)+'" y="'+(y0-8)+'" text-anchor="middle" font-size="8.5" fill="'+INK2+'">n'+(i+1)+'</text>';
+    });
+  });
+  s+='<text x="14" y="262" font-size="9.5" fill="'+INK2+'">Same eight positions, two different words. Where both bars point the same way, the two words share something the model picked up from how they are used.</text>';
+  s+='<text x="14" y="278" font-size="9.5" fill="'+INK2+'">Ask what "n3" means on its own and there is no answer. It only means something alongside the other seven.</text>';
+  return svgWrap("0 0 920 290",s);
+}
+function numRender(){
+  const A=words[numA], B=words[numB], sim=cos(vecOf(A),vecOf(B));
+  $("#numArt").innerHTML=numArt();
+  $("#numSim").innerHTML=Math.round(sim*100)+' <s>%</s>';
+  $("#numSim").parentElement.className="read "+(sim>0.8?"good":sim>0.4?"warn":"bad");
+  let v;
+  if(sim>0.8) v="Nearly the same row. These two words turn up in the same company so often that the model has effectively decided they are close relatives — which is why a search for one finds documents containing the other.";
+  else if(sim>0.4) v="Related but not interchangeable. Some of the pattern is shared, some is not. This middle ground is where most useful distinctions live.";
+  else v="Two very different rows. Nothing in how these words are used overlaps, so the model keeps them far apart. A keyword search would treat every pair on this page as equally unrelated; this does not.";
+  $("#numDet").innerHTML="<h4>“"+A.w+"” against “"+B.w+"”</h4><div class='spec'>"+Math.round(sim*100)+"% alike</div><p>"+v+"</p>"+
+   "<p style='color:var(--ink2)'>Try “invoice” against “payment”, then “invoice” against “cricket”. The words never appear in the same sentence in either case — the difference is entirely in the company they keep across billions of others.</p>";
+}
+(function(){
+  const mk=(host,which)=>{
+    const el=$(host); el.innerHTML='<span class="mono" style="align-self:center;color:var(--ink2);margin-right:4px">'+(which==="A"?"first word":"second word")+'</span>';
+    words.forEach((w,i)=>{
+      const b=document.createElement("button");
+      b.className="chip"+((which==="A"?numA:numB)===i?" on":"")+(which==="B"?" pink":"");
+      b.textContent=w.w;
+      b.addEventListener("click",()=>{
+        if(which==="A") numA=i; else numB=i;
+        $$("button",el).forEach(x=>x.classList.remove("on")); b.classList.add("on"); numRender();
+      });
+      el.appendChild(b);
+    });
+  };
+  mk("#numCtlA","A"); mk("#numCtlB","B"); numRender();
+})();
+
+/* ---------- M3 bottleneck ---------- */
+function rnnRender(){
+  const n=+$("#rnnLen").value; $("#rnnLenO").textContent=n;
+  const keep=Math.max(0.08,Math.min(1,6/n));
+  const W=880, bar=Math.round(keep*100);
+  let s='<text x="14" y="20" font-size="10" font-weight="700" letter-spacing="1">HOW MUCH OF THE INPUT SURVIVES THE SINGLE SUMMARY</text>';
+  for(let i=0;i<n;i++){
+    const x=14+i*(W/n), w=Math.max(3,(W/n)-3);
+    const fade=Math.max(0.12,Math.min(1,(i+1)/n*1.4));
+    s+='<rect x="'+x.toFixed(1)+'" y="34" width="'+w.toFixed(1)+'" height="26" fill="'+BLUE+'" fill-opacity="'+fade.toFixed(2)+'"/>';
+  }
+  s+='<text x="14" y="76" font-size="9" fill="'+INK2+'">the beginning of the sentence</text>';
+  s+='<text x="880" y="76" font-size="9" fill="'+INK2+'" text-anchor="end">the end, still fresh</text>';
+  s+='<text x="14" y="106" font-size="10" font-weight="700">SUMMARY CAPACITY USED</text>';
+  s+='<rect x="14" y="114" width="880" height="26" fill="none" stroke="'+INK+'" stroke-width="2"/>';
+  s+='<rect x="16" y="116" width="'+(876*Math.min(1,n/6/4)).toFixed(0)+'" height="22" fill="'+(n>24?PINK:n>12?YEL:BLUE)+'" fill-opacity=".7"/>';
+  s+='<text x="14" y="164" font-size="9.5" fill="'+INK2+'">Faded blocks are words whose contribution has largely been overwritten by the words that came after them.</text>';
+  return $("#rnnArt").innerHTML=svgWrap("0 0 920 178",s), bar;
+}
+function rnnDet(){
+  const n=+$("#rnnLen").value;
+  let v;
+  if(n<=10) v="Short input, and the architecture copes. This is why early translation demos looked so impressive: they were demonstrated on sentences of exactly this length.";
+  else if(n<=25) v="Now it is straining. The opening words have been overwritten several times over by the time the summary is handed across, and quality drops in ways that are hard to see unless you know the source.";
+  else v="<b style='color:var(--pink)'>Well past breaking.</b> A single fixed-size summary cannot hold a paragraph of this length, so the model produces something fluent that quietly drops or garbles the beginning. Nothing in the output flags it. This is the failure mode attention was invented to remove.";
+  $("#rnnDet").innerHTML="<h4>"+n+" words in</h4><p>"+v+"</p><p style='color:var(--ink2)'>Keep in mind what a consultant actually feeds these things: a 40-page tender is roughly 15,000 words. The gap between what this architecture could hold and what the work requires was not a gap you could close by tuning.</p>";
+}
+$("#rnnLen").addEventListener("input",()=>{rnnRender();rnnDet();}); rnnRender(); rnnDet();
+
+/* ---------- M4 attention viewer ---------- */
+const attSents=[
+ {label:"The classic ambiguity",
+  toks:["The","animal","didn't","cross","the","road","because","it","was","too","tired"],
+  focus:7,
+  w:[0.04,0.42,0.03,0.05,0.03,0.11,0.04,0.00,0.06,0.04,0.18],
+  d:"Change one word — 'tired' to 'wide' — and a human instantly re-points 'it' at the road. The model does the same thing, because the weight it gives each candidate depends on the whole sentence, not on a grammar rule somebody wrote down."},
+ {label:"A consulting sentence",
+  toks:["The","analyst","sent","the","forecast","to","the","client","because","it","was","overdue"],
+  focus:9,
+  w:[0.02,0.09,0.04,0.03,0.46,0.02,0.02,0.12,0.03,0.00,0.05,0.12],
+  d:"'It' is the forecast, not the client — and getting that wrong changes who is at fault in a status note. Attention is what lets the model weigh 'forecast' four times more heavily than 'client' here."},
+ {label:"Across a long document",
+  toks:["…penalty","of","0.5%","per","week,","capped","at","10%.","[27","pages]","The","aforementioned","penalties","shall","not","apply…"],
+  focus:11,
+  w:[0.31,0.02,0.14,0.02,0.03,0.09,0.01,0.12,0.00,0.00,0.02,0.00,0.16,0.02,0.03,0.03],
+  d:"This is the capability that matters commercially. The phrase 'the aforementioned penalties' reaches twelve thousand words back and binds to the clause that defines them — in one step, at no extra cost. No architecture before 2017 could do this at document scale."}
+];
+let attSel=0, attFocus=attSents[0].focus;
+function attArt(){
+  const s0=attSents[attSel]; const n=s0.toks.length;
+  const W=880, colW=W/n;
+  let s='<text x="14" y="18" font-size="10" font-weight="700" letter-spacing="1">CLICK ANY WORD TO SEE WHAT IT LOOKS AT</text>';
+  s0.toks.forEach((t,i)=>{
+    const x=14+i*colW, on=(i===attFocus);
+    const wt=(i===attFocus)?0:s0.w[i]*(attFocus===s0.focus?1:0.35+0.3*Math.random()*0);
+    s+='<rect x="'+x.toFixed(1)+'" y="86" width="'+(colW-5).toFixed(1)+'" height="30" fill="'+(on?PINK:BLUE)+'" fill-opacity="'+(on?1:(0.06+wt*1.6).toFixed(2))+'" stroke="'+(on?PINK:INK2)+'" stroke-width="1"/>';
+    s+='<text x="'+(x+(colW-5)/2).toFixed(1)+'" y="105" text-anchor="middle" font-size="'+(colW<52?7.5:9)+'" fill="'+(on?"#FFFFFF":INK)+'">'+t+'</text>';
+    if(!on && wt>0.05){
+      s+='<path d="M'+(14+attFocus*colW+(colW-5)/2)+' 86 Q'+((14+attFocus*colW+x)/2)+' '+(40-wt*40)+' '+(x+(colW-5)/2)+' 86" fill="none" stroke="'+PINK+'" stroke-width="'+(1+wt*10).toFixed(1)+'" opacity=".5"/>';
+      s+='<text x="'+(x+(colW-5)/2).toFixed(1)+'" y="132" text-anchor="middle" font-size="8.5" fill="'+PINK+'">'+Math.round(wt*100)+'</text>';
+    }
+  });
+  s+='<text x="14" y="156" font-size="9.5" fill="'+INK2+'">Thickness and shading show how much weight the highlighted word gives each other word. The numbers are illustrative; the pattern is not.</text>';
+  return svgWrap("0 0 920 170",s);
+}
+function attPaint(){
+  $("#attArt").innerHTML=attArt();
+  const s0=attSents[attSel];
+  const pairs=s0.toks.map((t,i)=>({t,w:s0.w[i]})).filter((o,i)=>i!==attFocus).sort((a,b)=>b.w-a.w).slice(0,3);
+  $("#attDet").innerHTML="<h4>“"+s0.toks[attFocus]+"” is looking at…</h4><div class='spec'>"+pairs.map(p=>p.t+" "+Math.round(p.w*100)+"%").join("  ·  ")+"</div><p>"+s0.d+"</p>";
+  $$("#attArt rect").forEach((r,i)=>{ r.style.cursor="pointer"; r.addEventListener("click",()=>{attFocus=i;attPaint();}); });
+}
+chipGroup("#attCtl",attSents,(it,i)=>{ attSel=i; attFocus=attSents[i].focus; attPaint(); },0);
+
+/* ---------- M4 attention matrix ---------- */
+const mxSets=[
+ {label:"The classic ambiguity",
+  toks:["The","animal","didn't","cross","the","road","because","it","was","tired"],
+  links:[[7,1,.42],[7,9,.18],[7,5,.11],[3,1,.22],[3,5,.24],[9,1,.20],[2,3,.18],[6,3,.16],[5,4,.20]],
+  d:"Read the row for “it”. Almost half its attention lands on “animal”, and that single bright square is the model working out what “it” refers to. Change “tired” to “wide” and the bright square slides across to “road”."},
+ {label:"A consulting sentence",
+  toks:["The","analyst","sent","the","forecast","to","the","client","because","it","was","overdue"],
+  links:[[9,4,.46],[9,7,.12],[9,11,.12],[2,1,.24],[2,4,.20],[11,4,.26],[7,5,.14],[4,3,.18]],
+  d:"The row for “it” points at “forecast”, not “client”. Get that backwards in a status note and you have accidentally told the client the delay was theirs. Nobody wrote a rule; the model reads it from the word “overdue”."},
+ {label:"Across a contract",
+  toks:["penalty","0.5%","per","week","capped","10%","[27 pages]","the","aforementioned","penalties","shall","not","apply"],
+  links:[[8,0,.31],[8,9,.16],[9,0,.28],[9,5,.14],[9,1,.12],[12,10,.20],[11,12,.22],[4,5,.26],[1,0,.22]],
+  d:"This is the one that matters commercially. “Aforementioned” reaches back past twenty-seven pages and binds to the clause that defines the penalty — one bright square, at a distance no earlier design could cross."}
+];
+let mxSel=0, mxRow=null;
+function mxWeights(set){
+  const n=set.toks.length;
+  return set.toks.map((_,i)=>{
+    const row=set.toks.map(()=>0.02);
+    row[i]=0.14;
+    set.links.filter(l=>l[0]===i).forEach(l=>{ row[l[1]]=l[2]; });
+    const s=row.reduce((a,b)=>a+b,0);
+    return row.map(v=>v/s);
+  });
+}
+function mxArt(){
+  const set=mxSets[mxSel], n=set.toks.length, W=mxWeights(set);
+  const gut=124, top=106, cell=Math.min(62,(884-gut)/n), H=top+n*cell+34;
+  let s='<text x="14" y="18" font-size="10" font-weight="700" letter-spacing="1">EVERY WORD, AGAINST EVERY WORD</text>';
+  s+='<text x="14" y="34" font-size="9" fill="'+INK2+'">row = the word doing the looking · column = the word being looked at · brighter = more attention</text>';
+  set.toks.forEach((t,c)=>{
+    const x=gut+c*cell+cell/2;
+    s+='<text transform="translate('+x.toFixed(1)+','+(top-8)+') rotate(-55)" font-size="9" fill="'+INK2+'">'+t+'</text>';
+  });
+  set.toks.forEach((t,r)=>{
+    const y=top+r*cell, on=(mxRow===r);
+    s+='<text x="'+(gut-8)+'" y="'+(y+cell/2+3.5).toFixed(1)+'" text-anchor="end" font-size="9.5" font-weight="'+(on?700:400)+'" fill="'+(on?PINK:INK)+'" style="cursor:pointer" data-row="'+r+'">'+t+'</text>';
+    set.toks.forEach((t2,c)=>{
+      const x=gut+c*cell, v=W[r][c];
+      const col=(on?PINK:BLUE);
+      s+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+(cell-2).toFixed(1)+'" height="'+(cell-2).toFixed(1)+'" fill="'+col+'" fill-opacity="'+Math.min(.95,v*2.1).toFixed(2)+'" stroke="'+(on?PINK:'rgba(30,27,24,.14)')+'" stroke-width="'+(on?1.4:1)+'" style="cursor:pointer" data-r="'+r+'" data-c="'+c+'"/>';
+      if(v>0.20) s+='<text x="'+(x+(cell-2)/2).toFixed(1)+'" y="'+(y+cell/2+3).toFixed(1)+'" text-anchor="middle" font-size="8.5" font-weight="700" fill="#FFFFFF" pointer-events="none">'+Math.round(v*100)+'</text>';
+    });
+  });
+  s+='<text x="14" y="'+(H-12)+'" font-size="9" fill="'+INK2+'">Numbers shown inside the brightest squares are percentages. Every row adds up to 100 — a word has only so much attention to spend.</text>';
+  return svgWrap("0 0 920 "+H,s);
+}
+function mxPaint(){
+  $("#mxArt").innerHTML=mxArt();
+  const set=mxSets[mxSel], W=mxWeights(set);
+  if(mxRow===null){
+    $("#mxDet").innerHTML="<h4>"+set.label+"</h4><p>"+set.d+"</p><p style='color:var(--ink2)'>Click a word on the left to follow its row, or click any square to have it read out in words.</p>";
+  } else {
+    const row=W[mxRow], best=row.map((v,i)=>({v,i})).sort((a,b)=>b.v-a.v).slice(0,3);
+    $("#mxDet").innerHTML="<h4>The row for “"+set.toks[mxRow]+"”</h4><div class='spec'>"+best.map(b=>set.toks[b.i]+" "+Math.round(b.v*100)+"%").join("  ·  ")+"</div>"+
+      "<p>Of all the attention the word “"+set.toks[mxRow]+"” has to spend, most goes to “"+set.toks[best[0].i]+"”. Everything else in that row is nearly dark, which is the point: attention is a budget, and spending it on the right word is the whole skill.</p>"+
+      "<p style='color:var(--ink2)'>"+set.d+"</p>";
+  }
+  $$("#mxArt [data-row]").forEach(el=>el.addEventListener("click",()=>{ mxRow=+el.dataset.row; mxPaint(); }));
+  $$("#mxArt [data-r]").forEach(el=>el.addEventListener("click",()=>{
+    const r=+el.dataset.r, c=+el.dataset.c, v=mxWeights(mxSets[mxSel])[r][c];
+    mxRow=r; mxPaint();
+    $("#mxDet").innerHTML="<h4>One square, read out</h4><div class='spec'>row "+(r+1)+", column "+(c+1)+"</div>"+
+      "<p>The word <b>“"+mxSets[mxSel].toks[r]+"”</b> spends <b>"+Math.round(v*100)+"%</b> of its attention on the word <b>“"+mxSets[mxSel].toks[c]+"”</b>"+
+      (r===c?" — that is the diagonal, a word attending to itself.":".")+"</p>"+
+      "<p style='color:var(--ink2)'>"+(v>0.2?"That is a strong link: the meaning of one is genuinely shaping the meaning of the other.":"That is close to background level — these two words have little to do with each other in this sentence.")+"</p>";
+  }));
+}
+chipGroup("#mxCtl",mxSets,(it,i)=>{ mxSel=i; mxRow=null; mxPaint(); },0);
+
+/* ---------- M5 step through the architecture ---------- */
+const txSteps=[
+ {t:"The sentence arrives",who:"Input",hi:"input",
+  w:"Three words go in: “I love llamas”. Nothing has happened yet — they are still just words on the way to the machine.",
+  y:"Worth noticing what the machine is being asked to do. It is not looking anything up. It has to build the Dutch sentence from scratch, one word at a time, using only what it can work out from these three words.",
+  p:"Three words on a slip of paper, handed through a window. Nothing has been read yet.",
+  s:"INPUT\n  \"I love llamas\"\n\nOUTPUT SO FAR\n  (nothing yet)"},
+ {t:"Words become numbers, with a position marker",who:"Bottom of the reader stack",hi:"embed",
+  w:"Each word is swapped for its list of numbers. A second list is added on top saying where the word sits — first, second, third.",
+  y:"The position marker matters because everything from here on happens simultaneously. Without it the machine would have no idea that “I love llamas” differs from “llamas love I”.",
+  p:"Like giving every guest at a party a badge with their name and their table number. The number matters, because everyone is going to speak at once.",
+  s:"AFTER LOOKUP\n  I       → [0.21, -0.08, ...]  + position 1\n  love    → [-0.13, 0.44, ...]  + position 2\n  llamas  → [0.37, 0.02,  ...]  + position 3"},
+ {t:"Reader station 1 — everyone looks at everyone",who:"Self-attention",hi:"encAttn",
+  w:"Inside the first station, each of the three words checks the other two and blends in whatever matters. “love” picks up that its object is “llamas”; “llamas” picks up that it is the thing being loved.",
+  y:"This is the step that older designs could not do. All three words do this at the same instant — nobody waits for anybody.",
+  p:"Everyone in the room turns to everyone else and asks: are you relevant to me? Then listens hardest to whoever says yes.",
+  s:"ATTENTION IN STATION 1\n  love → llamas   0.51\n  love → I        0.28\n  llamas → love   0.44\n  I → love        0.33"},
+ {t:"Reader station 1 — think it over",who:"The small network",hi:"encFF",
+  w:"A small network takes what attention just gathered for each word and works it into a richer set of numbers.",
+  y:"Attention decides what to look at. This decides what to make of it. Most of a model's dials actually live in this half, not in attention.",
+  p:"Attention is hearing what everyone said. This step is deciding what to write in your notebook about it.",
+  s:"STATION 1 OUTPUT\n  three lists of numbers, one per word,\n  each now carrying a little of the others"},
+ {t:"Up through the stack",who:"Stations 2 to 6",hi:"encStack",
+  w:"Now the same two moves happen again. Look around, think it over. Then again at the next station, and the next. Six times in the original design; today's models do it dozens of times.",
+  y:"Each pass adds a little more. The first station notices simple things, like which word goes with which. Later ones pick up meaning: that this is a sentence about liking something, and that llamas are the thing being liked.",
+  p:"Like reading a paragraph several times over. The first read tells you what it says. The third tells you what it means. Nobody decided which pass would notice what — that sorted itself out during training, and it is not something you can look inside and read.",
+  s:"CLIMBING\n  station 1 ✓\n  station 2 ✓\n  station 3 ✓\n  ⋮\n  station 6 ✓"},
+ {t:"The readers hand over their notes",who:"The handover",hi:"handover",
+  w:"The readers are finished. What comes out is one set of numbers per input word — a rich description of what the sentence means and how its parts relate.",
+  y:"These notes go to every writer station, not just the first. That is what keeps the output tied to the input, and it is the yellow line in the diagram above.",
+  p:"A research team finishes and puts its notes on the table. Every writer can pick them up at any moment — not just the first one.",
+  s:"READERS' NOTES\n  I      → [ … ]\n  love   → [ … ]\n  llamas → [ … ]\n\n  available to every writer station"},
+ {t:"The writer starts with nothing",who:"Bottom of the writer stack",hi:"decInput",
+  w:"The writing side begins with an empty page and a start marker. It has to produce the first Dutch word.",
+  y:"Everything it writes from here becomes part of its own input. That is why these models never revise: a word, once written, is a fact it has to build on.",
+  p:"A blank page and a deadline. Whatever gets written first becomes something the rest has to live with.",
+  s:"WRITTEN SO FAR\n  (start)\n\nGOAL\n  produce word 1"},
+ {t:"Writer — look back, never forward",who:"Masked self-attention",hi:"decMask",
+  w:"The writer does the same looking-around the readers did, with one rule added: it may look at the words it has already written, and nothing after them.",
+  y:"It is being trained to guess the next word. During training the real next word is sitting right there in the text — so if it were allowed to peek, it would just copy it and learn nothing.",
+  p:"Like an exam where the answers are printed on the next page. Cover that page and the student has to think. Uncover it and they get full marks having learned nothing at all. The mask is the sheet of paper over the next page.",
+  s:"WHEN WRITING WORD 4\n  Ik     ✓ visible\n  hou    ✓ visible\n  van    ✓ visible\n  ?      ✗ covered up"},
+ {t:"Writer — check the readers' notes",who:"The extra middle step",hi:"decCross",
+  w:"Now the writer looks across at the readers' notes and picks out the part of the English it needs right now. About to write the fourth word, it lands hardest on “llamas”.",
+  y:"This is the only step a reader station does not have, and it is the one that keeps a translation faithful. Remove the readers entirely — which is exactly what GPT does — and this step disappears with them.",
+  p:"A translator glancing back at the original sentence before choosing the next word. That glance is this step.",
+  s:"LOOKING ACROSS\n  llamas  0.61   ← most of the focus\n  love    0.22\n  I       0.17"},
+ {t:"Writer — think it over, then score every word",who:"Top of the writer stack",hi:"pick",
+  w:"The small network digests everything gathered. At the very top, every word in the vocabulary gets a score, turned into percentages that add up to a hundred.",
+  y:"Note what is produced: not an answer, a ranked list of candidates. Roughly a hundred thousand of them, most with a share close to zero.",
+  p:"Not choosing a word yet — just ranking every word in the language by how well it would fit here.",
+  s:"CANDIDATES FOR WORD 4\n  lama's     0.71\n  lamas      0.14\n  dieren     0.06\n  ...99,997 others share the rest"},
+ {t:"Pick one, add it, run the whole thing again",who:"The loop",hi:"loop",
+  w:"One candidate is chosen — usually the top one. It is added to what has been written, and the entire writer stack runs again from the bottom to produce the next word.",
+  y:"The readers do not run again; their notes are reused. But the writers repeat once per word, which is why a long answer takes proportionally longer and costs proportionally more.",
+  p:"Writing a sentence one word at a time, re-reading everything you have written before each new word. Slow, and it is exactly what is happening.",
+  s:"WRITTEN SO FAR\n  Ik hou van lama's\n\nTRIPS THROUGH THE WRITER STACK\n  4 so far, one per word"},
+ {t:"Done — and what it explains",who:"The finished sentence",hi:"done",
+  w:"“Ik hou van lama's”. Four words, four complete trips through the writing stack, one set of readers' notes reused throughout.",
+  y:"Now strip out the left-hand side entirely and you have GPT: no readers, no handover, no middle step — just a stack of writers looking backwards at everything you typed. That is the machine on your laptop, and it is the next figure.",
+  p:"Read once, wrote four times. That ratio is why reading a long document is cheap and writing a long answer is not.",
+  s:"FINAL\n  input   : \"I love llamas\"\n  output  : \"Ik hou van lama's\"\n  reader passes : 1\n  writer passes : 4"}
+];
+let txI=0, txTimer=null;
+function txArt(step){
+  const hi=txSteps[step].hi;
+  const on=(k)=>hi===k;
+  const dim=(k)=>on(k)?1:0.32;
+  const EX=54, EW=210, DX=330, DW=210;
+  let s='';
+  s+='<text x="'+EX+'" y="20" font-size="10" font-weight="700" letter-spacing="1" fill="'+BLUE+'" opacity="'+(hi.indexOf("enc")===0||on("embed")||on("input")||on("handover")?1:.45)+'">READERS</text>';
+  s+='<text x="'+DX+'" y="20" font-size="10" font-weight="700" letter-spacing="1" fill="'+PINK+'" opacity="'+(hi.indexOf("dec")===0||on("pick")||on("loop")||on("done")?1:.45)+'">WRITERS</text>';
+  /* encoder stack */
+  const eb=[[300,"1"],[248,"2"],[196,"3"],[132,"6"]];
+  eb.forEach(([y,n],k)=>{
+    const act = on("encStack") || ((on("encAttn")||on("encFF")) && k===0);
+    s+='<rect x="'+EX+'" y="'+y+'" width="'+EW+'" height="42" fill="'+BLUE+'" fill-opacity="'+(act?.30:.10)+'" stroke="'+BLUE+'" stroke-width="'+(act?2.4:1.4)+'" opacity="'+(on("input")||on("embed")?.55:1)+'"/>';
+    const zoomed=(k===0&&(on("encAttn")||on("encFF")));
+    s+='<text x="'+(EX+EW/2)+'" y="'+(y+(zoomed?13:26))+'" text-anchor="middle" font-size="'+(zoomed?8.5:10)+'" font-weight="700" fill="'+BLUE+'">READER '+n+'</text>';
+  });
+  s+='<text x="'+(EX+EW/2)+'" y="184" text-anchor="middle" font-size="13" fill="'+BLUE+'">⋮</text>';
+  if(on("encAttn")||on("encFF")){
+    s+='<rect x="'+(EX+10)+'" y="320" width="'+(EW-20)+'" height="16" fill="'+PINK+'" fill-opacity=".9"/>';
+    s+='<text x="'+(EX+EW/2)+'" y="331.5" text-anchor="middle" font-size="8.5" font-weight="700" fill="#FFFFFF">'+(on("encAttn")?"1 · LOOK AROUND":"2 · THINK IT OVER")+'</text>';
+  }
+  /* decoder stack */
+  const db=[[300,"1"],[248,"2"],[196,"3"],[132,"6"]];
+  db.forEach(([y,n],k)=>{
+    const act = on("decMask")||on("decCross")||on("pick")||on("loop");
+    s+='<rect x="'+DX+'" y="'+y+'" width="'+DW+'" height="42" fill="'+PINK+'" fill-opacity="'+(act&&k===0?.30:.10)+'" stroke="'+PINK+'" stroke-width="'+(act&&k===0?2.4:1.4)+'" opacity="'+(hi.indexOf("enc")===0||on("input")||on("embed")?.45:1)+'"/>';
+    const dz=(k===0&&(on("decMask")||on("decCross")));
+    s+='<text x="'+(DX+DW/2)+'" y="'+(y+(dz?13:26))+'" text-anchor="middle" font-size="'+(dz?8.5:10)+'" font-weight="700" fill="'+PINK+'">WRITER '+n+'</text>';
+  });
+  s+='<text x="'+(DX+DW/2)+'" y="184" text-anchor="middle" font-size="13" fill="'+PINK+'">⋮</text>';
+  if(on("decMask")||on("decCross")){
+    s+='<rect x="'+(DX+10)+'" y="320" width="'+(DW-20)+'" height="16" fill="'+(on("decCross")?"#B8860B":PINK)+'" fill-opacity=".9"/>';
+    s+='<text x="'+(DX+DW/2)+'" y="331.5" text-anchor="middle" font-size="8.5" font-weight="700" fill="#FFFFFF">'+(on("decMask")?"1 · LOOK BACK ONLY":"2 · CHECK THE NOTES")+'</text>';
+  }
+  /* input + output boxes */
+  s+='<rect x="'+EX+'" y="366" width="'+EW+'" height="40" fill="#FFFFFF" stroke="'+INK+'" stroke-width="'+(on("input")||on("embed")?2.6:1.4)+'"/>';
+  s+='<text x="'+(EX+EW/2)+'" y="382" text-anchor="middle" font-size="9.5" font-weight="700">THE ENGLISH SENTENCE</text>';
+  s+='<text x="'+(EX+EW/2)+'" y="396" text-anchor="middle" font-size="9.5" fill="'+BLUE+'">"I love llamas"</text>';
+  s+='<rect x="'+DX+'" y="366" width="'+DW+'" height="40" fill="#FFFFFF" stroke="'+INK+'" stroke-width="'+(on("decInput")||on("loop")?2.6:1.4)+'"/>';
+  s+='<text x="'+(DX+DW/2)+'" y="382" text-anchor="middle" font-size="9.5" font-weight="700">WRITTEN SO FAR</text>';
+  s+='<text x="'+(DX+DW/2)+'" y="396" text-anchor="middle" font-size="9.5" fill="'+PINK+'">'+(step<7?"(nothing yet)":step<11?"Ik hou van":"Ik hou van lama\'s")+'</text>';
+  s+='<rect x="'+DX+'" y="62" width="'+DW+'" height="40" fill="'+(on("pick")||on("done")?YEL:"#FFFFFF")+'" fill-opacity="'+(on("pick")||on("done")?.55:1)+'" stroke="'+INK+'" stroke-width="'+(on("pick")||on("done")?2.6:1.4)+'"/>';
+  s+='<text x="'+(DX+DW/2)+'" y="78" text-anchor="middle" font-size="9.5" font-weight="700">THE NEXT WORD</text>';
+  s+='<text x="'+(DX+DW/2)+'" y="92" text-anchor="middle" font-size="9.5">'+(step>=9?"lama\'s":"…")+'</text>';
+  /* arrows */
+  s+='<line x1="'+(EX+EW/2)+'" y1="366" x2="'+(EX+EW/2)+'" y2="346" stroke="'+INK+'" stroke-width="1.8" marker-end="url(#tx1)" opacity="'+dim("embed")+'"/>';
+  s+='<line x1="'+(DX+DW/2)+'" y1="366" x2="'+(DX+DW/2)+'" y2="346" stroke="'+INK+'" stroke-width="1.8" marker-end="url(#tx1)" opacity="'+(on("decInput")?1:.32)+'"/>';
+  s+='<line x1="'+(DX+DW/2)+'" y1="132" x2="'+(DX+DW/2)+'" y2="106" stroke="'+INK+'" stroke-width="1.8" marker-end="url(#tx1)" opacity="'+(on("pick")?1:.32)+'"/>';
+  const hv=on("handover")||on("decCross");
+  s+='<path d="M'+(EX+EW)+' 150 L300 150 L300 210 L'+(DX-8)+' 210" fill="none" stroke="#B8860B" stroke-width="'+(hv?3:1.4)+'" opacity="'+(hv?1:.3)+'" marker-end="url(#tx2)"/>';
+  s+='<path d="M300 210 L300 322 L'+(DX-8)+' 322" fill="none" stroke="#B8860B" stroke-width="'+(hv?3:1.4)+'" opacity="'+(hv?1:.3)+'" marker-end="url(#tx2)"/>';
+  s+='<path d="M300 266 L'+(DX-8)+' 266" fill="none" stroke="#B8860B" stroke-width="'+(hv?3:1.4)+'" opacity="'+(hv?1:.3)+'" marker-end="url(#tx2)"/>';
+  if(hv) s+='<text x="252" y="140" text-anchor="middle" font-size="8.5" fill="#8A6A00">the notes</text>';
+  const lp=on("loop");
+  s+='<path d="M'+(DX+DW)+' 82 L562 82 L562 386 L'+(DX+DW+4)+' 386" fill="none" stroke="'+PINK+'" stroke-width="'+(lp?2.6:1.2)+'" stroke-dasharray="6 4" opacity="'+(lp?1:.3)+'" marker-end="url(#tx1)"/>';
+  if(lp) s+='<text x="574" y="240" font-size="8.5" fill="'+PINK+'">added to the input,</text>'+
+            '<text x="574" y="252" font-size="8.5" fill="'+PINK+'">then run again</text>';
+  /* zoom panel */
+  s+='<rect x="620" y="40" width="286" height="372" fill="'+P+'" stroke="'+INK+'" stroke-width="2"/>';
+  s+='<text x="634" y="62" font-size="9.5" font-weight="700" letter-spacing="1">STEP '+(step+1)+' OF 12 · CLOSE UP</text>';
+  s+=txZoom(step);
+  return svgWrap("0 0 920 424",'<defs><marker id="tx1" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="'+INK+'"/></marker>'+
+    '<marker id="tx2" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#B8860B"/></marker></defs>'+s);
+}
+function txZoom(step){
+  const X=636, Y=80; let s='';
+  const word=(x,y,t,c,w)=>'<rect x="'+x+'" y="'+y+'" width="'+(w||62)+'" height="24" fill="#FFFFFF" stroke="'+(c||INK)+'" stroke-width="1.6"/>'+
+     '<text x="'+(x+(w||62)/2)+'" y="'+(y+16)+'" text-anchor="middle" font-size="9.5" fill="'+(c||INK)+'">'+t+'</text>';
+  const nums=(x,y,c)=>[0,1,2,3].map(i=>'<rect x="'+(x+i*15)+'" y="'+y+'" width="13" height="13" fill="'+c+'" fill-opacity="'+(0.25+i*0.2)+'"/>').join("");
+  if(step===0){ s+=word(X,Y,"I",BLUE)+word(X+70,Y,"love",BLUE)+word(X+140,Y,"llamas",BLUE);
+    s+='<text x="'+X+'" y="'+(Y+52)+'" font-size="9" fill="'+INK2+'">Three words. That is the whole input.</text>'; }
+  if(step===1){ s+=word(X,Y,"I",BLUE)+nums(X+80,Y+5,BLUE)+word(X,Y+38,"love",BLUE)+nums(X+80,Y+43,BLUE)+word(X,Y+76,"llamas",BLUE)+nums(X+80,Y+81,BLUE);
+    s+='<text x="'+X+'" y="'+(Y+126)+'" font-size="9" fill="'+INK2+'">each word → a list of numbers</text>';
+    s+='<text x="'+X+'" y="'+(Y+140)+'" font-size="9" fill="'+INK2+'">+ a marker: 1st, 2nd, 3rd</text>'; }
+  if(step===2){ s+=word(X,Y+70,"I",BLUE)+word(X+80,Y+70,"love",BLUE)+word(X+160,Y+70,"llamas",BLUE);
+    s+='<path d="M'+(X+111)+' '+(Y+70)+' Q'+(X+150)+' '+(Y+20)+' '+(X+191)+' '+(Y+70)+'" fill="none" stroke="'+PINK+'" stroke-width="4" opacity=".7"/>';
+    s+='<path d="M'+(X+111)+' '+(Y+70)+' Q'+(X+70)+' '+(Y+30)+' '+(X+31)+' '+(Y+70)+'" fill="none" stroke="'+PINK+'" stroke-width="2" opacity=".5"/>';
+    s+='<text x="'+X+'" y="'+(Y+120)+'" font-size="9" fill="'+INK2+'">"love" looks hardest at "llamas"</text>';
+    s+='<text x="'+X+'" y="'+(Y+134)+'" font-size="9" fill="'+INK2+'">all three do this at the same time</text>'; }
+  if(step===3){ s+='<rect x="'+X+'" y="'+(Y+30)+'" width="230" height="44" fill="#FFFFFF" stroke="'+BLUE+'" stroke-width="1.8"/>';
+    s+='<text x="'+(X+115)+'" y="'+(Y+58)+'" text-anchor="middle" font-size="10">a small network</text>';
+    s+='<line x1="'+(X+115)+'" y1="'+(Y+8)+'" x2="'+(X+115)+'" y2="'+(Y+28)+'" stroke="'+INK+'" stroke-width="1.6" marker-end="url(#tx1)"/>';
+    s+='<line x1="'+(X+115)+'" y1="'+(Y+76)+'" x2="'+(X+115)+'" y2="'+(Y+96)+'" stroke="'+INK+'" stroke-width="1.6" marker-end="url(#tx1)"/>';
+    s+='<text x="'+X+'" y="'+(Y+130)+'" font-size="9" fill="'+INK2+'">attention gathers · this digests</text>'; }
+  if(step===4){ [0,1,2,3,4,5].forEach(i=>{ s+='<rect x="'+X+'" y="'+(Y+i*26)+'" width="230" height="20" fill="'+BLUE+'" fill-opacity="'+(0.12+i*0.11)+'" stroke="'+BLUE+'" stroke-width="1.2"/>';
+      s+='<text x="'+(X+115)+'" y="'+(Y+14+i*26)+'" text-anchor="middle" font-size="8.5" fill="'+BLUE+'">station '+(i+1)+'</text>'; });
+    s+='<text x="'+X+'" y="'+(Y+186)+'" font-size="9" fill="'+INK2+'">richer at every level</text>'; }
+  if(step===5){ s+=word(X,Y,"I",BLUE,50)+nums(X+60,Y+5,"#B8860B")+word(X,Y+34,"love",BLUE,50)+nums(X+60,Y+39,"#B8860B")+word(X,Y+68,"llamas",BLUE,50)+nums(X+60,Y+73,"#B8860B");
+    s+='<text x="'+X+'" y="'+(Y+118)+'" font-size="9" fill="#8A6A00">the finished notes — one per word</text>';
+    s+='<text x="'+X+'" y="'+(Y+132)+'" font-size="9" fill="#8A6A00">every writer station may read them</text>'; }
+  if(step===6){ s+='<rect x="'+X+'" y="'+Y+'" width="230" height="26" fill="#FFFFFF" stroke="'+PINK+'" stroke-width="1.6" stroke-dasharray="4 3"/>';
+    s+='<text x="'+(X+10)+'" y="'+(Y+18)+'" font-size="10" fill="'+INK2+'">(start) ▌</text>';
+    s+='<text x="'+X+'" y="'+(Y+56)+'" font-size="9" fill="'+INK2+'">an empty page and a start marker</text>'; }
+  if(step===7){ const g=[[1,1,1,0],[1,1,1,0],[1,1,1,0],[1,1,1,1]];
+    ["Ik","hou","van","?"].forEach((t,r)=>{ s+='<text x="'+X+'" y="'+(Y+16+r*26)+'" font-size="9">'+t+'</text>';
+      g[r].forEach((v,c)=>{ s+='<rect x="'+(X+40+c*44)+'" y="'+(Y+2+r*26)+'" width="40" height="20" fill="'+(v?PINK:INK2)+'" fill-opacity="'+(v?.35:.12)+'" stroke="'+INK2+'" stroke-width=".8"/>'; }); });
+    s+='<text x="'+X+'" y="'+(Y+130)+'" font-size="9" fill="'+INK2+'">pink = may look · grey = covered</text>'; }
+  if(step===8){ s+=word(X,Y,"I",BLUE,60)+word(X,Y+34,"love",BLUE,60)+word(X,Y+68,"llamas",PINK,60);
+    ['0.17','0.22','0.61'].forEach((v,i)=>{ s+='<rect x="'+(X+72)+'" y="'+(Y+4+i*34)+'" width="'+(30+i*60)+'" height="16" fill="#B8860B" fill-opacity=".65"/>';
+      s+='<text x="'+(X+72+35+i*60)+'" y="'+(Y+17+i*34)+'" font-size="8.5">'+v+'</text>'; });
+    s+='<text x="'+X+'" y="'+(Y+124)+'" font-size="9" fill="#8A6A00">about to write word 4, it looks</text>';
+    s+='<text x="'+X+'" y="'+(Y+138)+'" font-size="9" fill="#8A6A00">hardest at "llamas"</text>'; }
+  if(step===9){ [["lama\'s",.71],["lamas",.14],["dieren",.06],["…",.02]].forEach((c,i)=>{
+      s+='<text x="'+X+'" y="'+(Y+16+i*28)+'" font-size="9.5">'+c[0]+'</text>';
+      s+='<rect x="'+(X+70)+'" y="'+(Y+4+i*28)+'" width="'+(c[1]*160).toFixed(0)+'" height="16" fill="'+YEL+'" fill-opacity=".85" stroke="#B8860B" stroke-width="1"/>';
+      s+='<text x="'+(X+240)+'" y="'+(Y+16+i*28)+'" font-size="8.5" text-anchor="end" fill="'+INK2+'">'+Math.round(c[1]*100)+'%</text>'; });
+    s+='<text x="'+X+'" y="'+(Y+134)+'" font-size="9" fill="'+INK2+'">every possible word gets a share</text>'; }
+  if(step===10){ ["Ik","Ik hou","Ik hou van","Ik hou van lama\'s"].forEach((t,i)=>{
+      s+='<rect x="'+X+'" y="'+(Y+i*30)+'" width="230" height="22" fill="#FFFFFF" stroke="'+PINK+'" stroke-width="1.2"/>';
+      s+='<text x="'+(X+8)+'" y="'+(Y+16+i*30)+'" font-size="9.5" fill="'+PINK+'">'+t+'</text>';
+      s+='<text x="'+(X+238)+'" y="'+(Y+16+i*30)+'" font-size="8" text-anchor="end" fill="'+INK2+'">pass '+(i+1)+'</text>'; });
+    s+='<text x="'+X+'" y="'+(Y+142)+'" font-size="9" fill="'+INK2+'">one full trip per word</text>'; }
+  if(step===11){ s+='<rect x="'+X+'" y="'+Y+'" width="230" height="30" fill="'+BLUE+'" fill-opacity=".14" stroke="'+BLUE+'" stroke-width="1.6"/>';
+    s+='<text x="'+(X+115)+'" y="'+(Y+20)+'" text-anchor="middle" font-size="10" fill="'+BLUE+'">I love llamas</text>';
+    s+='<text x="'+(X+115)+'" y="'+(Y+52)+'" text-anchor="middle" font-size="12">↓</text>';
+    s+='<rect x="'+X+'" y="'+(Y+62)+'" width="230" height="30" fill="'+PINK+'" fill-opacity=".16" stroke="'+PINK+'" stroke-width="1.6"/>';
+    s+='<text x="'+(X+115)+'" y="'+(Y+82)+'" text-anchor="middle" font-size="10" fill="'+PINK+'">Ik hou van lama\'s</text>';
+    s+='<text x="'+X+'" y="'+(Y+124)+'" font-size="9" fill="'+INK2+'">1 pass through the readers</text>';
+    s+='<text x="'+X+'" y="'+(Y+138)+'" font-size="9" fill="'+INK2+'">4 passes through the writers</text>'; }
+  return s;
+}
+function txRender(){
+  const st=txSteps[txI];
+  $("#txDots").innerHTML=txSteps.map((x,i)=>'<span style="cursor:pointer;'+(i===txI?"background:var(--pink);color:#fff;border-color:var(--pink)":"")+'" data-i="'+i+'">'+(i+1)+'</span>').join("");
+  $$("#txDots span").forEach(d=>d.addEventListener("click",()=>{txI=+d.dataset.i;txRender();}));
+  $("#txArt").innerHTML=txArt(txI);
+  $("#txTitle").textContent=(txI+1)+". "+st.t;
+  $("#txWho").textContent=st.who;
+  $("#txWhat").textContent=st.w;
+  $("#txWhy").innerHTML="<b>Why it matters — </b>"+st.y;
+  $("#txPlain").innerHTML = st.p ? "<b>Put another way — </b>"+st.p : "";
+  $("#txPlain").style.display = st.p ? "" : "none";
+  $("#txState").textContent=st.s;
+  $("#txPrev").disabled=(txI===0);
+  $("#txNext").textContent=(txI===txSteps.length-1)?"Back to the start":"Next step";
+}
+$("#txNext").addEventListener("click",()=>{ txI=(txI+1)%txSteps.length; txRender(); });
+$("#txPrev").addEventListener("click",()=>{ if(txI>0){txI--;txRender();} });
+$("#txAuto").addEventListener("click",e=>{
+  if(txTimer){clearInterval(txTimer);txTimer=null;e.target.textContent="Play all";return;}
+  e.target.textContent="Stop";
+  txTimer=setInterval(()=>{ txI++; if(txI>=txSteps.length){txI=txSteps.length-1;clearInterval(txTimer);txTimer=null;e.target.textContent="Play all";} txRender(); },4600);
+});
+txRender();
+
+/* ---------- M5 transformer parts ---------- */
+const trParts=[
+ {label:"Input embedding",d:"Each token is swapped for its list of numbers — the descendant of word2vec, except these are learned as part of the model rather than downloaded separately.",
+  x:"Nothing about the sentence is understood yet. This is just the dictionary lookup that turns text into arithmetic."},
+ {label:"Position information",d:"Because every word is now processed simultaneously, the model would otherwise have no idea which came first. So a signal encoding each token's position is added to its numbers.",
+  x:"This is the one thing bag-of-words could never do and sequential models got for free. The Transformer has to put order back in deliberately."},
+ {label:"Self-attention",d:"Every token compares itself with every other token and produces a weight for each. Those weights are used to blend the other tokens' information into its own.",
+  x:"This is where 'it' becomes bound to 'the animal', and where a clause on page 31 finds the one on page 4. Everything else in the block is plumbing around this step."},
+ {label:"Multiple heads",d:"The same attention step is run several times in parallel with different learned patterns, and the results are combined. One head may track grammatical subjects, another long-range references.",
+  x:"Think of it as several readers going through the same sentence looking for different things, then comparing notes."},
+ {label:"Feed-forward network",d:"A small neural network applied to each position, which digests whatever attention just gathered.",
+  x:"Attention decides what to look at; this decides what to make of it. Most of a model's parameters actually live here, not in attention."},
+ {label:"Stacking",d:"Block after block, dozens deep. Early blocks pick up surface patterns; later ones handle abstraction and reasoning-shaped structure.",
+  x:"There is no point at which somebody wrote 'this layer handles sarcasm'. The division of labour emerges from training and is largely unreadable."},
+ {label:"Masking, in the decoder",d:"When the model is being trained to predict the next token, it must not be allowed to see the tokens ahead. So the attention weights for future positions are switched off.",
+  x:"Without the mask, training is trivial and useless: the model would learn to copy the answer sitting to its right. This one detail is why generation happens strictly left to right."}
+];
+chipGroup("#trCtl",trParts,(it)=>{
+  $("#trDet").innerHTML="<h4>"+it.label+"</h4><p>"+it.d+"</p><p style='color:var(--ink2)'><b style='font-family:var(--disp)'>Why it matters — </b>"+it.x+"</p>";
+},2);
+
+/* ---------- M6 family chooser ---------- */
+const fams=[
+ {label:"Tag 40,000 support tickets by issue type",f:"E",
+  d:"A classification problem with a fixed set of labels and a large volume. A small encoder model, fine-tuned on a few hundred examples you label by hand, will beat a frontier model on cost by orders of magnitude — and it runs inside your own network, so nothing leaves the building."},
+ {label:"Turn nine interview transcripts into a one-page note",f:"D",
+  d:"Generation, grounded in supplied text. This is the decoder family doing exactly what it is good at: reading what you gave it and writing something new in a known genre."},
+ {label:"Find which of 4,000 past slides are relevant to this pitch",f:"E",
+  d:"Semantic search — turn every slide into an embedding, turn the query into an embedding, return the nearest. The encoder family is the engine inside every retrieval system, including the ones that feed a generative model afterwards."},
+ {label:"Draft the client email and three subject lines",f:"D",
+  d:"Pure generation in a heavily patterned genre. Low risk, high time saving, and no encoder model can do it — representation models do not write."},
+ {label:"Group 400 open-ended survey answers into themes",f:"E",
+  d:"Clustering on embeddings. You can do this with a generative model too, and many people do, but the encoder route is cheaper, repeatable and gives you a similarity number you can defend in a methodology appendix."},
+ {label:"Spot near-duplicate clauses across 200 contracts",f:"E",
+  d:"Similarity between embeddings, with a threshold. Deterministic, auditable, and it will not invent a clause that is not there."},
+ {label:"Explain a technical due-diligence finding to a non-technical partner",f:"D",
+  d:"Rewriting for an audience — generation again. Note the pattern: if the deliverable is a number, a label or a ranking, look at the encoder family. If it is prose, the decoder family."},
+ {label:"Answer questions about our own past engagements",f:"B",
+  d:"Both, in sequence, and this is the most common real architecture. An encoder model finds the relevant documents; a decoder model reads them and writes the answer with citations. That is what retrieval-augmented generation actually is under the hood."}
+];
+chipGroup("#famCtl",fams,(it)=>{
+  const label={E:["ENCODER FAMILY — represent",BLUE],D:["DECODER FAMILY — generate",PINK],B:["BOTH, IN SEQUENCE",'#8A6A00']}[it.f];
+  $("#famDet").innerHTML="<h4>"+it.label+"</h4><div class='spec' style='color:"+label[1]+"'>"+label[0]+"</div><p>"+it.d+"</p>";
+},0);
+
+/* ---------- M7 scale ---------- */
+const scales=[
+ {n:"117 million",y:"GPT-1, 2018",c:"Completes sentences and gets grammar right. Useful only after fine-tuning on a specific task.",cost:"Runs on one machine"},
+ {n:"1.5 billion",y:"GPT-2, 2019",c:"Writes coherent paragraphs. Still wanders off topic and invents freely, but the shape of what was coming was visible here.",cost:"Runs on a good server"},
+ {n:"175 billion",y:"GPT-3, 2020",c:"Follows instructions given only in the prompt, with no task-specific training. This is where prompting became a skill rather than a curiosity.",cost:"A cluster; rented, not owned"},
+ {n:"Hundreds of billions",y:"2022–23 generation",c:"Instruction-tuned and preference-trained. Drafts, summarises, codes and reasons well enough to be used in real work.",cost:"Rented through an interface"},
+ {n:"Not disclosed",y:"2024–25 frontier",c:"Long context windows measured in hundreds of thousands of tokens, images and audio as input, tool use. Parameter counts stopped being published.",cost:"Rented; priced per token"},
+ {n:"Not disclosed",y:"Today",c:"Same architecture as 2017 with more scale, better tuning and tools bolted on. Treat any specific parameter figure you see quoted as an estimate unless the lab published it.",cost:"Rented; priced per token"}
+];
+function scaleRender(){
+  const i=+$("#scaleS").value, s0=scales[i];
+  $("#scaleO").textContent=s0.n;
+  let s='<text x="14" y="20" font-size="10" font-weight="700" letter-spacing="1">SIX YEARS OF GROWTH — THE ARCHITECTURE BARELY CHANGED</text>';
+  scales.forEach((sc,k)=>{
+    const x=14+k*148, on=(k===i), h=8+k*13;
+    s+='<rect x="'+x+'" y="'+(120-h)+'" width="130" height="'+h+'" fill="'+(on?PINK:BLUE)+'" fill-opacity="'+(on?.85:.22)+'" stroke="'+(on?PINK:BLUE)+'" stroke-width="1.4"/>';
+    s+='<text x="'+(x+65)+'" y="138" text-anchor="middle" font-size="9" font-weight="'+(on?700:400)+'" fill="'+(on?PINK:INK2)+'">'+sc.y+'</text>';
+    s+='<text x="'+(x+65)+'" y="'+(112-h)+'" text-anchor="middle" font-size="8.5" fill="'+INK2+'">'+sc.n+'</text>';
+  });
+  s+='<text x="14" y="164" font-size="9.5" fill="'+INK2+'">Bar heights are illustrative, not to scale — a true scale would make the first bar invisible.</text>';
+  $("#scaleArt").innerHTML=svgWrap("0 0 920 175",s);
+  $("#scaleDet").innerHTML="<h4>"+s0.y+" · "+s0.n+" parameters</h4><p>"+s0.c+"</p><p style='color:var(--ink2)'><b style='font-family:var(--disp)'>Where it runs — </b>"+s0.cost+"</p>";
+}
+$("#scaleS").addEventListener("input",scaleRender); scaleRender();
+
+/* ---------- M8 stack builder ---------- */
+const layers=[
+ {k:"instr",label:"Instruction tuning",out:"It answers the question instead of continuing it.",
+  d:"Trained on examples of instructions paired with good responses. Without this, asking 'summarise this report' gets you a plausible continuation of the phrase 'summarise this report' — which is what raw models actually do."},
+ {k:"pref",label:"Human preference training",out:"It is helpful, polite and declines the obviously improper.",
+  d:"People rank alternative answers and the model is nudged towards the preferred ones. This is where the personality, the hedging and the refusals come from — none of it is in the raw model."},
+ {k:"corpus",label:"Corpus / house-style tuning",out:"It writes in your firm's structure and register.",
+  d:"Further training on your own documents. Buys manner, not knowledge — it will still not know a single fact about the client you signed last week, and it goes stale as your business changes."},
+ {k:"search",label:"Web search",out:"It can answer about things that happened after training.",
+  d:"A tool call: the system searches, reads the results and answers from them with links. Fixes recency. Does nothing for anything private."},
+ {k:"docs",label:"Your document store",out:"It can answer about your firm and your client, with citations.",
+  d:"Retrieval over your own files. For consulting work this is the layer that converts a clever writing assistant into something that knows your business."},
+ {k:"calc",label:"Calculator / code",out:"Its arithmetic can be trusted, because it is not doing the arithmetic.",
+  d:"The model writes the calculation and a real interpreter runs it. This removes the single most embarrassing failure mode: a confident sentence built around a wrong number."},
+ {k:"mem",label:"Memory of past chats",out:"It carries context between conversations.",
+  d:"Stored notes re-injected into later prompts. Convenient, shallow, and silent about what it retained — do not confuse it with the model having learned anything."}
+];
+let on=new Set(["instr","pref"]);
+function stackRender(){
+  const active=layers.filter(l=>on.has(l.k));
+  let s='<text x="14" y="20" font-size="10" font-weight="700" letter-spacing="1">THE SAME REQUEST — "SUMMARISE OUR SUPPLIER RISK EXPOSURE"</text>';
+  s+='<rect x="14" y="32" width="200" height="46" fill="'+INK+'"/>';
+  s+='<text x="114" y="52" text-anchor="middle" font-size="10.5" font-weight="700" fill="'+P+'">RAW MODEL</text>';
+  s+='<text x="114" y="68" text-anchor="middle" font-size="8.5" fill="'+P+'" opacity=".8">predicts the next token</text>';
+  let x=228;
+  active.forEach((l,i)=>{
+    const col=["instr","pref"].indexOf(l.k)>-1?BLUE:(l.k==="corpus"?'#B8860B':PINK);
+    s+='<rect x="'+x+'" y="32" width="128" height="46" fill="'+col+'" fill-opacity=".16" stroke="'+col+'" stroke-width="2"/>';
+    s+='<text x="'+(x+64)+'" y="56" text-anchor="middle" font-size="9" font-weight="700">'+l.label.split(" ")[0]+'</text>';
+    s+='<text x="'+(x+64)+'" y="70" text-anchor="middle" font-size="8" fill="'+INK2+'">'+(l.label.split(" ").slice(1).join(" ")||"layer")+'</text>';
+    x+=136;
+    if(x>760) x=760;
+  });
+  s+='<text x="14" y="104" font-size="10" font-weight="700">WHAT COMES BACK</text>';
+  let out;
+  if(!on.has("instr")) out="A continuation of your sentence, not an answer. Raw models complete text; they were never told that a question wants a response.";
+  else if(on.has("docs")&&on.has("calc")) out="A sourced summary drawn from your own contracts, with the exposure figures computed rather than guessed, and a link against every claim. This is the top of what is buildable today.";
+  else if(on.has("docs")) out="A summary drawn from your own contracts with citations — but treat any arithmetic in it as unverified until a calculator layer is added.";
+  else if(on.has("search")) out="A competent, current-sounding summary of supplier risk in general. Nothing in it is about your client, because nothing of your client's was ever supplied.";
+  else if(on.has("corpus")) out="A generic answer, in your house style and structure. It sounds like your firm wrote it, which is precisely what makes the missing facts harder to notice.";
+  else out="A polite, well-formed, entirely generic answer about supplier risk. Useful as a structure. Empty of anything specific to this client.";
+  s+='<foreignObject x="14" y="112" width="880" height="70"><div xmlns="http://www.w3.org/1999/xhtml" style="font-family:Newsreader,Georgia,serif;font-size:14px;line-height:1.5;color:#1E1B18">'+out+'</div></foreignObject>';
+  $("#stackArt").innerHTML=svgWrap("0 0 920 186",s);
+  const last=layers.filter(l=>on.has(l.k)).slice(-1)[0];
+  $("#stackDet").innerHTML= last
+    ? "<h4>"+last.label+"</h4><p>"+last.d+"</p><p style='color:var(--ink2)'><b style='font-family:var(--disp)'>Effect — </b>"+last.out+"</p>"
+    : "<h4>Nothing but the raw model</h4><p>This is what comes out of pre-training: a system that continues text. Everything that makes it feel like an assistant was added afterwards, by people, on purpose.</p>";
+}
+(function(){
+  const el=$("#stackCtl");
+  layers.forEach(l=>{
+    const b=document.createElement("button"); b.className="chip pink"+(on.has(l.k)?" on":""); b.textContent=l.label;
+    b.addEventListener("click",()=>{ on.has(l.k)?on.delete(l.k):on.add(l.k); b.classList.toggle("on"); stackRender(); });
+    el.appendChild(b);
+  });
+  stackRender();
+})();
+
+/* ---------- M9 cut-off zones ---------- */
+const cuts=[
+ {label:"What is compound interest?",z:0,
+  d:"A timeless concept, thoroughly represented in the training data, and it has not changed. This is the safest category there is — and notice it is also the least valuable, because you already knew it."},
+ {label:"Who is the current chief executive of this company?",z:1,
+  d:"Leadership changes constantly and the model's picture froze on a date. It will answer with a name and no hedging. Check it against the company's own site, and prefer a tool that searches and shows you the link."},
+ {label:"What is the GST rate on this category?",z:1,
+  d:"Rates, thresholds and regulations move. Anything a government can amend belongs in this zone by default. Source it from the regulator, not the model, and put the date of retrieval in your footnote."},
+ {label:"What were our client's Q4 numbers?",z:2,
+  d:"Never public, never in any training set, at any date. There is no search that fixes this and no prompt that reaches it. Either you attach the accounts or you do not ask. This is the zone that costs consultants money."},
+ {label:"What did the plant manager say on Tuesday's call?",z:2,
+  d:"Same zone. It was not on the call, and it retains nothing from your previous conversations unless a memory feature stored something — and even then, not this. Paste the transcript or expect fiction."},
+ {label:"What is the market size of Indian quick-service restaurants?",z:1,
+  d:"Sits in the awkward middle. Some figure was in the training data, from some report, from some year, with some definition — and none of that provenance survived. You will get a confident number you cannot cite. Buy the report or use a published source."},
+ {label:"Summarise the report I have pasted below",z:0,
+  d:"Not really a knowledge question at all — the answer is a transformation of material sitting in front of it. This is the zone where these tools are strongest and cheapest to check, which is why so much of Session 01 pointed you here."}
+];
+chipGroup("#cutCtl",cuts,(it)=>{
+  const z=[["INSIDE THE TRAINING WINDOW — low risk",BLUE],["AFTER THE CUT-OFF, OR CHANGES OFTEN — verify",'#8A6A00'],["NEVER PUBLIC — the model cannot know this",PINK]][it.z];
+  const act=["Usually needs no check. Spend your checking time elsewhere.","Source it independently, with a link and a date. A search-enabled tool helps; it does not absolve you.","Attach the document. There is no other route — and if you cannot attach it, the model is the wrong instrument."][it.z];
+  $("#cutDet").innerHTML="<h4>“"+it.label+"”</h4><div class='spec' style='color:"+z[1]+"'>"+z[0]+"</div><p>"+it.d+"</p><p style='color:var(--ink2)'><b style='font-family:var(--disp)'>What you do about it — </b>"+act+"</p>";
+},0);
+
+/* ---------- M10 applications ---------- */
+const apps=[
+ {label:"Marketing & advertising",g:["Ad visuals and campaign videos","Virtual influencers and brand avatars","Automated creative variations at scale"],l:["Ad copy, slogans, product descriptions","Consumer insight from open-ended responses","Brand messaging rewritten per audience"],
+  n:"The sector where the two get confused most often. A client asking for 'AI in marketing' may mean image generation, copywriting or audience analysis — three different vendors and three different risk conversations."},
+ {label:"Media & entertainment",g:["Music and sound generation","Video synthesis and visual effects","Game assets and storyboarding"],l:["Script and dialogue drafting","Translation and subtitling","Summarising reviews and audience feedback"],
+  n:"Rights and provenance dominate the conversation here. Who owns the output, and what was the model trained on, are commercial questions long before they are technical ones."},
+ {label:"Healthcare & life sciences",g:["Molecule and drug discovery","Synthetic patient data for testing","Medical imaging synthesis"],l:["Summarising clinical notes","Discharge instructions in plain language","Research copilots and regulatory documents"],
+  n:"The highest-consequence sector on this list. Everything here sits in the top-left quadrant of the Session 01 triage grid: expensive if wrong, and hard for a non-specialist to check."},
+ {label:"Finance & banking",g:["Synthetic datasets for model testing","Fraud scenario simulation","Stress-testing and scenario dashboards"],l:["Compliance reporting and filings","Investment research summarisation","Customer support and sentiment analysis"],
+  n:"Heavily regulated, so the audit trail matters more than the output quality. Expect the first client question to be about explainability, not accuracy."},
+ {label:"Manufacturing & engineering",g:["Digital twins and defect simulation","3D prototypes and product design visuals"],l:["Technical manuals and procurement copilots","Summarising incident reports","Engineer knowledge assistants"],
+  n:"Often the best first project in a conservative client: the documents are internal, the language is technical and repetitive, and nothing customer-facing is at risk."},
+ {label:"Retail & e-commerce",g:["Virtual try-on and catalogue visuals","Store layout simulation","AI stylists and visual merchandising"],l:["Product descriptions at catalogue scale","Customer chatbots and personalisation","Review sentiment at volume"],
+  n:"The clearest measurable return of any sector, because catalogue copy and support deflection both have a number attached before you start."},
+ {label:"Education & learning",g:["Explainer videos and animations","Gamified and immersive lessons"],l:["Personalised tutoring and Q&A","Summarising notes, grading, quiz generation"],
+  n:"Closest to home for this room. Worth noticing that the assessment side raises the same verification problem you have been studying: fluent output that has to be checked against a source."}
+];
+chipGroup("#appCtl",apps,(it)=>{
+  $("#appOut").innerHTML=
+   '<div class="box" style="margin:0"><div class="box-t" style="color:'+PINK+'">Generative AI · the wide family</div><ul class="kl">'+it.g.map(x=>"<li>"+x+"</li>").join("")+'</ul></div>'+
+   '<div class="box" style="margin:0"><div class="box-t" style="color:'+BLUE+'">Language models · the text branch</div><ul class="kl">'+it.l.map(x=>"<li>"+x+"</li>").join("")+'</ul></div>';
+  $("#appDet").innerHTML="<h4>"+it.label+"</h4><p>"+it.n+"</p>";
+},0);
+
+/* ---------- glossary + tooltips ---------- */
+const ABBR={
+ "AI":"Artificial Intelligence — the broad field of making machines do things that look intelligent",
+ "NLP":"Natural Language Processing — the older name for the field of getting computers to work with human language",
+ "LLM":"Large Language Model — a very large text-prediction model, the engine behind tools like ChatGPT and Claude",
+ "LLMs":"Large Language Models — very large text-prediction models",
+ "bag-of-words":"the oldest method here: split text into words, count them, and use the counts as the document's numbers",
+ "token":"a chunk of text the model reads and writes, usually about three-quarters of an English word",
+ "tokens":"chunks of text the model reads and writes, usually about three-quarters of an English word each",
+ "tokenization":"splitting text into tokens — the first step of almost every method in this session",
+ "vector":"a list of numbers standing for something — a word, a sentence or a whole document",
+ "vectors":"lists of numbers standing for words, sentences or documents",
+ "embedding":"a list of numbers that places a word, sentence or document near other things that mean something similar",
+ "embeddings":"lists of numbers placing words or documents near other things of similar meaning",
+ "word2vec":"the 2013 method that first successfully captured word meaning as numbers, by looking at which words appear beside which",
+ "semantic":"to do with meaning, rather than with the exact words used",
+ "neural network":"layers of simple numerical units, connected together, whose connection strengths are adjusted during training",
+ "RNN":"Recurrent Neural Network — a model that reads a sequence one item at a time, carrying a running summary forward",
+ "RNNs":"Recurrent Neural Networks — models that read a sequence one item at a time",
+ "encoder":"the half of a model that reads an input and turns it into numbers representing its meaning",
+ "decoder":"the half of a model that takes those numbers and writes an output, one token at a time",
+ "autoregressive":"generating one token at a time, where each token written is fed back in before the next one is chosen",
+ "attention":"the mechanism that lets every word look at every other word and weigh which ones matter to it",
+ "self-attention":"attention applied within a single sequence — every word weighing every other word in the same text",
+ "Transformer":"the 2017 architecture built purely on attention, with the sequential machinery removed. The T in GPT",
+ "masked":"switched off — in the decoder, attention to words ahead of the current one is masked so the model cannot see the answer",
+ "masked language modelling":"the training trick behind BERT: blank out words in real sentences and make the model guess them",
+ "BERT":"Bidirectional Encoder Representations from Transformers, 2018 — the encoder-only family, used for search and classification",
+ "GPT":"Generative Pre-trained Transformer, 2018 — the decoder-only family, used for writing text",
+ "parameters":"the billions of internal numerical dials set during training, where the model's patterns are stored",
+ "parameter":"one of the billions of internal numerical dials set during training",
+ "pre-training":"the long, expensive first phase: predict the next token across an enormous pile of text",
+ "instruction tuning":"further training on examples of instructions and good answers, so the model responds instead of continuing",
+ "RLHF":"Reinforcement Learning from Human Feedback — people rank answers and the model is nudged towards the preferred ones",
+ "fine-tuning":"further training on your own examples to shift a model's style, format or task performance",
+ "knowledge cutoff":"the date after which the model saw no training data",
+ "cut-off":"the date after which the model saw no training data",
+ "context window":"the total amount of text a model can hold in view at once",
+ "hallucination":"fluent output that is factually wrong or invented, delivered in the same confident voice as the truth",
+ "RAG":"Retrieval-Augmented Generation — search your own documents first, then answer only from what was found",
+ "corpus":"the body of text a model is trained or tuned on",
+ "GenAI":"Generative AI — systems that produce new content: text, images, audio, video, code",
+ "Common Crawl":"a very large public archive of web pages, used as training data",
+ "CLS":"the classification token BERT adds at the front of an input, whose embedding stands for the whole text",
+ "QSR":"Quick Service Restaurant — the fast-food and fast-casual category",
+ "CFO":"Chief Financial Officer",
+ "COO":"Chief Operating Officer",
+ "CEO":"Chief Executive Officer",
+ "GST":"Goods and Services Tax",
+ "P&L":"Profit and Loss — the statement showing whether the business made money",
+ "MICA":"Mudra Institute of Communications, Ahmedabad"
+};
+const aKeys=Object.keys(ABBR).sort((a,b)=>b.length-a.length);
+const aEsc=s=>s.replace(/[.*+?^${}()|[\]\\\-]/g,"\\$&");
+const aPat="(?:^|(?<=[^A-Za-z0-9]))("+aKeys.map(aEsc).join("|")+")(?![A-Za-z0-9])";
+let rxG,rxT;
+try{ rxG=new RegExp(aPat,"g"); rxT=new RegExp(aPat); }
+catch(e){ rxG=new RegExp("\\b("+aKeys.map(aEsc).join("|")+")\\b","g"); rxT=new RegExp("\\b("+aKeys.map(aEsc).join("|")+")\\b"); }
+
+function annotate(root){
+  if(!root) return;
+  const LIMIT=3, count={};
+  $$("abbr[title]").forEach(a=>{ const k=a.textContent; count[k]=(count[k]||0)+1; });
+  const bad={SCRIPT:1,STYLE:1,ABBR:1,BUTTON:1,INPUT:1,TEXTAREA:1,H1:1,H2:1,TITLE:1,OPTION:1};
+  const nodes=[], w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null);
+  while(w.nextNode()){
+    const n=w.currentNode;
+    if(!n.nodeValue||!rxT.test(n.nodeValue)) continue;
+    let p=n.parentNode, ok=true;
+    while(p&&p!==root.parentNode){
+      if(p.nodeType===1){
+        if(p.namespaceURI==="http://www.w3.org/2000/svg"||bad[p.tagName]){ok=false;break;}
+        if(p.classList&&p.classList.contains("no-abbr")){ok=false;break;}
+      }
+      p=p.parentNode;
+    }
+    if(ok) nodes.push(n);
+  }
+  nodes.forEach(n=>{
+    const s=n.nodeValue, frag=document.createDocumentFragment();
+    let last=0,m; rxG.lastIndex=0;
+    while((m=rxG.exec(s))!==null){
+      const term=m[1], at=m.index+m[0].length-term.length;
+      if((count[term]||0)>=LIMIT){ if(rxG.lastIndex===m.index) rxG.lastIndex++; continue; }
+      if(at>last) frag.appendChild(document.createTextNode(s.slice(last,at)));
+      const a=document.createElement("abbr"); a.title=ABBR[term]; a.textContent=term; frag.appendChild(a);
+      count[term]=(count[term]||0)+1;
+      last=at+term.length;
+      if(rxG.lastIndex===m.index) rxG.lastIndex++;
+    }
+    if(last<s.length) frag.appendChild(document.createTextNode(s.slice(last)));
+    if(frag.childNodes.length) n.parentNode.replaceChild(frag,n);
+  });
+}
+const pop=document.createElement("div"); pop.className="abbr-pop"; document.body.appendChild(pop);
+let popT;
+document.addEventListener("click",e=>{
+  const t=e.target, a=(t&&t.closest)?t.closest("abbr[title]"):null;
+  if(a){ pop.textContent=a.textContent+" · "+a.title; pop.classList.add("on");
+    clearTimeout(popT); popT=setTimeout(()=>pop.classList.remove("on"),4500); }
+  setTimeout(()=>annotate($("main")),40);
+});
+(function glossary(){
+  const gl=$("#gloss");
+  const base=Object.keys(ABBR).filter(k=>!/s$/.test(k)||!ABBR[k.replace(/s$/,"")]);
+  gl.innerHTML=base.sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()))
+    .map(k=>'<div data-k="'+(k+" "+ABBR[k]).toLowerCase().replace(/"/g,"")+'"><b>'+k+'</b> — '+ABBR[k]+'</div>').join("");
+  $("#glossQ").addEventListener("input",e=>{
+    const q=e.target.value.trim().toLowerCase();
+    $$("#gloss div").forEach(d=>{ d.style.display=(!q||d.dataset.k.indexOf(q)>-1)?"":"none"; });
+  });
+})();
+annotate($("main"));
+})();
+</script>
+</body>
+</html>
