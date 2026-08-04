@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Agents Engineering for Consulting · Course Outline</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Space+Mono:wght@400;700&display=swap');
+
+:root{
+  --paper:#EDEAE0;
+  --panel:#FBFAF4;
+  --ink:#1E1B18;
+  --ink2:#5D564D;
+  --blue:#2F4B8F;
+  --pink:#E8348B;
+  --yellow:#FFD400;
+  --rule:rgba(30,27,24,.15);
+  --rule2:rgba(30,27,24,.36);
+  --disp:'Bricolage Grotesque','Arial Black',sans-serif;
+  --body:'Newsreader',Georgia,serif;
+  --mono:'Space Mono',ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:88px}
+body{
+  margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6;
+  background-image:radial-gradient(rgba(30,27,24,.09) 1px,transparent 1.1px);
+  background-size:9px 9px;
+}
+h1,h2,h3,h4{font-family:var(--disp);line-height:1.03;margin:0;letter-spacing:-.015em}
+p{margin:0 0 .85em}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
+
+/* top bar */
+.bar{position:sticky;top:0;z-index:40;background:rgba(237,234,224,.94);backdrop-filter:blur(6px);border-bottom:2px solid var(--ink)}
+.bar-in{max-width:1280px;margin:0 auto;padding:8px 20px;display:flex;gap:16px;align-items:center}
+.bar-tag{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;background:var(--pink);color:#fff;padding:3px 7px}
+.bar-t{font-family:var(--disp);font-weight:800;font-size:15px;margin-right:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-p{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;color:var(--ink2)}
+.ptrack{width:120px;height:6px;background:rgba(30,27,24,.14)}
+.pfill{height:100%;width:0;background:var(--blue);transition:width .25s}
+
+.shell{max-width:1280px;margin:0 auto;padding:0 20px 90px;display:grid;grid-template-columns:210px 1fr;gap:44px}
+.rail{position:sticky;top:88px;align-self:start;padding-top:26px}
+.rail-h{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink2);
+  border-bottom:2px solid var(--ink);padding-bottom:6px;margin-bottom:10px}
+.rail a{display:flex;gap:9px;padding:4px 0;text-decoration:none;color:var(--ink2);font-family:var(--disp);font-size:14.5px;font-weight:600}
+.rail a em{font-family:var(--mono);font-style:normal;font-size:9.5px;color:var(--pink);min-width:34px;padding-top:3px}
+.rail a:hover{color:var(--ink)}
+.rail a.on{color:var(--ink)}
+.rail a.on em{background:var(--pink);color:#fff}
+
+/* hero */
+.hero{padding:34px 0 6px}
+.kick{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--blue)}
+.hero h1{font-size:clamp(38px,7vw,80px);font-weight:800;margin:12px 0 8px}
+.hero h1 mark,.mod h2 mark{background:var(--yellow);color:var(--ink);padding:0 .08em;box-decoration-break:clone}
+.hero h1 span,.mod h2 span{color:var(--pink)}
+.lede{font-size:19px;max-width:60ch;color:var(--ink2)}
+
+/* modules */
+.mod{border-top:2px solid var(--ink);margin-top:48px;padding-top:34px}
+.mod-h{display:flex;gap:14px;align-items:flex-start;margin-bottom:18px}
+.mod-t{font-family:var(--mono);font-size:10px;letter-spacing:.12em;background:var(--ink);color:var(--paper);padding:4px 7px;margin-top:6px;white-space:nowrap}
+.mod h2{font-size:clamp(26px,4vw,42px);font-weight:800}
+.mod-k{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--pink);margin-bottom:5px}
+.big{font-size:19.5px;max-width:68ch}
+
+.box{background:var(--panel);border:2px solid var(--ink);padding:20px 22px;margin:20px 0;box-shadow:5px 5px 0 rgba(47,75,143,.16)}
+.box-t{font-family:var(--disp);font-weight:800;font-size:17px;display:flex;align-items:center;gap:9px;margin-bottom:14px;
+  padding-bottom:9px;border-bottom:1px solid var(--rule)}
+.box-t::before{content:"";width:11px;height:11px;background:var(--pink);flex:none}
+.box-t small{margin-left:auto;font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);font-weight:400}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+
+ul.kl{list-style:none;padding:0;margin:0}
+ul.kl li{padding:8px 0 8px 22px;border-bottom:1px dotted var(--rule2);position:relative}
+ul.kl li:last-child{border-bottom:0}
+ul.kl li::before{content:"→";position:absolute;left:0;color:var(--pink);font-family:var(--mono);font-size:12px;top:9px}
+ul.kl b{font-family:var(--disp);font-weight:700}
+.quote{border-left:5px solid var(--yellow);padding:4px 0 4px 15px;margin:16px 0;font-size:18.5px}
+.flag{background:rgba(232,52,139,.09);border:1.5px solid var(--pink);padding:12px 15px;font-size:15.5px;margin:16px 0}
+.flag b{font-family:var(--disp);color:var(--pink)}
+.mono{font-family:var(--mono);font-size:12.5px}
+
+table.t{width:100%;border-collapse:collapse;font-size:15px}
+table.t th{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;text-align:left;padding:8px;
+  border-bottom:2px solid var(--ink);color:var(--ink2)}
+table.t td{padding:8px;border-bottom:1px solid var(--rule);vertical-align:top}
+table.t td.hl{color:var(--blue);font-weight:600}
+table.t tr:hover td{background:rgba(255,212,0,.16)}
+
+button.chip{font-family:var(--disp);font-weight:600;font-size:14px;padding:6px 12px;background:transparent;
+  border:2px solid var(--rule2);color:var(--ink2);cursor:pointer}
+button.chip:hover{border-color:var(--ink);color:var(--ink)}
+button.chip.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+button.chip.pink.on{background:var(--pink);border-color:var(--pink)}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.slider{margin:12px 0}
+.slider label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink2);margin-bottom:5px}
+.slider input[type=range]{width:100%;accent-color:var(--pink)}
+.slider output{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--pink)}
+input[type=number],input[type=text],textarea,select{font-family:var(--mono);font-size:13px;padding:6px 8px;border:2px solid var(--rule2);background:#fff;width:100%}
+textarea{font-family:var(--mono);line-height:1.6;resize:vertical}
+.field{margin-bottom:10px}
+.field label{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink2);margin-bottom:3px}
+
+.reads{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:2px;background:var(--ink);border:2px solid var(--ink)}
+.read{background:var(--panel);padding:10px 12px}
+.read i{font-style:normal;display:block;font-family:var(--mono);font-size:9px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink2)}
+.read b{display:block;font-family:var(--disp);font-size:25px;font-weight:800;line-height:1.15}
+.read b s{text-decoration:none;font-size:12px;color:var(--ink2);font-weight:600}
+.read.good b{color:var(--blue)} .read.warn b{color:#B8860B} .read.bad b{color:var(--pink)}
+
+.detail{margin-top:14px;border-top:1px solid var(--rule);padding-top:12px;min-height:96px}
+.detail h4{font-size:19px;margin-bottom:4px}
+.detail .spec{font-family:var(--mono);font-size:11px;color:var(--pink);letter-spacing:.05em;margin-bottom:7px}
+
+/* predictor */
+.pred{display:grid;grid-template-columns:1fr 300px;gap:22px}
+.pred-txt{background:#fff;border:2px solid var(--ink);padding:16px 18px;font-family:var(--mono);font-size:14px;line-height:1.85;min-height:190px;white-space:pre-wrap}
+.pred-txt .new{background:var(--yellow)}
+.cand{margin-bottom:7px}
+.cand .row{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11.5px;margin-bottom:2px}
+.cand .track{height:13px;background:rgba(30,27,24,.09)}
+.cand .fill{height:100%;background:var(--blue);transition:width .25s}
+.cand.pick .fill{background:var(--pink)}
+.cand.pick .row{font-weight:700;color:var(--pink)}
+
+/* token chips */
+.tok{display:flex;flex-wrap:wrap;gap:3px;margin-top:10px}
+.tok span{font-family:var(--mono);font-size:12px;padding:2px 5px;background:rgba(47,75,143,.13);border-bottom:2px solid var(--blue);white-space:pre}
+.tok span:nth-child(even){background:rgba(232,52,139,.13);border-color:var(--pink)}
+
+/* grounding bar */
+.gbar{display:flex;height:38px;border:2px solid var(--ink);margin:14px 0;font-family:var(--mono);font-size:10.5px}
+.gbar div{display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;transition:width .3s}
+.g1{background:var(--blue);color:#fff}
+.g2{background:var(--yellow)}
+.g3{background:var(--pink);color:#fff}
+.glegend{display:flex;flex-wrap:wrap;gap:14px;font-family:var(--mono);font-size:10.5px;color:var(--ink2)}
+.glegend i{font-style:normal;display:inline-block;width:11px;height:11px;margin-right:5px;vertical-align:-1px}
+
+/* cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:13px}
+.card{border:2px solid var(--ink);background:var(--panel);padding:15px;cursor:pointer}
+.card:hover{box-shadow:4px 4px 0 var(--pink)}
+.card h4{font-size:17px;margin-bottom:5px}
+.card .tag{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--pink)}
+.card p{font-size:14.5px;margin:7px 0 0;color:var(--ink2)}
+.card .more{display:none;margin-top:9px;padding-top:9px;border-top:1px dotted var(--rule2);font-size:14px}
+.card.open .more{display:block}
+.card.open{box-shadow:4px 4px 0 var(--blue)}
+
+/* bars for engagement */
+.wf{font-family:var(--mono);font-size:11.5px}
+.wf .row{display:grid;grid-template-columns:190px 1fr 74px;gap:10px;align-items:center;padding:5px 0;border-bottom:1px dotted var(--rule)}
+.wf .bars{position:relative;height:20px}
+.wf .b1,.wf .b2{position:absolute;height:9px;transition:width .35s}
+.wf .b1{top:0;background:rgba(30,27,24,.3)}
+.wf .b2{top:11px;background:var(--pink)}
+.wf .b2.up{background:var(--blue)}
+
+/* quiz */
+.q{border-bottom:1px solid var(--rule);padding:14px 0}
+.q p.stem{font-weight:600;margin-bottom:8px}
+.opt{display:block;width:100%;text-align:left;font-family:var(--body);font-size:15px;padding:7px 11px;margin-bottom:5px;
+  background:#fff;border:2px solid var(--rule);cursor:pointer;color:var(--ink)}
+.opt:hover{border-color:var(--ink2)}
+.opt.right{border-color:var(--blue);background:rgba(47,75,143,.1);font-weight:600}
+.opt.wrong{border-color:var(--pink);background:rgba(232,52,139,.09);text-decoration:line-through}
+.exp{display:none;font-size:14px;color:var(--ink2);border-left:4px solid var(--yellow);padding-left:12px;margin-top:8px}
+.exp.show{display:block}
+
+/* how-it-works steps */
+.how{font-family:var(--disp);font-weight:800;font-size:15px;letter-spacing:.02em;margin:18px 0 2px;
+  padding-top:12px;border-top:2px solid var(--ink)}
+.steps{counter-reset:st;margin:6px 0 0;padding:0;list-style:none}
+.steps li{counter-increment:st;position:relative;padding:9px 0 9px 40px;border-bottom:1px dotted var(--rule);font-size:15.5px}
+.steps li:last-child{border-bottom:0}
+.steps li::before{content:counter(st);position:absolute;left:0;top:9px;width:25px;height:25px;background:var(--ink);
+  color:var(--paper);font-family:var(--mono);font-size:11px;display:flex;align-items:center;justify-content:center}
+.steps b{font-family:var(--disp);font-weight:700}
+.analogy{background:rgba(255,212,0,.28);border:2px solid var(--ink);padding:13px 16px;margin:16px 0;font-size:16px}
+.analogy b{font-family:var(--disp);font-weight:800;display:block;margin-bottom:3px}
+
+/* figures */
+.fig{margin:22px 0;border:2px solid var(--ink);background:var(--panel);padding:16px 18px 12px}
+.fig svg{display:block;width:100%;height:auto}
+.fig figcaption{margin-top:11px;padding-top:9px;border-top:1px solid var(--rule);font-family:var(--mono);font-size:10.5px;
+  letter-spacing:.04em;color:var(--ink2);line-height:1.55}
+.fig figcaption b{color:var(--pink);letter-spacing:.12em;margin-right:6px}
+
+/* takeaways + glossary */
+.tk{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:2px;background:var(--ink);border:2px solid var(--ink)}
+.tk-item{background:var(--panel);padding:16px 18px;display:flex;gap:13px}
+.tk-item i{font-style:normal;font-family:var(--disp);font-size:28px;font-weight:800;color:var(--pink);line-height:.95;min-width:34px}
+.tk-item h4{font-size:16px;margin-bottom:5px}
+.tk-item p{font-size:14.5px;margin:0;color:var(--ink2)}
+.headline{border:2px solid var(--ink);background:var(--ink);color:var(--paper);padding:20px 22px;margin:20px 0}
+.headline h3{font-size:clamp(19px,2.6vw,27px);color:var(--paper);margin-bottom:9px}
+.headline p{margin:0;font-size:17px}
+.headline b{color:var(--yellow)}
+.gloss{column-count:2;column-gap:28px}
+.gloss div{break-inside:avoid;padding:5px 0;border-bottom:1px dotted var(--rule);font-size:14.5px;line-height:1.45}
+.gloss b{font-family:var(--mono);font-size:12px;color:var(--pink)}
+input.search{margin-bottom:14px}
+
+/* activities */
+.actv{border:2px solid var(--ink);background:var(--panel);padding:18px 20px;margin:18px 0;box-shadow:6px 6px 0 rgba(232,52,139,.18)}
+.actv .head{display:flex;gap:11px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.actv .num{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;background:var(--pink);color:#fff;padding:3px 7px}
+.actv h3{font-size:20px;font-weight:800;margin-right:auto}
+.tmr{font-family:var(--mono);font-size:12px;font-weight:700;border:2px solid var(--ink);background:#fff;padding:4px 10px;cursor:pointer}
+.tmr.run{background:var(--yellow)} .tmr.done{background:var(--pink);color:#fff}
+.brief{background:rgba(47,75,143,.07);border-left:5px solid var(--blue);padding:11px 14px;font-size:15px;margin:12px 0}
+.sent{cursor:pointer;border-bottom:2px solid transparent;padding:1px 0}
+.sent:hover{background:rgba(255,212,0,.4)}
+.sent.mark{background:rgba(232,52,139,.16);border-bottom-color:var(--pink)}
+.sent.hit{background:rgba(47,75,143,.14);border-bottom-color:var(--blue)}
+.sent.miss{background:rgba(232,52,139,.3);border-bottom-color:var(--pink)}
+.why{display:none;font-family:var(--mono);font-size:12px;color:var(--ink2);border-left:4px solid var(--yellow);padding:5px 0 5px 11px;margin:6px 0}
+.why.show{display:block}
+.chk{display:block;padding:6px 0;border-bottom:1px dotted var(--rule);cursor:pointer;font-size:15px}
+.chk input{margin-right:9px;accent-color:var(--pink)}
+.ctxbar{display:flex;height:36px;border:2px solid var(--ink);margin:12px 0;overflow:hidden;background:repeating-linear-gradient(45deg,rgba(30,27,24,.05) 0 6px,transparent 6px 12px)}
+.ctxbar div{font-family:var(--mono);font-size:9.5px;display:flex;align-items:center;justify-content:center;color:#fff;overflow:hidden;white-space:nowrap}
+.tag-row{display:flex;flex-wrap:wrap;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--ink2)}
+.tag-row span{border:1px solid var(--rule2);padding:2px 7px}
+.sentence-demo{font-family:var(--mono);font-size:14px;line-height:2.2;background:#fff;border:2px solid var(--ink);padding:14px 16px}
+.sentence-demo b{font-weight:400;padding:3px 4px}
+.s-prompt{background:rgba(47,75,143,.85);color:#fff}
+.s-pattern{background:rgba(255,212,0,.75)}
+.s-memory{background:rgba(232,52,139,.85);color:#fff}
+
+abbr[title]{border-bottom:2px dotted var(--pink);text-decoration:none;cursor:help}
+abbr[title]:hover{background:rgba(232,52,139,.12)}
+.abbr-pop{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:var(--paper);
+  font-family:var(--mono);font-size:12.5px;padding:9px 15px;z-index:60;max-width:min(92vw,540px);opacity:0;pointer-events:none;
+  transition:opacity .18s;border-left:5px solid var(--yellow)}
+.abbr-pop.on{opacity:1}
+.src{font-family:var(--mono);font-size:10.5px;color:var(--ink2);letter-spacing:.03em}
+.foot{margin-top:52px;border-top:2px solid var(--ink);padding-top:16px;font-family:var(--mono);font-size:10.5px;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between}
+
+@media(max-width:980px){
+  .bar-t{font-size:12px}
+  .shell{grid-template-columns:1fr;gap:0}
+  .rail{position:static;padding:14px 0 0;display:flex;gap:8px;overflow-x:auto;border-bottom:1px solid var(--rule)}
+  .rail-h{display:none}
+  .rail a{flex:none;border:2px solid var(--rule2);padding:4px 9px;font-size:13px}
+  .two,.three,.pred{grid-template-columns:1fr}
+  .gloss{column-count:1}
+  .wf .row{grid-template-columns:130px 1fr 60px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+
+/* ---------- drawer navigation (hamburger) ---------- */
+.shell{grid-template-columns:1fr!important;max-width:1120px;gap:0}
+.rail{position:fixed!important;top:0;left:0;height:100vh;width:300px;max-width:86vw;z-index:70;
+  background:var(--paper);border-right:2px solid var(--ink);box-shadow:6px 0 0 rgba(30,27,24,.08);
+  transform:translateX(-102%);transition:transform .22s ease;overflow-y:auto;overscroll-behavior:contain;
+  padding:74px 20px 40px 22px;display:block;align-self:auto;max-height:none;
+  scrollbar-width:thin;scrollbar-color:var(--rule2) transparent}
+.rail.open{transform:none}
+.rail::-webkit-scrollbar{width:6px}
+.rail::-webkit-scrollbar-thumb{background:var(--rule2)}
+.rail-grp{max-height:none;overflow:visible;padding-right:0;display:block}
+.rail a{padding:6px 0}
+.burger{position:relative;display:flex;flex-direction:column;justify-content:center;gap:4px;
+  width:34px;height:30px;padding:0 5px;background:transparent;border:2px solid var(--ink);cursor:pointer;flex:none}
+.burger span{display:block;height:2.4px;background:var(--ink);transition:transform .2s,opacity .2s}
+.burger:hover{background:var(--yellow,#FFD400)}
+.burger.open span:nth-child(1){transform:translateY(6.4px) rotate(45deg)}
+.burger.open span:nth-child(2){opacity:0}
+.burger.open span:nth-child(3){transform:translateY(-6.4px) rotate(-45deg)}
+.drawer-x{position:absolute;top:14px;right:16px;background:transparent;border:0;cursor:pointer;
+  font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--ink2)}
+.drawer-x:hover{color:var(--pink)}
+.scrim{position:fixed;inset:0;background:rgba(30,27,24,.34);opacity:0;pointer-events:none;
+  transition:opacity .22s;z-index:65}
+.scrim.on{opacity:1;pointer-events:auto}
+@media(max-width:980px){
+  .rail{padding-top:74px;display:block;border-bottom:0}
+  .rail-h{display:block;position:static;border-bottom:2px solid var(--ink);margin:0 0 8px;padding:0 0 6px;
+    border-right:0;align-self:auto;background:transparent}
+  .rail-grp{display:block;overflow:visible}
+  .rail a{flex:none;border:0;border-bottom:1px dotted var(--rule);padding:8px 0;font-size:14px}
+}
+</style>
+<style>
+  .rail a em{min-width:34px}
+  .sess-jump{display:flex;flex-wrap:wrap;gap:5px;margin:14px 0 4px}
+  .sess-jump a{font-family:var(--mono);font-size:11px;padding:4px 8px;border:1.4px solid var(--rule2);
+    text-decoration:none;color:var(--ink);background:#fff}
+  .sess-jump a:hover{background:var(--yellow,#FFD400);border-color:var(--ink)}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="bar-in" style="align-items:center;gap:14px">
+    <button class="burger" id="burger" aria-label="Open contents" aria-controls="rail" aria-expanded="false"><span></span><span></span><span></span></button>
+    <div class="bar-stack" style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+    <div class="bar-mod">PGDM Batch 2025–2027 · Academic Term III (Phase 1), AY 2026–27 · July–September 2026</div>
+    <div class="bar-row">
+      <span class="bar-tag">Course</span>
+      <span class="bar-t">AI Agents Engineering for Consulting</span>
+      <div class="bar-p"><span id="ptxt">0%</span><div class="ptrack"><div class="pfill" id="pfill"></div></div></div>
+    </div>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="shell">
+  <nav class="rail no-abbr" id="rail">
+    <button class="drawer-x" id="drawerX" aria-label="Close menu">CLOSE ✕</button>
+    <div class="rail-h">Course outline</div>
+    <a href="#" id="navSimple" class="on"><em>01</em>Course Outline Simplified</a>
+    <a href="#" id="navFull"><em>02</em>Course Outline Original</a>
+  </nav>
+
+  <main>
+  <header class="hero">
+    <div class="kick">MICA Ahmedabad · PGDM Batch 2025–2027 · Term III, Phase 1</div>
+    <h1>AI Agents <span>Engineering</span><br>for <mark>Consulting</mark>.</h1>
+    <p class="lede">Twenty-four sessions building from what a language model actually is, through prompt engineering and agent fundamentals, to designing and stress-testing agents that produce real consulting deliverables — and finally to what goes wrong when they run in production. Two views of the same course: the working schedule, and the full approved outline.</p>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab on" id="tabSimple" role="tab" aria-selected="true">Course Outline Simplified<small>sessions, dates and tools</small></button>
+    <button class="tab" id="tabFull" role="tab" aria-selected="false">Course Outline Original<small>the approved document, in full</small></button>
+  </div>
+
+  <div id="paneSimple">
+  <div class="headline" style="margin:16px 0 10px">
+    <h3>The course at a glance</h3>
+    <p>Twenty-four sessions across six modules, running from 3 August to 26 August 2026. Two sessions a day, seventy-five minutes each. This tab is the working view — what happens when, and which tool you will have open. The full outline with pre-reads, discussion questions and assessment sits in the second tab.</p>
+  </div>
+
+  <div class="reads" style="grid-template-columns:repeat(4,1fr);margin:18px 0 26px">
+    <div class="read"><i>Modules</i><b>6</b></div>
+    <div class="read"><i>Sessions</i><b>24</b></div>
+    <div class="read"><i>Each</i><b>75 <s>min</s></b></div>
+    <div class="read"><i>Runs</i><b>3–26 <s>Aug</s></b></div>
+  </div>
+  <div class="box" id="s-m1">
+    <div class="box-t" style="color:#2F4B8F">Module 1 · Foundations of Generative AI <small>4 sessions</small></div>
+    <table class="t">
+      <tr><th style="width:46%">Session</th><th style="width:22%">Date</th><th>Tool to be used</th></tr>
+      <tr><td class="hl" style="font-weight:400"><b>1</b> · Introduction to LLMs, GenAI and Understanding Model Capabilities</td><td class="mono" style="font-size:12.5px">3 August 2026</td><td><span class="mono" style="font-size:12.5px">Web based Activity for Fundamentals</span></td></tr>
+      <tr><td class="hl" style="font-weight:400"><b>2</b> · How LLMs Work</td><td class="mono" style="font-size:12.5px">3 August 2026</td><td><span class="mono" style="font-size:12.5px">Web based Activity for Fundamentals</span></td></tr>
+      <tr><td class="hl" style="font-weight:400"><b>3</b> · Claude and ChatGPT Fluency</td><td class="mono" style="font-size:12.5px">4 August 2026</td><td><span class="mono" style="font-size:12.5px">Web based Activity for Fundamentals</span></td></tr>
+      <tr><td class="hl" style="font-weight:400"><b>4</b> · Fundamentals of Prompt Engineering</td><td class="mono" style="font-size:12.5px">4 August 2026</td><td><span class="mono" style="font-size:12.5px">Claude, Web based Activity for Fundamentals</span></td></tr>
+    </table>
+  </div>
+
+  <div class="box" id="s-m2">
+    <div class="box-t" style="color:#E8348B">Module 2 · Agent Fundamentals <small>4 sessions</small></div>
+    <table class="t">
+      <tr><th style="width:46%">Session</th><th style="width:22%">Date</th><th>Tool to be used</th></tr>
+      <tr><td class="hl" style="font-weight:400"><b>5</b> · AI Agents as an Extension of Chatbots</td><td class="mono" style="font-size:12.5px">5 August 2026</td><td><span class="mono" style="font-size:12.5px">Voiceflow</span></td></tr>
+      <tr><td class="hl" style="font-weight:400"><b>6</b> · Agent Tools</td><td class="mono" style="font-size:12.5px">5 August 2026</td><td><span class="mono" style="font-size:12.5px">Claude Co-Work, Claude Arttifacts, Claude Web Search</span></td></tr>
+      <tr><td class="hl" style="font-weight:400"><b>7</b> · Agent MCP</td><td class="mono" style="font-size:12.5px">10 August 2026</td><td><span style="color:var(--ink2)">to be confirmed</span></td></tr>
+      <tr><td class="hl" style="font-weight:400"><b>8</b> · Agent Skills</td><td class="mono" style="font-size:12.5px">10 August 2026</td><td><span style="color:var(--ink2)">to be confirmed</span></td></tr>
+    </table>
+  </div>
+
+  <div class="box" id="s-m3">
+    <div class="box-t" style="color:#8A6A00">Module 3 · Building Multi-Purpose Agents <small>3 sessions</small></div>
+    <table class="t">
+      <tr><th style="width:46%">Session</th><th style="width:22%">Date</th><th>Tool to be used</th></tr>
+      <tr><td class="hl" style="font-weight:400"><b>9</b> · Turning your Claude / ChatGPT into Multi-Purpose Agents – 1: Design</td><td class="mono" style="font-size:12.5px">11 August 2026</td><td><span style="color:var(--ink2)">to be confirmed</span></td></tr>
+      <tr><td class="hl" style="font-weight:400"><b>10</b> · Turning your Claude / ChatGPT into Multi-Purpose Agents – 2: Build</td><td class="mono" style="font-size:12.5px">11 August 2026</td><td><span style="color:var(--ink2)">to be confirmed</span></td></tr>
+      <tr><td class="hl" style="font-weight:400"><b>11</b> · Agent Evaluations</td><td class="mono" style="font-size:12.5px">12 August 2026</td><td><span style="color:var(--ink2)">to be confirmed</span></td></tr>
+    </table>
+  </div>
+
+  <div class="box" id="s-m4">
+    <div class="box-t" style="color:#2F4B8F">Module 4 · Agents in Consulting Practice <small>7 sessions</small></div>
+    <table class="t">
+      <tr><th style="width:46%">Session</th><th style="width:22%">Date</th><th>Tool to be used</th></tr>
+      <tr><td class="hl" style="font-weight:400"><b>12</b> · Agents in Consulting: Context Management and Synthesis</td><td class="mono" style="font-size:12.5px">12 August 2026</td><td><span style="color:var(--ink2)">to be confirmed</span></td></tr>
+      <tr><td class="hl" style="font-weight:400"><b>13</b> · Market and Competitive Research at Scale</td><td class="mono" style="font-size:12.5px">17 August 2026</td><td><span style="color:var(--ink2)">to be confirmed</span></td></tr>
+      <tr><td class="hl" style="font-weight:400"><b>14</b> · Financial Models, Spreadsheets and Quant Deliverables</td><td class="mono" style="font-size:12.5px">17 August 2026</td><td><span style="color:var(--ink2)">to be confirmed</span></td></tr>
+      <tr><td class="hl" style="font-weight:400"><b>15</b> · Data Science and Analytics using Claude / ChatGPT</td><td class="mono" style="font-size:12.5px">18 August 2026</td><td><span style="color:var(--ink2)">to be confirmed</span></td></tr>
+      <tr><td class="hl" style="font-weight:400"><b>16</b> · Finding Meaningful Insights from AI Outputs</td><td class="mono" style="font-size:12.5px">18 August 2026</td><td><span style="color:var(--ink2)">to be confirmed</span></td></tr>
+      <tr><td class="hl" style="font-weight:400"><b>17</b> · Generating C-Suite Audience Outputs</td><td class="mono" style="font-size:12.5px">19 August 2026</td><td><span style="color:var(--ink2)">to be confirmed</span></td></tr>
+      <tr><td class="hl" style="font-weight:400"><b>18</b> · Critiquing and Iteration</td><td class="mono" style="font-size:12.5px">19 August 2026</td><td><span style="color:var(--ink2)">to be confirmed</span></td></tr>
+    </table>
+  </div>
+
+  <div class="box" id="s-m5">
+    <div class="box-t" style="color:#E8348B">Module 5 · Capstone <small>2 sessions</small></div>
+    <table class="t">
+      <tr><th style="width:46%">Session</th><th style="width:22%">Date</th><th>Tool to be used</th></tr>
+      <tr><td class="hl" style="font-weight:400"><b>19</b> · Capstone: End-to-End Consulting Engagement – 1</td><td class="mono" style="font-size:12.5px">24 August 2026</td><td><span style="color:var(--ink2)">to be confirmed</span></td></tr>
+      <tr><td class="hl" style="font-weight:400"><b>20</b> · Capstone: End-to-End Consulting Engagement – 2</td><td class="mono" style="font-size:12.5px">24 August 2026</td><td><span style="color:var(--ink2)">to be confirmed</span></td></tr>
+    </table>
+  </div>
+
+  <div class="box" id="s-m6">
+    <div class="box-t" style="color:#8A6A00">Module 6 · Scaling, Risk and the Future of AI-Powered Consulting <small>4 sessions</small></div>
+    <table class="t">
+      <tr><th style="width:46%">Session</th><th style="width:22%">Date</th><th>Tool to be used</th></tr>
+      <tr><td class="hl" style="font-weight:400"><b>21</b> · Driving Value in Organisations using Agents</td><td class="mono" style="font-size:12.5px">25 August 2026</td><td><span style="color:var(--ink2)">to be confirmed</span></td></tr>
+      <tr><td class="hl" style="font-weight:400"><b>22</b> · Failure Cases of AI Agents in Production</td><td class="mono" style="font-size:12.5px">25 August 2026</td><td><span style="color:var(--ink2)">to be confirmed</span></td></tr>
+      <tr><td class="hl" style="font-weight:400"><b>23</b> · AI Agent Risks</td><td class="mono" style="font-size:12.5px">26 August 2026</td><td><span style="color:var(--ink2)">to be confirmed</span></td></tr>
+      <tr><td class="hl" style="font-weight:400"><b>24</b> · The Future of AI-Powered Consulting</td><td class="mono" style="font-size:12.5px">26 August 2026</td><td><span style="color:var(--ink2)">to be confirmed</span></td></tr>
+    </table>
+  </div>
+
+  </div>
+
+  <div id="paneFull" style="display:none">
+  <div class="headline" style="margin:16px 0 10px">
+    <h3>Course Outline (PGDM)</h3>
+    <p>The outline as approved, reproduced in full — programme details, outcomes, assessment weightings, policies and the complete session-by-session schedule with pre-reads, in-class discussion questions and post-session reflections.</p>
+  </div>
+
+  <div class="box" id="o-meta">
+    <div class="box-t">Programme details</div>
+    <table class="t">
+      <tr><td class="hl">Program Name</td><td>PGDM</td><td class="hl">Batch</td><td>2025-2027</td></tr>
+      <tr><td class="hl">Academic Term</td><td>III (Phase 1)</td><td class="hl">Year</td><td>II Year, AY 2026-27</td></tr>
+      <tr><td class="hl">Term Duration</td><td colspan="3">July-Sept 2026</td></tr>
+      <tr><td class="hl">Course Title</td><td colspan="3">AI Agents Engineering for Consulting</td></tr>
+      <tr><td class="hl">Course type</td><td>Functional Specialisation</td><td class="hl">Course Credit</td><td>3</td></tr>
+      <tr><td class="hl">Total no. of sessions</td><td>24</td><td class="hl">Session Duration</td><td>75 minutes</td></tr>
+      <tr><td class="hl">Sections (if any)</td><td>Consultation Hours:</td><td class="hl">&nbsp;</td><td>By appointment via email</td></tr>
+      <tr><td class="hl">Course Instructor(s)</td><td colspan="3">Lead Instructor<br>Name: Mr. Ketan Paithankar<br>Contact Details: ketan@konverge.ai<br>Consultation Hours: By appointment via email<br><br>Co-instructor(s)<br>1. Name: Mr. Adwait Mardikar<br>Contact Details: adwait.mardikar@micamail.in<br>Consultation Hours: By appointment via email</td></tr>
+      <tr><td class="hl">Office<br>(Lead Instructor)</td><td colspan="3">NA</td></tr>
+      <tr><td class="hl">Academic Associate</td><td>Name: Astha Aloria</td><td class="hl">&nbsp;</td><td>Contact Details: astha.aloria@micamail.in</td></tr>
+      <tr><td class="hl">Pre-requisites<br>(if any)</td><td colspan="3">None. Basic familiarity with using a computer and standard business software (e.g., spreadsheets, email) is assumed; no prior coding or AI experience is required.</td></tr>
+    </table>
+    </div>
+
+  <div class="box" id="o-desc">
+    <div class="box-t">Course description</div>
+    <p><b>What.</b> This course builds practical fluency in Generative AI and agentic AI systems for management consulting. Students will learn how large language models (LLMs) work, become fluent users of tools such as Claude and ChatGPT, master prompt engineering, and progress to designing, building, and evaluating multi-purpose AI agents. These agent skills are then applied to core consulting deliverables such as market and competitive research, financial models and quant analysis, data science and insight generation, and C-suite communication, culminating in an end-to-end capstone consulting engagement.</p>
+    <p><b>Why.</b> Generative AI and autonomous agents are rapidly reshaping how consulting and analytical work gets done, from research and synthesis to modelling and client-ready deliverables. Future consultants and managers must be able to work fluently and critically with these tools: knowing what agents can and cannot do, how to direct them reliably, and how to responsibly manage their risks and failure modes, so they can multiply their own judgement and productivity rather than be replaced by, or over-rely on, the technology.</p>
+    <p><b>How.</b> Through a build-as-you-learn pedagogy: concept sessions on LLMs and agent architecture, hands-on labs (prompt engineering, agent tools, MCP, agent skills), guided design-and-build of a personal multi-purpose agent, applied consulting labs (research, financial modelling, data analytics, insight and C-suite output generation), peer critique and iteration, and a two-session capstone that simulates an end-to-end consulting engagement using AI agents, closing with a critical look at failure cases, risks, and the future of AI-powered consulting.</p>
+  </div>
+
+  <div class="box" id="o-po">
+    <div class="box-t">PGDM Programme Outcomes</div>
+    <ul class="kl">
+      <li>PO-1: Students will acquire in-depth knowledge of management theories and practices to sustain and drive emerging business ecosystems.</li>
+      <li>PO-3: Students will acquire the abilities required for ethical and empathetic leadership to create a collaborative, and innovative business environment.</li>
+      <li>PO-2: Students will demonstrate agile thinking abilities for analytical and evidence-based decision-making and creative problem-solving.</li>
+      <li>PO-4: Students will imbibe values to make future businesses sustainable and sensitive to symbiotic business and societal ecosystems.</li>
+    </ul>
+  </div>
+
+  <div class="box" id="o-co">
+    <div class="box-t">Course objectives and outcomes <small>linked to programme outcomes</small></div>
+    <p style="margin-bottom:12px"><b>Objective.</b> To build students’ practical fluency in Generative AI and agentic systems, and their ability to design, build, deploy, and critically evaluate AI agents as tools for high-value management consulting work.</p>
+    <table class="t">
+      <tr><th style="width:44%">Course Outcome</th><th>Bloom's verb</th><th>Linked PO</th></tr>
+      <tr><td class="hl" style="font-weight:400">CO1: Explain the working principles, capabilities, and limitations of large language models (LLMs) and generative AI systems.</td><td>Explain</td><td>PO-1<br>Alignment Level: 2</td></tr>
+      <tr><td class="hl" style="font-weight:400">CO2: Apply prompt engineering techniques and agentic design principles (tools, MCP, skills) to build a functioning multi-purpose AI agent.</td><td>Apply / Construct</td><td>PO-1, PO-2<br>Alignment Level:3</td></tr>
+      <tr><td class="hl" style="font-weight:400">CO3: Employ AI agents to execute consulting deliverables, including market and competitive research, financial models, and data analytics.</td><td>Employ / Execute</td><td>PO-2<br>Alignment Level:3</td></tr>
+      <tr><td class="hl" style="font-weight:400">CO4: Evaluate and critique AI-generated outputs for accuracy, relevance, and audience-fit, and iterate them into C-suite-ready deliverables.</td><td>Evaluate / Critique</td><td>PO-2<br>Alignment Level:3</td></tr>
+      <tr><td class="hl" style="font-weight:400">CO5: Analyze the failure modes, risks, and governance considerations of deploying AI agents in organisational and consulting contexts.</td><td>Analyze</td><td>PO-3<br>Alignment Level:3</td></tr>
+    </table>
+  </div>
+
+  <div class="box" id="o-ped">
+    <div class="box-t">Pedagogy</div>
+    <p>Delivered primarily through hands-on, in-classroom build sessions rather than lectures. The instructor live-builds each technique or agent workflow step by step, while students replicate it in real time, progressing from guided replication to independently applying it to their own consulting deliverables, culminating in the two-part Capstone, where students build and stress-test a working agent end-to-end.</p>
+  </div>
+
+  <div class="box" id="o-eval">
+    <div class="box-t">Evaluation components <small>assessment schema and performance indicators</small></div>
+    <table class="t">
+      <tr><th style="width:40%">Component</th><th>Weight</th><th>Performance indicator</th><th>Bloom's verb</th></tr>
+      <tr><td class="hl" colspan="4" style="background:rgba(47,75,143,.10);font-family:var(--disp)">A. Internal Evaluations (Continuous) — 60</td></tr>
+      <tr><td class="hl" style="font-weight:400"><b>Individual Reflection Essay</b><br><span style="font-weight:400;color:var(--ink2);font-size:14px">Application of specific agent-building techniques (agent tools, MCP, and skills from Modules 2–3) to a consulting problem. The essay must also address the failure modes, risks, and governance considerations of the chosen approach.</span></td><td class="mono">10%</td><td>Clarity of argument, critical analysis of the agent design, depth of reflection on risks and responsible use, and the ability to connect course concepts to a practical consulting context.</td><td class="mono" style="font-size:12px">Analyze, Evaluate</td></tr>
+      <tr><td class="hl" style="font-weight:400"><b>Announced Quiz</b><br><span style="font-weight:400;color:var(--ink2);font-size:14px">Tests students’ understanding of how LLMs work, the capabilities and limitations of generative AI, agent fundamentals (tools, MCP, and skills), and the core principles of prompt engineering.</span></td><td class="mono">20%</td><td>Correctness of answers demonstrates a clear grasp of key terminology, concepts, and the foundational building blocks of agentic systems.</td><td class="mono" style="font-size:12px">Remember, Understand</td></tr>
+      <tr><td class="hl" style="font-weight:400"><b>Group Projects</b><br><span style="font-weight:400;color:var(--ink2);font-size:14px">A group consulting case study in which teams design and build a multi-purpose AI agent and use it to perform tasks such as market and competitive research, financial modelling, and data analytics, culminating in a project report and presentation.</span></td><td class="mono">30%</td><td>Depth of analysis, effective and appropriate application of the agent (tools, MCP, and skills), feasibility and usefulness of the proposed solution, and the collaborative quality of the final output.</td><td class="mono" style="font-size:12px">Apply, Analyze, Create</td></tr>
+      <tr><td class="hl" colspan="4" style="background:rgba(47,75,143,.10);font-family:var(--disp)">B. End-term Evaluation (End-course) — 40</td></tr>
+      <tr><td class="hl" style="font-weight:400"><b>Individual Take-Home Assignment</b><br><span style="font-weight:400;color:var(--ink2);font-size:14px">Comprehensive take-home capstone in which students act as an AI-enabled consultant for a given company and run an end-to-end engagement using their own agent. Students must (1) analyse the company’s needs and identify high-impact use cases for AI agents; (2) design, build, and evaluate an agent to execute the core consulting deliverables (research, modelling, analytics); and (3) develop a strategic recommendation covering the implementation plan, risk mitigation, and governance. The submission must include an appendix documenting the key prompts, agent configuration, and verification steps used.</span></td><td class="mono">40%</td><td>Demonstrated ability to synthesise all course modules: sound agent design and build (M2–M3), skilful execution of consulting deliverables with agents (M4), critical evaluation and iteration of AI output into a C-suite-ready form (M4), and a clear-eyed treatment of failure modes, risks, and governance (M6), together with the quality and actionability of the final recommendation.</td><td class="mono" style="font-size:12px">Evaluate, Create</td></tr>
+      <tr><td class="hl" colspan="4" style="background:rgba(47,75,143,.10);font-family:var(--disp)">C. Individual Assessment Weightage (total) — 70</td></tr>
+      <tr><td class="hl" colspan="4" style="background:rgba(47,75,143,.10);font-family:var(--disp)">D. Group Assessment Weightage (total) — 30</td></tr>
+    </table>
+  </div>
+
+  <div class="box" id="o-aol">
+    <div class="box-t">Assurance of learning <small>assessment mapped to course and programme outcomes</small></div>
+    <table class="t" style="text-align:center">
+      <tr><th style="text-align:left">Assessment component</th><th colspan="5">Course Outcomes</th><th colspan="3">Programme Outcomes</th></tr>
+      <tr><th style="text-align:left">&nbsp;</th><th>CO1</th><th>CO2</th><th>CO3</th><th>CO4</th><th>CO5</th><th>PO1</th><th>PO 2</th><th>PO3</th></tr>
+      <tr><td class="hl" style="text-align:left;font-weight:400">Individual Reflection Essay (10%)</td><td style="color:var(--pink)">✓</td><td style="color:var(--ink2)">·</td><td style="color:var(--ink2)">·</td><td style="color:var(--ink2)">·</td><td style="color:var(--pink)">✓</td><td style="color:var(--pink)">✓</td><td style="color:var(--ink2)">·</td><td style="color:var(--pink)">✓</td></tr>
+      <tr><td class="hl" style="text-align:left;font-weight:400">Announced Quiz (20%)</td><td style="color:var(--pink)">✓</td><td style="color:var(--pink)">✓</td><td style="color:var(--ink2)">·</td><td style="color:var(--ink2)">·</td><td style="color:var(--ink2)">·</td><td style="color:var(--pink)">✓</td><td style="color:var(--pink)">✓</td><td style="color:var(--ink2)">·</td></tr>
+      <tr><td class="hl" style="text-align:left;font-weight:400">Group Projects (30%)</td><td style="color:var(--ink2)">·</td><td style="color:var(--pink)">✓</td><td style="color:var(--pink)">✓</td><td style="color:var(--pink)">✓</td><td style="color:var(--ink2)">·</td><td style="color:var(--pink)">✓</td><td style="color:var(--pink)">✓</td><td style="color:var(--ink2)">·</td></tr>
+      <tr><td class="hl" style="text-align:left;font-weight:400">Individual Take-Home Assignment (40%)</td><td style="color:var(--ink2)">·</td><td style="color:var(--pink)">✓</td><td style="color:var(--pink)">✓</td><td style="color:var(--pink)">✓</td><td style="color:var(--pink)">✓</td><td style="color:var(--pink)">✓</td><td style="color:var(--pink)">✓</td><td style="color:var(--pink)">✓</td></tr>
+    </table>
+        <p class="mono" style="color:var(--ink2);margin-top:12px"></p>
+  </div>
+
+  <div class="box" id="o-etiq">
+    <div class="box-t">Academic integrity and course etiquette</div>
+    <ul class="kl">
+      <li>Electronics Policy: Laptops open and required every session. Phones and non-course apps should stay closed during active build/discussion time.</li>
+      <li>Academic Integrity: This course is a deliberate exception to MICA’s default no-AI-tools policy. Full use of Claude, ChatGPT, and agentic tools is required and expected. The only requirements are transparency (note which tools/agents you used for each deliverable) and personal accountability (you are responsible for verifying and standing behind anything an AI produced). Standard integrity rules still apply to non-AI matters.</li>
+      <li>Collaboration Guidelines: Peer collaboration is encouraged during in-class labs and the Capstone (group work). Quiz and individual reflections must be your own.</li>
+      <li>All work you submit for this course must be original. If you do borrow from another source for any purpose, please follow APA guidelines. If you are not sure what plagiarism means, consult your Student Manual or your faculty.</li>
+      <li>Additionally, the use of Artificial Intelligence (AI) tools (such as ChatGPT, Quillbot or other AI text generators) to create or significantly produce content that you submit as your own original work is strictly prohibited and constitutes plagiarism, unless otherwise directed/approved by the concerned course instructor.</li>
+      <li>Any violation of academic integrity through plagiarism, fabrication, or other unfair practices will be subject to disciplinary action as outlined in MICA&#x27;s Code of Academic Integrity.</li>
+      <li>All examination protocols and disciplines detailed in the Student Manual are sacrosanct; any violation will be subject to disciplinary action as outlined in MICA&#x27;s Code of Academic Integrity.</li>
+    </ul>
+  </div>
+
+  <div class="flag" style="margin:24px 0">NOTE:<br>The course outline is structured session-wise to help students anticipate upcoming topics, prepare in advance through assigned pre-reads, engage critically during in-class discussions, and consolidate learning through post-reads — enabling a coherent and progressive understanding of the subject.<br>Each course must dedicate a minimum of One Session to examining the impact and implications of Artificial Intelligence (AI) and its practical applications within the specific subject field.</div>
+
+  <div class="box" id="o-m1">
+    <div class="box-t" style="color:#2F4B8F">Module 1: Foundations of Generative AI</div>
+    <div style="border-top:1px dotted var(--rule);padding:14px 0">
+      <div class="mono" style="color:#2F4B8F;font-size:12px;letter-spacing:.12em;margin-bottom:4px">SESSION 1 · 3 August 2026 · Ketan Paithankar</div>
+      <h4 style="font-size:19px;margin-bottom:6px">Introduction to LLMs, GenAI and understanding model capabilities</h4>
+      <p style="margin:8px 0"><b style="font-family:var(--disp)">Pre-read.</b> Andrej Karpathy, &quot;Intro to Large Language Models&quot; (1-hour talk) — a jargon-light mental model of what LLMs are, how they are trained, and what they can and cannot do. <a href="https://www.youtube.com/watch?v=zjkBMFhNj_g" target="_blank" rel="noopener">https://www.youtube.com/watch?v=zjkBMFhNj_g</a></p><p style="margin:8px 0"><b style="font-family:var(--disp)">In Class.</b> Discussion Questions<br>Q1. Where have you already seen generative AI change how analytical or knowledge work gets done, and what surprised you most about its capabilities or its limits?<br>Q2. If an LLM is essentially predicting the next token, why can it still summarise a report or draft an email? What does that tell us about where it will be reliable versus risky?</p><p style="margin:8px 0"><b style="font-family:var(--disp)">Post Read/Reflections.</b> Write a one-page reflection listing three consulting tasks you believe an LLM could do well today and three it would likely fail at, with your reasoning for each.</p>
+    </div>
+    <div style="border-top:1px dotted var(--rule);padding:14px 0">
+      <div class="mono" style="color:#2F4B8F;font-size:12px;letter-spacing:.12em;margin-bottom:4px">SESSION 2 · 3 August 2026 · Ketan Paithankar</div>
+      <h4 style="font-size:19px;margin-bottom:6px">How LLMs work</h4>
+      <p style="margin:8px 0"><b style="font-family:var(--disp)">Pre-read.</b> Jay Alammar, &quot;The Illustrated Transformer&quot; — a visual, non-mathematical walkthrough of the transformer architecture behind modern LLMs. <a href="https://jalammar.github.io/illustrated-transformer/" target="_blank" rel="noopener">https://jalammar.github.io/illustrated-transformer/</a></p><p style="margin:8px 0"><b style="font-family:var(--disp)">In Class.</b> Discussion Questions<br>Q1. In your own words, what does “attention” let a model do that older approaches could not? Use a business-writing example.<br>Q2. Knowing that a model is trained on a fixed dataset up to a cut-off date, how should that shape the way a consultant fact-checks its output?</p><p style="margin:8px 0"><b style="font-family:var(--disp)">Post Read/Reflections.</b> Explain the transformer’s core idea to a non-technical colleague in under 200 words and submit your explanation.</p>
+    </div>
+    <div style="border-top:1px dotted var(--rule);padding:14px 0">
+      <div class="mono" style="color:#2F4B8F;font-size:12px;letter-spacing:.12em;margin-bottom:4px">SESSION 3 · 4 August 2026 · Ketan Paithankar</div>
+      <h4 style="font-size:19px;margin-bottom:6px">Claude and ChatGPT Fluency</h4>
+      <p style="margin:8px 0"><b style="font-family:var(--disp)">Pre-read.</b> Ethan Mollick, &quot;One Useful Thing&quot; — practical, hype-free guidance on becoming genuinely fluent with tools like Claude and ChatGPT. <a href="https://www.oneusefulthing.org/" target="_blank" rel="noopener">https://www.oneusefulthing.org/</a></p><p style="margin:8px 0"><b style="font-family:var(--disp)">In Class.</b> Discussion Questions<br>Q1. What separates a novice user of Claude/ChatGPT from a fluent one? Share one prompt that worked well and one that failed for you.<br>Q2. When should you prefer a chat model over a traditional tool (search engine, spreadsheet, calculator), and when should you not?</p><p style="margin:8px 0"><b style="font-family:var(--disp)">Post Read/Reflections.</b> Use Claude and ChatGPT on the same real task, then write a short comparison of where each was stronger, weaker, or simply different.</p>
+    </div>
+    <div style="border-top:1px dotted var(--rule);padding:14px 0">
+      <div class="mono" style="color:#2F4B8F;font-size:12px;letter-spacing:.12em;margin-bottom:4px">SESSION 4 · 4 August 2026 · Ketan Paithankar</div>
+      <h4 style="font-size:19px;margin-bottom:6px">Fundamentals of Prompt Engineering</h4>
+      <p style="margin:8px 0"><b style="font-family:var(--disp)">Pre-read.</b> DAIR.AI, &quot;Prompt Engineering Guide&quot; — a structured open reference covering core prompting techniques with worked examples. <a href="https://www.promptingguide.ai/" target="_blank" rel="noopener">https://www.promptingguide.ai/</a></p><p style="margin:8px 0"><b style="font-family:var(--disp)">In Class.</b> Discussion Questions<br>Q1. Which prompting technique (role, few-shot examples, step-by-step, output format) most improved your results, and why do you think it helped?<br>Q2. How much of “prompt engineering” is about the model versus about clearly specifying the task the way you would brief a junior analyst?</p><p style="margin:8px 0"><b style="font-family:var(--disp)">Post Read/Reflections.</b> Take a weak prompt and iterate it through at least three versions; submit all versions with notes on what changed and why the output improved.</p>
+    </div>
+    <div class="detail" style="margin-top:14px"><h4>By the end of Module 1, students will be able to:</h4><ul class="kl"><li>Explain, in plain language, what LLMs and generative AI are, how they are trained, and the core idea of the transformer architecture that powers them.</li><li>Describe the capabilities and limitations of current models, including why they can be confidently wrong and how a knowledge cut-off affects reliability.</li><li>Operate Claude and ChatGPT fluently for common analytical and writing tasks and select the appropriate tool for a given job.</li><li>Apply core prompt-engineering techniques (role, examples, step-by-step reasoning, output format) and iterate a prompt to measurably improve its output.</li></ul></div>
+  </div>
+
+  <div class="box" id="o-m2">
+    <div class="box-t" style="color:#E8348B">Module 2: Agent Fundamentals</div>
+    <div style="border-top:1px dotted var(--rule);padding:14px 0">
+      <div class="mono" style="color:#E8348B;font-size:12px;letter-spacing:.12em;margin-bottom:4px">SESSION 5 · 5 August 2026 · Ketan Paithankar</div>
+      <h4 style="font-size:19px;margin-bottom:6px">AI Agents as an Extension of Chatbots</h4>
+      <p style="margin:8px 0"><b style="font-family:var(--disp)">Pre-read.</b> Anthropic, &quot;Building Effective Agents&quot; — distinguishes chatbots, workflows, and agents, and explains when each is appropriate. <a href="https://www.anthropic.com/engineering/building-effective-agents" target="_blank" rel="noopener">https://www.anthropic.com/engineering/building-effective…</a></p><p style="margin:8px 0"><b style="font-family:var(--disp)">In Class.</b> Discussion Questions<br>Q1. What is the practical difference between a chatbot, a workflow, and an agent? Give a consulting example of each.<br>Q2. Anthropic argues you should use the simplest solution that works. When would adding agentic autonomy create more risk than value?</p><p style="margin:8px 0"><b style="font-family:var(--disp)">Post Read/Reflections.</b> Identify one repetitive task in your own workflow and sketch whether a simple prompt, a workflow, or a full agent is the right tool for it.</p>
+    </div>
+    <div style="border-top:1px dotted var(--rule);padding:14px 0">
+      <div class="mono" style="color:#E8348B;font-size:12px;letter-spacing:.12em;margin-bottom:4px">SESSION 6 · 5 August 2026 · Ketan Paithankar</div>
+      <h4 style="font-size:19px;margin-bottom:6px">Agent Tools</h4>
+      <p style="margin:8px 0"><b style="font-family:var(--disp)">Pre-read.</b> Anthropic, &quot;Writing Effective Tools for AI Agents&quot; — how tools extend an agent’s abilities and what makes a tool well-designed. <a href="https://www.anthropic.com/engineering/writing-tools-for-agents" target="_blank" rel="noopener">https://www.anthropic.com/engineering/writing-tools-for-…</a></p><p style="margin:8px 0"><b style="font-family:var(--disp)">In Class.</b> Discussion Questions<br>Q1. Why does giving an agent tools (search, code execution, file access) change what it can reliably accomplish? What new failure modes appear?<br>Q2. What makes a tool description “clear” to an agent, and how is that similar to writing instructions for a new team member?</p><p style="margin:8px 0"><b style="font-family:var(--disp)">Post Read/Reflections.</b> List three tools you would want your consulting agent to have and, for each, write the one-line description you would give the agent.</p>
+    </div>
+    <div style="border-top:1px dotted var(--rule);padding:14px 0">
+      <div class="mono" style="color:#E8348B;font-size:12px;letter-spacing:.12em;margin-bottom:4px">SESSION 7 · 10 August 2026 · Ketan Paithankar</div>
+      <h4 style="font-size:19px;margin-bottom:6px">Agent MCP</h4>
+      <p style="margin:8px 0"><b style="font-family:var(--disp)">Pre-read.</b> Anthropic, &quot;Introducing the Model Context Protocol (MCP)&quot; — the open standard for connecting AI systems to the data and tools where work happens. <a href="https://www.anthropic.com/news/model-context-protocol" target="_blank" rel="noopener">https://www.anthropic.com/news/model-context-protocol</a></p><p style="margin:8px 0"><b style="font-family:var(--disp)">In Class.</b> Discussion Questions<br>Q1. What problem does MCP solve that ad-hoc, one-off integrations do not? Why might a shared standard matter for enterprises?<br>Q2. If an agent can reach internal systems (email, drives, databases) via MCP, what governance questions does that raise?</p><p style="margin:8px 0"><b style="font-family:var(--disp)">Post Read/Reflections.</b> Describe one internal or external data source you would connect to an agent via MCP and the value and the risks it would create.</p>
+    </div>
+    <div style="border-top:1px dotted var(--rule);padding:14px 0">
+      <div class="mono" style="color:#E8348B;font-size:12px;letter-spacing:.12em;margin-bottom:4px">SESSION 8 · 10 August 2026 · Ketan Paithankar</div>
+      <h4 style="font-size:19px;margin-bottom:6px">Agent Skills</h4>
+      <p style="margin:8px 0"><b style="font-family:var(--disp)">Pre-read.</b> Anthropic, &quot;Introducing Agent Skills&quot; — folders of instructions, scripts, and resources that make an agent reliably better at specific tasks. <a href="https://claude.com/blog/skills" target="_blank" rel="noopener">https://claude.com/blog/skills</a></p><p style="margin:8px 0"><b style="font-family:var(--disp)">In Class.</b> Discussion Questions<br>Q1. How is a “skill” different from a prompt or a tool? Why might packaging procedural knowledge this way be powerful for a consulting firm?<br>Q2. What firm-specific knowledge (templates, brand rules, methods) would be worth turning into a reusable skill?</p><p style="margin:8px 0"><b style="font-family:var(--disp)">Post Read/Reflections.</b> Draft the outline of one skill you would build for your capstone agent, listing the instructions and resources it would contain.</p>
+    </div>
+    <div class="detail" style="margin-top:14px"><h4>By the end of Module 2, students will be able to:</h4><ul class="kl"><li>Distinguish between chatbots, workflows, and agents, and judge when each is the appropriate solution.</li><li>Explain how tools extend an agent’s abilities and write clear, well-scoped tool descriptions.</li><li>Describe the purpose of the Model Context Protocol (MCP) and how it connects agents to data sources and systems.</li><li>Explain how Agent Skills package procedural knowledge, and identify firm-specific knowledge (templates, methods, brand rules) worth turning into a</li><li>reusable skill.</li></ul></div>
+  </div>
+
+  <div class="box" id="o-m3">
+    <div class="box-t" style="color:#8A6A00">Module 3: Building Multi-Purpose Agents</div>
+    <div style="border-top:1px dotted var(--rule);padding:14px 0">
+      <div class="mono" style="color:#8A6A00;font-size:12px;letter-spacing:.12em;margin-bottom:4px">SESSION 9 · 11 August 2026 · Adwait Mardikar</div>
+      <h4 style="font-size:19px;margin-bottom:6px">Turning your Claude / ChatGPT into Multi-Purpose Agents – 1: Design</h4>
+      <p style="margin:8px 0"><b style="font-family:var(--disp)">Pre-read.</b> Anthropic Engineering Blog — design guidance for agents, including workflow patterns and how to structure an agent’s context and behaviour. <a href="https://www.anthropic.com/engineering" target="_blank" rel="noopener">https://www.anthropic.com/engineering</a></p><p style="margin:8px 0"><b style="font-family:var(--disp)">In Class.</b> Discussion Questions<br>Q1. Before building, how do you decide what your multi-purpose agent should and should not do? What are the risks of an agent that “does everything”?<br>Q2. What context (instructions, examples, tools, memory) does your agent need on hand to behave the way you intend?</p><p style="margin:8px 0"><b style="font-family:var(--disp)">Post Read/Reflections.</b> Write a one-page design brief for your agent: its purpose, the tasks it handles, the tools and skills it needs, and its guardrails.</p>
+    </div>
+    <div style="border-top:1px dotted var(--rule);padding:14px 0">
+      <div class="mono" style="color:#8A6A00;font-size:12px;letter-spacing:.12em;margin-bottom:4px">SESSION 10 · 11 August 2026 · Adwait Mardikar</div>
+      <h4 style="font-size:19px;margin-bottom:6px">Turning your Claude / ChatGPT into Multi-Purpose Agents – 2: Build</h4>
+      <p style="margin:8px 0"><b style="font-family:var(--disp)">Pre-read.</b> Anthropic Cookbook — open-source examples and recipes for building working applications with Claude. <a href="https://github.com/anthropics/anthropic-cookbook" target="_blank" rel="noopener">https://github.com/anthropics/anthropic-cookbook</a></p><p style="margin:8px 0"><b style="font-family:var(--disp)">In Class.</b> Discussion Questions<br>Q1. Where was the gap between your design intent and how the agent actually behaved once you built it?<br>Q2. Which parts of building an agent are really “engineering,” and which are careful instruction-writing?</p><p style="margin:8px 0"><b style="font-family:var(--disp)">Post Read/Reflections.</b> Build a first working version of your agent and submit a short log of what worked, what broke, and what you changed.</p>
+    </div>
+    <div style="border-top:1px dotted var(--rule);padding:14px 0">
+      <div class="mono" style="color:#8A6A00;font-size:12px;letter-spacing:.12em;margin-bottom:4px">SESSION 11 · 12 August 2026 · Ketan Paithankar</div>
+      <h4 style="font-size:19px;margin-bottom:6px">Agent Evaluations</h4>
+      <p style="margin:8px 0"><b style="font-family:var(--disp)">Pre-read.</b> Hamel Husain, &quot;Your AI Product Needs Evals&quot; — why systematic evaluation, not vibes, is how you know an AI system actually works. <a href="https://hamel.dev/blog/posts/evals/" target="_blank" rel="noopener">https://hamel.dev/blog/posts/evals/</a></p><p style="margin:8px 0"><b style="font-family:var(--disp)">In Class.</b> Discussion Questions<br>Q1. How would you tell whether your agent is genuinely good at a task rather than just looking good on one lucky example?<br>Q2. What does a useful test set look like for a consulting deliverable where there is no single correct answer?</p><p style="margin:8px 0"><b style="font-family:var(--disp)">Post Read/Reflections.</b> Define at least five evaluation cases for your agent (input plus what a good output looks like), run them, and record pass/fail.</p>
+    </div>
+    <div class="detail" style="margin-top:14px"><h4>By the end of Module 3, students will be able to:</h4><ul class="kl"><li>Design a multi-purpose AI agent with a clear purpose, defined scope, required tools and skills, and appropriate guardrails.</li><li>Build a working version of the agent and diagnose the gap between its intended and actual behaviour.</li><li>Construct an evaluation set and systematically test the agent’s performance against clear criteria rather than relying on single examples.</li></ul></div>
+  </div>
+
+  <div class="box" id="o-m4">
+    <div class="box-t" style="color:#2F4B8F">Module 4: Agents in Consulting Practice</div>
+    <div style="border-top:1px dotted var(--rule);padding:14px 0">
+      <div class="mono" style="color:#2F4B8F;font-size:12px;letter-spacing:.12em;margin-bottom:4px">SESSION 12 · 12 August 2026 · Ketan Paithankar</div>
+      <h4 style="font-size:19px;margin-bottom:6px">Agents in Consulting: Context Management and Synthesis</h4>
+      <p style="margin:8px 0"><b style="font-family:var(--disp)">Pre-read.</b> Anthropic, &quot;Effective Context Engineering for AI Agents&quot; — how to curate the information an agent works from so it stays accurate over long tasks. <a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents" target="_blank" rel="noopener">https://www.anthropic.com/engineering/effective-context-…</a></p><p style="margin:8px 0"><b style="font-family:var(--disp)">In Class.</b> Discussion Questions<br>Q1. When you feed an agent many documents, why can “more context” sometimes make the output worse? How do you manage this?<br>Q2. In consulting, synthesis is a core skill. Where can an agent genuinely help synthesise, and where must human judgement lead?</p><p style="margin:8px 0"><b style="font-family:var(--disp)">Post Read/Reflections.</b> Give your agent a small pile of mixed source material, ask it to synthesise a one-page brief, and critique what it got right and wrong.</p>
+    </div>
+    <div style="border-top:1px dotted var(--rule);padding:14px 0">
+      <div class="mono" style="color:#2F4B8F;font-size:12px;letter-spacing:.12em;margin-bottom:4px">SESSION 13 · 17 August 2026 · Adwait Mardikar</div>
+      <h4 style="font-size:19px;margin-bottom:6px">Market and Competitive Research at Scale</h4>
+      <p style="margin:8px 0"><b style="font-family:var(--disp)">Pre-read.</b> Dell’Acqua et al. (Harvard/BCG), &quot;Navigating the Jagged Technological Frontier&quot; — a field experiment with 758 consultants on where AI helps and where it hurts real tasks. <a href="https://aiinstitute.hbs.edu/navigating-the-jagged-technological-frontier/" target="_blank" rel="noopener">https://aiinstitute.hbs.edu/navigating-the-jagged-techno…</a></p><p style="margin:8px 0"><b style="font-family:var(--disp)">In Class.</b> Discussion Questions<br>Q1. The study found AI boosted some tasks but worsened others of similar difficulty. How would you judge which side of the “jagged frontier” a research task sits on?<br>Q2. How do you use an agent for market and competitive research without importing its confident-but-wrong claims into a client deliverable?</p><p style="margin:8px 0"><b style="font-family:var(--disp)">Post Read/Reflections.</b> Use your agent to produce a competitor scan on a real market, then verify every factual claim and log which ones held up.</p>
+    </div>
+    <div style="border-top:1px dotted var(--rule);padding:14px 0">
+      <div class="mono" style="color:#2F4B8F;font-size:12px;letter-spacing:.12em;margin-bottom:4px">SESSION 14 · 17 August 2026 · Adwait Mardikar</div>
+      <h4 style="font-size:19px;margin-bottom:6px">Financial Models, Spreadsheets and Quant Deliverables</h4>
+      <p style="margin:8px 0"><b style="font-family:var(--disp)">Pre-read.</b> McKinsey Global Institute, &quot;The Economic Potential of Generative AI&quot; — where gen AI creates measurable value across functions, including quantitative and analytical work. <a href="https://www.mckinsey.com/capabilities/mgi/our-research/the-economic-potential-of-generative-ai-the-next-productivity-frontier" target="_blank" rel="noopener">https://www.mckinsey.com/capabilities/mgi/our-research/t…</a></p><p style="margin:8px 0"><b style="font-family:var(--disp)">In Class.</b> Discussion Questions<br>Q1. What quantitative work can you responsibly delegate to an AI agent, and what must you always check by hand?<br>Q2. Why is it risky to trust an AI-built financial model you did not scrutinise, even when the numbers look plausible?</p><p style="margin:8px 0"><b style="font-family:var(--disp)">Post Read/Reflections.</b> Have your agent build or extend a simple financial model, then independently audit its formulas and assumptions and report the errors you find.</p>
+    </div>
+    <div style="border-top:1px dotted var(--rule);padding:14px 0">
+      <div class="mono" style="color:#2F4B8F;font-size:12px;letter-spacing:.12em;margin-bottom:4px">SESSION 15 · 18 August 2026 · Ketan Paithankar</div>
+      <h4 style="font-size:19px;margin-bottom:6px">Data Science and Analytics using Claude / ChatGPT</h4>
+      <p style="margin:8px 0"><b style="font-family:var(--disp)">Pre-read.</b> Harvard/BCG Henderson Institute, &quot;A New Paradigm for Skill Development&quot; — evidence on non-specialists solving data-science tasks with AI assistance. <a href="https://d3.harvard.edu/a-new-paradigm-for-skill-development-a-large-scale-bcg-experiment/" target="_blank" rel="noopener">https://d3.harvard.edu/a-new-paradigm-for-skill-developm…</a></p><p style="margin:8px 0"><b style="font-family:var(--disp)">In Class.</b> Discussion Questions<br>Q1. If AI lets a non-specialist run a data analysis, who is accountable for its correctness, and how do they earn that confidence?<br>Q2. Where does AI-assisted analysis break down, and how would you catch a misleading chart or statistic it produces?</p><p style="margin:8px 0"><b style="font-family:var(--disp)">Post Read/Reflections.</b> Use your agent to analyse a real dataset and produce one chart plus a finding; then write what a skeptical reviewer should double-check.</p>
+    </div>
+    <div style="border-top:1px dotted var(--rule);padding:14px 0">
+      <div class="mono" style="color:#2F4B8F;font-size:12px;letter-spacing:.12em;margin-bottom:4px">SESSION 16 · 18 August 2026 · Ketan Paithankar</div>
+      <h4 style="font-size:19px;margin-bottom:6px">Finding Meaningful Insights from AI Outputs</h4>
+      <p style="margin:8px 0"><b style="font-family:var(--disp)">Pre-read.</b> Ethan Mollick, &quot;One Useful Thing&quot; — on judging, verifying, and getting genuine value (not just fluent text) out of AI. <a href="https://www.oneusefulthing.org/" target="_blank" rel="noopener">https://www.oneusefulthing.org/</a></p><p style="margin:8px 0"><b style="font-family:var(--disp)">In Class.</b> Discussion Questions<br>Q1. What is the difference between an AI output that is well-written and one that contains a real insight? How do you tell them apart?<br>Q2. How do you avoid being lulled by confident, polished AI text into accepting a shallow or wrong conclusion?</p><p style="margin:8px 0"><b style="font-family:var(--disp)">Post Read/Reflections.</b> Take one AI-generated analysis and rewrite its “so what” into a single, sharper insight a client would actually pay for.</p>
+    </div>
+    <div style="border-top:1px dotted var(--rule);padding:14px 0">
+      <div class="mono" style="color:#2F4B8F;font-size:12px;letter-spacing:.12em;margin-bottom:4px">SESSION 17 · 19 August 2026 · Ketan Paithankar</div>
+      <h4 style="font-size:19px;margin-bottom:6px">Generating C-Suite Audience Outputs</h4>
+      <p style="margin:8px 0"><b style="font-family:var(--disp)">Pre-read.</b> Anthropic, &quot;Prompt Engineering Overview&quot; — techniques for controlling tone, structure, and audience-fit of model output. <a href="https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview" target="_blank" rel="noopener">https://docs.anthropic.com/en/docs/build-with-claude/pro…</a></p><p style="margin:8px 0"><b style="font-family:var(--disp)">In Class.</b> Discussion Questions<br>Q1. What changes when you write for a CEO versus an analyst, and how do you get an agent to make that shift reliably?<br>Q2. What must a human always own before an AI-drafted board deck goes to a client, and why?</p><p style="margin:8px 0"><b style="font-family:var(--disp)">Post Read/Reflections.</b> Turn a detailed analysis into a one-slide, C-suite-ready message using your agent; submit both the raw analysis and the polished output.</p>
+    </div>
+    <div style="border-top:1px dotted var(--rule);padding:14px 0">
+      <div class="mono" style="color:#2F4B8F;font-size:12px;letter-spacing:.12em;margin-bottom:4px">SESSION 18 · 19 August 2026 · Ketan Paithankar</div>
+      <h4 style="font-size:19px;margin-bottom:6px">Critiquing and Iteration</h4>
+      <p style="margin:8px 0"><b style="font-family:var(--disp)">Pre-read.</b> Kellogg et al. (Harvard/BCG), &quot;Discovering AI’s Jagged Frontier — and What We’ve Learned Since&quot; — how expert workers actually iterate and collaborate with AI (“centaurs” vs “cyborgs”). <a href="https://professorkl.substack.com/p/discovering-ais-jagged-frontier-and" target="_blank" rel="noopener">https://professorkl.substack.com/p/discovering-ais-jagge…</a></p><p style="margin:8px 0"><b style="font-family:var(--disp)">In Class.</b> Discussion Questions<br>Q1. What does a productive critique-and-iterate loop with an AI look like, versus simply accepting the first answer?<br>Q2. Are you a “centaur” (divide the work) or a “cyborg” (blend with the AI)? Which mode suits which consulting task?</p><p style="margin:8px 0"><b style="font-family:var(--disp)">Post Read/Reflections.</b> Take a deliverable through at least three critique-and-revise cycles with your agent and document how quality changed each round.</p>
+    </div>
+    <div class="detail" style="margin-top:14px"><h4>By the end of Module 4, students will be able to:</h4><ul class="kl"><li>Manage and curate context so an agent stays accurate across long, multi-source tasks, and use it to synthesise material into a brief.</li><li>Employ agents to execute core consulting deliverables — market and competitive research, financial models, and data analytics — while independently verifying every factual claim and calculation.</li><li>Distinguish a genuine insight from fluent-but-shallow output, and translate analysis into a clear, C-suite-ready message.</li><li>Critique and iterate AI-generated output through structured revise-and-review loops to raise its quality.</li></ul></div>
+  </div>
+
+  <div class="box" id="o-m5">
+    <div class="box-t" style="color:#E8348B">Module 5: Capstone</div>
+    <div style="border-top:1px dotted var(--rule);padding:14px 0">
+      <div class="mono" style="color:#E8348B;font-size:12px;letter-spacing:.12em;margin-bottom:4px">SESSION 19 · 24 August 2026 · Adwait Mardikar</div>
+      <h4 style="font-size:19px;margin-bottom:6px">Capstone: End-to-End Consulting Engagement – 1</h4>
+      <p style="margin:8px 0"><b style="font-family:var(--disp)">Pre-read.</b> Anthropic, &quot;Lessons on Building Effective Human-Agent Teams&quot; — how humans and agents divide work, build trust, and stay accountable. <a href="https://claude.com/blog/building-effective-human-agent-teams" target="_blank" rel="noopener">https://claude.com/blog/building-effective-human-agent-t…</a></p><p style="margin:8px 0"><b style="font-family:var(--disp)">In Class.</b> Discussion Questions<br>Q1. In an end-to-end engagement, which stages should the agent lead and which should the human lead?<br>Q2. How will your team verify the agent’s work at each hand-off so that errors do not compound?</p><p style="margin:8px 0"><b style="font-family:var(--disp)">Post Read/Reflections.</b> Draft your capstone engagement plan: the client problem, the stages, and where your agent and your team each take the lead.</p>
+    </div>
+    <div style="border-top:1px dotted var(--rule);padding:14px 0">
+      <div class="mono" style="color:#E8348B;font-size:12px;letter-spacing:.12em;margin-bottom:4px">SESSION 20 · 24 August 2026 · Adwait Mardikar</div>
+      <h4 style="font-size:19px;margin-bottom:6px">Capstone: End-to-End Consulting Engagement – 2</h4>
+      <p style="margin:8px 0"><b style="font-family:var(--disp)">Pre-read.</b> Dell’Acqua et al., &quot;Navigating the Jagged Technological Frontier&quot; (full working paper) — detailed evidence on AI-assisted consulting performance and its failure modes. <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4573321" target="_blank" rel="noopener">https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4573…</a></p><p style="margin:8px 0"><b style="font-family:var(--disp)">In Class.</b> Discussion Questions<br>Q1. Where did your agent-assisted engagement create the most value, and where did it introduce the most risk?<br>Q2. If you re-ran the engagement, what would you change about how you directed and checked the agent?</p><p style="margin:8px 0"><b style="font-family:var(--disp)">Post Read/Reflections.</b> Deliver your capstone output and submit a transparency note listing every tool and agent used and what you personally verified.</p>
+    </div>
+    <div class="detail" style="margin-top:14px"><h4>By the end of Module 5, students will be able to:</h4><ul class="kl"><li>Plan and execute an end-to-end consulting engagement using an AI agent, dividing work appropriately between the human and the agent.</li><li>Verify the agent’s work at each hand-off so errors do not compound, and deliver a client-ready recommendation.</li><li>Produce a transparency note documenting the tools and agents used and the checks personally performed on the output.</li></ul></div>
+  </div>
+
+  <div class="box" id="o-m6">
+    <div class="box-t" style="color:#8A6A00">Module 6: Scaling, Risk and the Future of AI-Powered Consulting</div>
+    <div style="border-top:1px dotted var(--rule);padding:14px 0">
+      <div class="mono" style="color:#8A6A00;font-size:12px;letter-spacing:.12em;margin-bottom:4px">SESSION 21 · 25 August 2026 · Ketan Paithankar</div>
+      <h4 style="font-size:19px;margin-bottom:6px">Driving Value in Organisations using Agents</h4>
+      <p style="margin:8px 0"><b style="font-family:var(--disp)">Pre-read.</b> McKinsey (QuantumBlack), &quot;The State of AI&quot; (2025) — adoption data showing why most value comes from redesigning workflows, not just deploying tools. <a href="https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai" target="_blank" rel="noopener">https://www.mckinsey.com/capabilities/quantumblack/our-i…</a></p><p style="margin:8px 0"><b style="font-family:var(--disp)">In Class.</b> Discussion Questions<br>Q1. The report finds most firms are stuck in pilots. Why is scaling AI value more an organisational challenge than a technical one?<br>Q2. As a consultant, how would you advise a client to move from “using AI” to capturing measurable value from it?</p><p style="margin:8px 0"><b style="font-family:var(--disp)">Post Read/Reflections.</b> Pick a real organisation and outline where agents could drive value, what would have to change in its workflows, and how you would measure impact.</p>
+    </div>
+    <div style="border-top:1px dotted var(--rule);padding:14px 0">
+      <div class="mono" style="color:#8A6A00;font-size:12px;letter-spacing:.12em;margin-bottom:4px">SESSION 22 · 25 August 2026 · Ketan Paithankar</div>
+      <h4 style="font-size:19px;margin-bottom:6px">Failure Cases of AI Agents in Production</h4>
+      <p style="margin:8px 0"><b style="font-family:var(--disp)">Pre-read.</b> OWASP GenAI Security Project, &quot;Top 10 for Agentic Applications (2026)&quot; — real production incidents and failure modes of autonomous agents. <a href="https://genai.owasp.org/2025/12/09/owasp-top-10-for-agentic-applications-the-benchmark-for-agentic-security-in-the-age-of-autonomous-ai/" target="_blank" rel="noopener">https://genai.owasp.org/2025/12/09/owasp-top-10-for-agen…</a></p><p style="margin:8px 0"><b style="font-family:var(--disp)">In Class.</b> Discussion Questions<br>Q1. Pick one documented agent failure mode (goal hijacking, memory poisoning, cascading failure). How could it show up in a consulting context?<br>Q2. What single guardrail would have prevented the failure you chose, and what would it cost in speed or convenience?</p><p style="margin:8px 0"><b style="font-family:var(--disp)">Post Read/Reflections.</b> Write a short pre-mortem for your own capstone agent: three ways it could fail in production and how you would detect each.</p>
+    </div>
+    <div style="border-top:1px dotted var(--rule);padding:14px 0">
+      <div class="mono" style="color:#8A6A00;font-size:12px;letter-spacing:.12em;margin-bottom:4px">SESSION 23 · 26 August 2026 · Ketan Paithankar</div>
+      <h4 style="font-size:19px;margin-bottom:6px">AI Agent Risks</h4>
+      <p style="margin:8px 0"><b style="font-family:var(--disp)">Pre-read.</b> OWASP GenAI Security Project, &quot;Top 10 for LLM Applications&quot; — the core security and reliability risks of LLM-based systems, from prompt injection to data leakage. <a href="https://genai.owasp.org/" target="_blank" rel="noopener">https://genai.owasp.org/</a></p><p style="margin:8px 0"><b style="font-family:var(--disp)">In Class.</b> Discussion Questions<br>Q1. Which of these risks worries you most for a firm handling confidential client data, and why?<br>Q2. Where should responsibility sit when an agent causes harm — the builder, the user, or the vendor?</p><p style="margin:8px 0"><b style="font-family:var(--disp)">Post Read/Reflections.</b> Draft a one-page responsible-use policy for AI agents that a consulting team could realistically follow.</p>
+    </div>
+    <div style="border-top:1px dotted var(--rule);padding:14px 0">
+      <div class="mono" style="color:#8A6A00;font-size:12px;letter-spacing:.12em;margin-bottom:4px">SESSION 24 · 26 August 2026 · Ketan Paithankar</div>
+      <h4 style="font-size:19px;margin-bottom:6px">The Future of AI-Powered Consulting</h4>
+      <p style="margin:8px 0"><b style="font-family:var(--disp)">Pre-read.</b> Ethan Mollick, &quot;One Useful Thing&quot; — ongoing, grounded writing on where AI is taking knowledge work and expertise. <a href="https://www.oneusefulthing.org/" target="_blank" rel="noopener">https://www.oneusefulthing.org/</a></p><p style="margin:8px 0"><b style="font-family:var(--disp)">In Class.</b> Discussion Questions<br>Q1. If agents can do more of the analytical grunt work, what becomes the distinctive value a human consultant offers?<br>Q2. What skills should you build now to stay valuable as these tools keep improving?</p><p style="margin:8px 0"><b style="font-family:var(--disp)">Post Read/Reflections.</b> Write a personal one-page manifesto: how you intend to use AI agents in your career while keeping your judgement and integrity central.</p>
+    </div>
+    <div class="detail" style="margin-top:14px"><h4>By the end of Module 6, students will be able to:</h4><ul class="kl"><li>Advise how an organisation can move from AI pilots to measurable value by redesigning workflows around agents.</li><li>Analyse real-world agent failure modes and risks (e.g. goal hijacking, memory poisoning, prompt injection, data leakage) and propose guardrails to mitigate them.</li><li>Draft a responsible-use policy for AI agents in a consulting context.</li><li>Articulate the enduring, distinctive value of human judgement and the skills to build for a career in AI-powered consulting.</li></ul></div>
+  </div>
+
+  <div class="box" id="o-reads">
+    <div class="box-t">Recommended texts and additional reading</div>
+    <ul class="kl">
+      <li>Mollick, Ethan. Co-Intelligence: Living and Working with AI. Portfolio/Penguin, 2024.</li>
+      <li>Davenport, T. &amp; Mittal, N. All-in on AI: How Smart Companies Win Big with Artificial Intelligence. Harvard Business Review Press, 2023.</li>
+      <li>McKinsey/BCG “State of AI” annual report series (updated through the term) — for current adoption data.</li>
+      <li>Anthropic and OpenAI official documentation: Claude / Model Context Protocol (MCP) specification; ChatGPT / GPT platform documentation (updated through the term).</li>
+    </ul>
+  </div>
+
+  </div>
+
+  <div class="foot">
+    <span>AI Agents Engineering for Consulting · 24 sessions · 3 credits</span>
+    <span>Lead instructor Ketan Paithankar · Co-instructor Adwait Mardikar</span>
+  </div>
+  </main>
+</div>
+
+<script>
+(function(){
+"use strict";
+const $=(s,r)=>(r||document).querySelector(s), $$=(s,r)=>[...(r||document).querySelectorAll(s)];
+
+function switchTab(which){
+  const full=(which==="full");
+  $("#paneFull").style.display=full?"":"none";
+  $("#paneSimple").style.display=full?"none":"";
+  $("#tabFull").classList.toggle("on",full);
+  $("#tabSimple").classList.toggle("on",!full);
+  $("#tabFull").setAttribute("aria-selected",full);
+  $("#tabSimple").setAttribute("aria-selected",!full);
+  $("#navFull").classList.toggle("on",full);
+  $("#navSimple").classList.toggle("on",!full);
+  window.scrollTo({top:0,behavior:"instant"});
+  onScroll();
+}
+$("#tabFull").addEventListener("click",()=>switchTab("full"));
+$("#tabSimple").addEventListener("click",()=>switchTab("simple"));
+$("#navFull").addEventListener("click",e=>{ e.preventDefault(); switchTab("full"); });
+$("#navSimple").addEventListener("click",e=>{ e.preventDefault(); switchTab("simple"); });
+
+function onScroll(){
+  const d=document.documentElement;
+  const p=Math.min(100,Math.max(0,(window.scrollY/(d.scrollHeight-d.clientHeight))*100));
+  $("#pfill").style.width=p+"%"; $("#ptxt").textContent=Math.round(p)+"%";
+}
+window.addEventListener("scroll",onScroll,{passive:true});
+onScroll();
+})();
+</script>
+
+<script>
+(function(){
+  var rail=document.getElementById("rail"), burger=document.getElementById("burger"),
+      scrim=document.getElementById("scrim"), closeBtn=document.getElementById("drawerX");
+  if(!rail||!burger) return;
+  function setOpen(open){
+    rail.classList.toggle("open",open);
+    burger.classList.toggle("open",open);
+    scrim.classList.toggle("on",open);
+    burger.setAttribute("aria-expanded",open?"true":"false");
+    rail.setAttribute("aria-hidden",open?"false":"true");
+    document.body.style.overflow = (open && window.innerWidth<=980) ? "hidden" : "";
+  }
+  burger.addEventListener("click",function(){ setOpen(!rail.classList.contains("open")); });
+  scrim.addEventListener("click",function(){ setOpen(false); });
+  if(closeBtn) closeBtn.addEventListener("click",function(){ setOpen(false); });
+  rail.addEventListener("click",function(e){ if(e.target.closest("a")) setOpen(false); });
+  document.addEventListener("keydown",function(e){
+    if(e.key==="Escape") setOpen(false);
+    else if((e.key==="m"||e.key==="M") && !/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName))
+      setOpen(!rail.classList.contains("open"));
+  });
+  setOpen(false);
+})();
+</script>
+</body>
+</html>
