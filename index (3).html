@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Session 05 · AI Agents as an Extension of Chatbots</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1a2830;
+  --surface:#f3f6f7;
+  --panel:#ffffff;
+  --teal:#0f6e6b;
+  --teal-soft:#e3efee;
+  --amber:#d98a24;
+  --amber-soft:#faf0e0;
+  --slate:#5d7079;
+  --line:#d9e1e4;
+  --radius:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--surface);
+  color:var(--ink);
+  line-height:1.65;
+  font-size:16px;
+}
+.wrap{max-width:1040px;margin:0 auto;padding:0 24px}
+.eyebrow{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--teal);font-weight:500;
+}
+h1,h2,h3{font-family:'Space Grotesk',sans-serif;line-height:1.2}
+a{color:var(--teal)}
+
+/* header */
+header{
+  background:var(--ink);color:#eef4f5;
+  padding:64px 0 56px;
+  border-bottom:4px solid var(--teal);
+}
+header .eyebrow{color:#7fc4c0;margin-bottom:14px}
+header h1{font-size:clamp(30px,4.4vw,46px);font-weight:700;max-width:760px}
+header p.sub{margin-top:16px;color:#a9bcc2;max-width:640px;font-size:17px}
+.crumbs{
+  display:flex;gap:10px;flex-wrap:wrap;margin-top:26px;
+  font-family:'IBM Plex Mono',monospace;font-size:12.5px;
+}
+.crumbs span{
+  border:1px solid #34474f;border-radius:999px;padding:6px 14px;color:#cfe0e2;
+}
+
+/* nav */
+nav{
+  position:sticky;top:0;z-index:20;
+  background:rgba(243,246,247,.92);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);
+}
+nav .wrap{display:flex;gap:26px;overflow-x:auto}
+nav a{
+  display:block;padding:14px 0;white-space:nowrap;
+  font-size:14px;font-weight:600;color:var(--slate);text-decoration:none;
+  border-bottom:2px solid transparent;
+}
+nav a:hover,nav a:focus-visible{color:var(--teal);border-bottom-color:var(--teal)}
+
+section{padding:64px 0}
+.sec-head{margin-bottom:34px}
+.sec-head h2{font-size:clamp(24px,3vw,32px);margin-top:8px}
+.sec-head p{color:var(--slate);margin-top:10px;max-width:720px}
+
+.card{
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);padding:28px;
+}
+
+/* definition */
+.definition{
+  border-left:5px solid var(--teal);
+  font-size:18px;
+}
+.definition strong{color:var(--teal)}
+.definition .vs{
+  margin-top:18px;padding-top:18px;border-top:1px dashed var(--line);
+  font-size:15px;color:var(--slate);
+}
+
+/* diagram frame */
+.diagram{
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);padding:20px;margin-top:28px;
+}
+.diagram figcaption{
+  margin-top:12px;font-family:'IBM Plex Mono',monospace;
+  font-size:12.5px;color:var(--slate);text-align:center;
+}
+.diagram svg{width:100%;height:auto;display:block}
+
+/* characteristics grid */
+.grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:16px;margin-top:28px;
+}
+.trait{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:20px 20px 18px;
+}
+.trait .t-ico{
+  width:34px;height:34px;border-radius:9px;background:var(--teal-soft);
+  display:flex;align-items:center;justify-content:center;margin-bottom:12px;
+  font-size:16px;
+}
+.trait h3{font-size:16.5px;margin-bottom:6px}
+.trait p{font-size:14px;color:var(--slate);line-height:1.55}
+
+/* section 2 */
+#activity{background:#e9eff0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.brief{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}
+@media(max-width:800px){.brief{grid-template-columns:1fr}}
+.brief ul{margin:12px 0 0 18px}
+.brief li{margin-bottom:8px}
+.resources h3{font-size:17px;margin-bottom:12px}
+.res-link{
+  display:flex;align-items:center;gap:12px;
+  border:1px solid var(--line);border-radius:10px;padding:12px 14px;
+  text-decoration:none;color:var(--ink);font-weight:600;font-size:14.5px;
+  margin-bottom:10px;background:var(--surface);
+}
+.res-link:hover{border-color:var(--teal)}
+.res-link .badge{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;
+  background:var(--amber-soft);color:var(--amber);border-radius:6px;padding:4px 8px;
+  flex-shrink:0;
+}
+.res-link small{display:block;font-weight:400;color:var(--slate)}
+
+/* steps */
+.steps{margin-top:44px;display:flex;flex-direction:column;gap:26px}
+.step{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  overflow:hidden;
+}
+.step-head{
+  display:flex;align-items:center;gap:16px;
+  padding:20px 26px;border-bottom:1px solid var(--line);
+}
+.step-num{
+  font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:13px;
+  background:var(--ink);color:#fff;border-radius:8px;padding:8px 12px;
+  letter-spacing:.06em;flex-shrink:0;
+}
+.step-head h3{font-size:18px}
+.step-head p{font-size:14px;color:var(--slate);margin-top:2px}
+.step .vid-wrap, .step video{width:100%;display:block;background:#0b1216}
+.step .vid-note{
+  padding:12px 26px;font-family:'IBM Plex Mono',monospace;
+  font-size:12px;color:var(--slate);border-top:1px solid var(--line);
+}
+
+/* test messages */
+.tests{margin-top:44px}
+.tests .card{padding:26px}
+.test-row{
+  display:flex;gap:14px;align-items:flex-start;
+  padding:14px 0;border-bottom:1px dashed var(--line);
+}
+.test-row:last-child{border-bottom:none}
+.test-row .tag{
+  font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.08em;
+  text-transform:uppercase;border-radius:6px;padding:5px 10px;flex-shrink:0;margin-top:2px;
+}
+.tag.d{background:var(--teal-soft);color:var(--teal)}
+.tag.c{background:var(--amber-soft);color:var(--amber)}
+.tag.a{background:#e7e9ef;color:#5b6280}
+.test-row code{
+  font-family:'IBM Plex Mono',monospace;font-size:14px;background:var(--surface);
+  border:1px solid var(--line);border-radius:8px;padding:8px 12px;display:inline-block;
+}
+
+footer{
+  padding:40px 0 56px;color:var(--slate);font-size:13.5px;
+  font-family:'IBM Plex Mono',monospace;
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="eyebrow">Module 1 · Foundations of Generative AI</div>
+    <h1>Session 05 — AI Agents as an Extension of Chatbots</h1>
+    <p class="sub">From answering messages to getting work done: what turns a chatbot into an agent, and a hands-on lab where you build one for GoRoute using Voiceflow.</p>
+    <div class="crumbs">
+      <span>Concept · What is an AI Agent</span>
+      <span>Lab · Build the GoRoute Support Agent</span>
+      <span>Tool · voiceflow.com</span>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <div class="wrap">
+    <a href="#concept">1 · What is an AI Agent</a>
+    <a href="#activity">2 · Hands-on Activity</a>
+    <a href="#steps">Lab Steps 0–5</a>
+    <a href="#tests">Test Messages</a>
+    <a href="#debrief">3 · Debrief</a>
+  </div>
+</nav>
+
+<!-- ============ SECTION 1 ============ -->
+<section id="concept">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Section 01 · Concept</div>
+      <h2>What is an AI Agent?</h2>
+    </div>
+
+    <div class="card definition">
+      <p>An <strong>AI Agent</strong> is an AI system that goes beyond generating replies: it uses a large language model as its reasoning engine to <strong>pursue a goal autonomously</strong> — perceiving its context, planning multi-step actions, using tools and knowledge sources, and adapting based on the results — all while operating within defined instructions and guardrails.</p>
+      <p class="vs"><strong>Chatbot vs. Agent:</strong> a chatbot answers one message at a time from what it already knows. An agent decides <em>what to do next</em> — it can identify who it's talking to, choose the right skill, search a knowledge base, filter what it retrieves, and escalate when it can't help. Same conversation surface, fundamentally more capable behavior.</p>
+    </div>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 960 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Anatomy of an AI Agent diagram">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#5d7079"/>
+          </marker>
+        </defs>
+
+        <!-- loop ring -->
+        <circle cx="480" cy="280" r="150" fill="none" stroke="#d9e1e4" stroke-width="1.5" stroke-dasharray="4 5"/>
+        <!-- loop labels -->
+        <g font-family="IBM Plex Mono, monospace" font-size="12" fill="#0f6e6b" text-anchor="middle" font-weight="500">
+          <text x="480" y="118">PERCEIVE</text>
+          <text x="652" y="285">REASON &amp; PLAN</text>
+          <text x="480" y="452">ACT</text>
+          <text x="310" y="285">OBSERVE &amp; ADAPT</text>
+        </g>
+        <g stroke="#8aa6a4" stroke-width="1.5" fill="none">
+          <path d="M 552 152 A 150 150 0 0 1 604 218" marker-end="url(#arr)"/>
+          <path d="M 604 342 A 150 150 0 0 1 552 408" marker-end="url(#arr)"/>
+          <path d="M 408 408 A 150 150 0 0 1 356 342" marker-end="url(#arr)"/>
+          <path d="M 356 218 A 150 150 0 0 1 408 152" marker-end="url(#arr)"/>
+        </g>
+
+        <!-- core -->
+        <rect x="390" y="230" width="180" height="100" rx="16" fill="#1a2830"/>
+        <text x="480" y="272" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="20" font-weight="700" fill="#ffffff">AI AGENT</text>
+        <text x="480" y="298" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11.5" fill="#7fc4c0">LLM reasoning core</text>
+
+        <!-- attribute nodes -->
+        <g font-family="Inter, sans-serif">
+          <!-- Instructions -->
+          <rect x="40" y="60" width="220" height="86" rx="12" fill="#e3efee" stroke="#0f6e6b" stroke-width="1.2"/>
+          <text x="150" y="92" text-anchor="middle" font-size="15" font-weight="600" fill="#1a2830">Instructions &amp; Persona</text>
+          <text x="150" y="113" text-anchor="middle" font-size="12" fill="#5d7079">Global prompt: personality,</text>
+          <text x="150" y="130" text-anchor="middle" font-size="12" fill="#5d7079">tone, goals of the agent</text>
+
+          <!-- Knowledge -->
+          <rect x="700" y="60" width="220" height="86" rx="12" fill="#e3efee" stroke="#0f6e6b" stroke-width="1.2"/>
+          <text x="810" y="92" text-anchor="middle" font-size="15" font-weight="600" fill="#1a2830">Knowledge &amp; Memory</text>
+          <text x="810" y="113" text-anchor="middle" font-size="12" fill="#5d7079">Knowledge base, documents,</text>
+          <text x="810" y="130" text-anchor="middle" font-size="12" fill="#5d7079">conversation context</text>
+
+          <!-- Skills -->
+          <rect x="700" y="414" width="220" height="86" rx="12" fill="#faf0e0" stroke="#d98a24" stroke-width="1.2"/>
+          <text x="810" y="446" text-anchor="middle" font-size="15" font-weight="600" fill="#1a2830">Skills &amp; Tools</text>
+          <text x="810" y="467" text-anchor="middle" font-size="12" fill="#5d7079">Playbooks, search, actions</text>
+          <text x="810" y="484" text-anchor="middle" font-size="12" fill="#5d7079">the agent can invoke</text>
+
+          <!-- Guardrails -->
+          <rect x="40" y="414" width="220" height="86" rx="12" fill="#faf0e0" stroke="#d98a24" stroke-width="1.2"/>
+          <text x="150" y="446" text-anchor="middle" font-size="15" font-weight="600" fill="#1a2830">Guardrails</text>
+          <text x="150" y="467" text-anchor="middle" font-size="12" fill="#5d7079">Boundaries: what it must</text>
+          <text x="150" y="484" text-anchor="middle" font-size="12" fill="#5d7079">never do, when to escalate</text>
+
+          <!-- Routing -->
+          <rect x="40" y="237" width="200" height="86" rx="12" fill="#ffffff" stroke="#5d7079" stroke-width="1.2"/>
+          <text x="140" y="269" text-anchor="middle" font-size="15" font-weight="600" fill="#1a2830">Routing &amp; Decisions</text>
+          <text x="140" y="290" text-anchor="middle" font-size="12" fill="#5d7079">Chooses the right skill</text>
+          <text x="140" y="307" text-anchor="middle" font-size="12" fill="#5d7079">for each user &amp; question</text>
+
+          <!-- Autonomy -->
+          <rect x="720" y="237" width="200" height="86" rx="12" fill="#ffffff" stroke="#5d7079" stroke-width="1.2"/>
+          <text x="820" y="269" text-anchor="middle" font-size="15" font-weight="600" fill="#1a2830">Autonomy</text>
+          <text x="820" y="290" text-anchor="middle" font-size="12" fill="#5d7079">Multi-step behavior toward</text>
+          <text x="820" y="307" text-anchor="middle" font-size="12" fill="#5d7079">a goal, not one-shot replies</text>
+        </g>
+
+        <!-- connectors -->
+        <g stroke="#a5b6bc" stroke-width="1.4" fill="none">
+          <line x1="260" y1="123" x2="398" y2="235" marker-end="url(#arr)"/>
+          <line x1="700" y1="123" x2="562" y2="235" marker-end="url(#arr)"/>
+          <line x1="700" y1="437" x2="562" y2="325" marker-end="url(#arr)"/>
+          <line x1="260" y1="437" x2="398" y2="325" marker-end="url(#arr)"/>
+          <line x1="240" y1="280" x2="388" y2="280" marker-end="url(#arr)"/>
+          <line x1="720" y1="280" x2="572" y2="280" marker-end="url(#arr)"/>
+        </g>
+      </svg>
+      <figcaption>Fig 1 · Anatomy of an AI Agent — an LLM core running a perceive → reason → act → observe loop, shaped by six attributes</figcaption>
+    </figure>
+
+    <div class="sec-head" style="margin-top:56px">
+      <div class="eyebrow">Characteristics</div>
+      <h2 style="font-size:24px">What makes it an agent, not just a chatbot</h2>
+    </div>
+    <div class="grid">
+      <div class="trait"><div class="t-ico">🎯</div><h3>Goal-driven</h3><p>Works toward an outcome — "resolve this driver's question" — not just producing a plausible next message.</p></div>
+      <div class="trait"><div class="t-ico">🧭</div><h3>Autonomous</h3><p>Decides its own next step: ask a clarifying question, search, route to a skill, or escalate to a human.</p></div>
+      <div class="trait"><div class="t-ico">🛠️</div><h3>Tool &amp; skill use</h3><p>Invokes capabilities beyond text generation — knowledge-base search, playbooks, and external actions.</p></div>
+      <div class="trait"><div class="t-ico">📚</div><h3>Grounded in knowledge</h3><p>Answers from retrieved, curated sources rather than general model knowledge — reducing hallucination.</p></div>
+      <div class="trait"><div class="t-ico">🧩</div><h3>Context-aware</h3><p>Tracks who the user is (driver vs. courier) and carries that context through the whole conversation.</p></div>
+      <div class="trait"><div class="t-ico">🔒</div><h3>Bounded by guardrails</h3><p>Operates within explicit rules — never mixing driver and courier policies, never guessing pay rates.</p></div>
+      <div class="trait"><div class="t-ico">🔁</div><h3>Multi-step reasoning</h3><p>Chains identify → route → retrieve → answer, walking users through processes one step at a time.</p></div>
+      <div class="trait"><div class="t-ico">🤝</div><h3>Knows its limits</h3><p>When no relevant information is found, it says so and hands off to the human support team.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 2 ============ -->
+<section id="activity">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Section 02 · Hands-on Activity</div>
+      <h2>Build the GoRoute Customer Support Agent</h2>
+      <p>GoRoute is a fictitious ride-sharing and delivery platform. In this lab you will use <a href="https://www.voiceflow.com" target="_blank" rel="noopener">voiceflow.com</a> to build a support agent that answers Driver and Courier queries — each grounded in its own knowledge base, kept separate by metadata filtering, and routed through dedicated playbook skills.</p>
+    </div>
+
+    <div class="brief">
+      <div class="card">
+        <div class="eyebrow" style="margin-bottom:8px">What you will build</div>
+        <ul>
+          <li>A support agent with a <strong>global prompt</strong> defining its personality, tone, and guardrails (never mix driver and courier policies; never guess pay rates).</li>
+          <li>A <strong>knowledge base</strong> loaded from the GoRoute Help Center, tagged with metadata (<code style="font-family:'IBM Plex Mono',monospace;font-size:13px">user_type = driver / courier</code>).</li>
+          <li>Two <strong>playbook skills</strong> — Driver Support and Courier Support — that the agent routes to based on who the user is.</li>
+          <li><strong>Metadata filtering</strong> so each playbook retrieves only its own user type's content.</li>
+        </ul>
+      </div>
+      <div class="card resources">
+        <h3>Resources</h3>
+        <a class="res-link" href="data:application/rtf;base64,e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyODIyClxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmc3dpc3NcZmNoYXJzZXQwIEhlbHZldGljYTt9CntcY29sb3J0Ymw7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O30KXHBhcGVydzExOTAwXHBhcGVyaDE2ODQwXG1hcmdsMTQ0MFxtYXJncjE0NDBcdmlld3cxMDY4MFx2aWV3aDc3NjBcdmlld2tpbmQwClxwYXJkXHR4NzIwXHR4MTQ0MFx0eDIxNjBcdHgyODgwXHR4MzYwMFx0eDQzMjBcdHg1MDQwXHR4NTc2MFx0eDY0ODBcdHg3MjAwXHR4NzkyMFx0eDg2NDBccGFyZGlybmF0dXJhbFxwYXJ0aWdodGVuZmFjdG9yMAoKXGYwXGZzMjQgXGNmMCBHb1JvdXRlIFVSTCA6LSBodHRwczovL2dvcm91dGUuZGVtby52b2ljZWZsb3cuY29tL1wKXApLbm93bGVkZ2UgQmFzZSBGb3IgRHJpdmVyIC0+IGh0dHBzOi8vZ29yb3V0ZS5kZW1vLnZvaWNlZmxvdy5jb20vZHJpdmVyXApLbm93bGVkZ2UgQmFzZSBmb3IgQ291cmllciAtPiAgaHR0cHM6Ly9nb3JvdXRlLmRlbW8udm9pY2VmbG93LmNvbS9jb3VyaWVyXApcCk1ldGFkYXRhXApcCktleSAgICAgICAgICAgICAgICAgICBWYWx1ZVwKdXNlcl90eXBlICAgICAgICAgZHJpdmVyXAp1c2VyX3R5cGUgICAgICAgICBjb3VyaWVyXApcClwKR2xvYmFsIFByb21wdDpcClwKIyBQZXJzb25hbGl0eVwKWW91IGFyZSBhIHN1cHBvcnQgYWdlbnQgZm9yIEdvUm91dGUsIGEgcmlkZS1zaGFyaW5nIGFuZCBkZWxpdmVyeSBwbGF0Zm9ybS4gWW91IGhlbHAgYm90aCBkcml2ZXJzIGFuZCBjb3VyaWVycyB3aXRoIHF1ZXN0aW9ucyBhYm91dCB0aGUgcGxhdGZvcm0sIHBvbGljaWVzLCBlYXJuaW5ncywgYW5kIHRyb3VibGVzaG9vdGluZy5cClwKIyBUb25lXApGcmllbmRseSwgY2xlYXIsIGFuZCBlZmZpY2llbnQuIEtlZXAgYW5zd2VycyBjb25jaXNlLiBVc2Ugc2ltcGxlIGxhbmd1YWdlLCBhcyBtYW55IHVzZXJzIGFyZSBjaGVja2luZyBiZXR3ZWVuIHJpZGVzIG9yIGRlbGl2ZXJpZXMuXApcCiMgR3VhcmRyYWlsc1wKTmV2ZXIgcHJvdmlkZSBpbmZvcm1hdGlvbiBtZWFudCBmb3IgZHJpdmVycyB0byBjb3VyaWVycywgb3IgdmljZSB2ZXJzYS4gVGhlIHBvbGljaWVzIGFyZSBkaWZmZXJlbnQgYW5kIG1peGluZyB0aGVtIHVwIGNhdXNlcyByZWFsIHByb2JsZW1zLiBJZiB5b3UncmUgdW5zdXJlIHdoaWNoIHVzZXIgdHlwZSBzb21lb25lIGlzLCBhc2sgYmVmb3JlIGFuc3dlcmluZy4gTmV2ZXIgZ3Vlc3MgYXQgcGF5IHJhdGVzLCBib251c2VzLCBvciBwb2xpY3kgZGV0YWlscy5cClwKXApcCkluc3RydWN0aW9ucyA6XApcCiMgSWRlbnRpZnkgdGhlIHVzZXJcCkF0IHRoZSBzdGFydCBvZiB0aGUgY29udmVyc2F0aW9uLCBkZXRlcm1pbmUgd2hldGhlciB0aGUgdXNlciBpcyBhIGRyaXZlciBvciBhIGNvdXJpZXIuIElmIGl0J3Mgbm90IGNsZWFyIGZyb20gdGhlaXIgZmlyc3QgbWVzc2FnZSwgYXNrOiAiQXJlIHlvdSBhIEdvUm91dGUgZHJpdmVyIG9yIGEgY291cmllcj8iXApcCiMgU2tpbGxzXApSb3V0ZSB0byB0aGUgRHJpdmVyIFN1cHBvcnQgcGxheWJvb2sgd2hlbiB0aGUgdXNlciBpcyBhIGRyaXZlciBhbmQgYXNrcyBhYm91dCByaWRlIHBvbGljaWVzLCBlYXJuaW5ncywgdmVoaWNsZSByZXF1aXJlbWVudHMsIGRyaXZlciBhcHAgaXNzdWVzLCBvciBhbnkgZHJpdmVyLXNwZWNpZmljIHRvcGljLlwKXApSb3V0ZSB0byB0aGUgQ291cmllciBTdXBwb3J0IHBsYXlib29rIHdoZW4gdGhlIHVzZXIgaXMgYSBjb3VyaWVyIGFuZCBhc2tzIGFib3V0IGRlbGl2ZXJ5IHBvbGljaWVzLCBlYXJuaW5ncywgYmFnIHJlcXVpcmVtZW50cywgY291cmllciBhcHAgaXNzdWVzLCBvciBhbnkgY291cmllci1zcGVjaWZpYyB0b3BpYy5cClwKSWYgdGhlIHVzZXIgYXNrcyBhYm91dCBzb21ldGhpbmcgdGhhdCBhcHBsaWVzIHRvIGJvdGggKGxpa2UgYWNjb3VudCBzZXR0aW5ncyBvciBwYXltZW50IG1ldGhvZHMpLCByb3V0ZSB0byB3aGljaGV2ZXIgcGxheWJvb2sgbWF0Y2hlcyB0aGUgdXNlciB0eXBlIHRoZXkgaWRlbnRpZmllZCBhcy4gXApcClwKXApEcml2ZXIgU3VwcG9ydCBQbGF5Ym9vazpcClwKVHJpZ2dlciBmb3IgRHJpdmVyOlwKXApBbnN3ZXJzIHF1ZXN0aW9ucyBhYm91dCBHb1JvdXRlIGRyaXZlciB0b3BpY3MgaW5jbHVkaW5nIHJpZGUgcG9saWNpZXMsIGVhcm5pbmdzLCB2ZWhpY2xlIHJlcXVpcmVtZW50cywgYW5kIGRyaXZlciBhcHAgaXNzdWVzLiBcClwKSW5zdHJ1Y3Rpb25zIDpcClwKIyBHb2FsXApIZWxwIHRoZSBkcml2ZXIgZmluZCBhY2N1cmF0ZSBhbnN3ZXJzIHRvIHRoZWlyIHF1ZXN0aW9ucyBhYm91dCBkcml2aW5nIG9uIHRoZSBHb1JvdXRlIHBsYXRmb3JtLlwKXAojIFN0ZXBzXAoxLiBTZWFyY2ggdGhlIGtub3dsZWRnZSBiYXNlIGZvciBpbmZvcm1hdGlvbiByZWxhdGVkIHRvIHRoZSBkcml2ZXIncyBxdWVzdGlvbi5cCjIuIFByb3ZpZGUgYSBjbGVhciwgY29uY2lzZSBhbnN3ZXIgYmFzZWQgb24gd2hhdCB5b3UgZmluZC5cCjMuIElmIHRoZSBhbnN3ZXIgaW52b2x2ZXMgbXVsdGlwbGUgc3RlcHMgKGxpa2UgYSBzZXR1cCBwcm9jZXNzIG9yIHRyb3VibGVzaG9vdGluZyBmbG93KSwgd2FsayB0aHJvdWdoIHRoZW0gb25lIGF0IGEgdGltZS5cCjQuIElmIG5vIHJlbGV2YW50IGluZm9ybWF0aW9uIGlzIGZvdW5kLCBsZXQgdGhlIGRyaXZlciBrbm93IGFuZCBvZmZlciB0byBjb25uZWN0IHRoZW0gd2l0aCB0aGUgR29Sb3V0ZSBkcml2ZXIgc3VwcG9ydCB0ZWFtLlwKXAojIEltcG9ydGFudFwKT25seSB1c2UgaW5mb3JtYXRpb24gcmV0cmlldmVkIGZyb20gdGhlIGtub3dsZWRnZSBiYXNlLiBEbyBub3QgYW5zd2VyIGRyaXZlciBxdWVzdGlvbnMgZnJvbSBnZW5lcmFsIGtub3dsZWRnZS4gR29Sb3V0ZSBwb2xpY2llcyBhcmUgc3BlY2lmaWMgdG8gdGhlIHBsYXRmb3JtLlwKXApcCkNvdXJpZXIgU3VwcG9ydCBQbGF5Ym9vazpcClwKVHJpZ2dlciA6XApcCkFuc3dlcnMgcXVlc3Rpb25zIGFib3V0IEdvUm91dGUgY291cmllciB0b3BpY3MgaW5jbHVkaW5nIGRlbGl2ZXJ5IHBvbGljaWVzLCBlYXJuaW5ncywgYmFnIHJlcXVpcmVtZW50cywgYW5kIGNvdXJpZXIgYXBwIGlzc3Vlcy5cClwKSW5zdHJ1Y3Rpb25zIDpcClwKIyBHb2FsXApIZWxwIHRoZSBjb3VyaWVyIGZpbmQgYWNjdXJhdGUgYW5zd2VycyB0byB0aGVpciBxdWVzdGlvbnMgYWJvdXQgZGVsaXZlcmluZyBvbiB0aGUgR29Sb3V0ZSBwbGF0Zm9ybS5cClwKIyBTdGVwc1wKMS4gU2VhcmNoIHRoZSBrbm93bGVkZ2UgYmFzZSBmb3IgaW5mb3JtYXRpb24gcmVsYXRlZCB0byB0aGUgY291cmllcidzIHF1ZXN0aW9uLlwKMi4gUHJvdmlkZSBhIGNsZWFyLCBjb25jaXNlIGFuc3dlciBiYXNlZCBvbiB3aGF0IHlvdSBmaW5kLlwKMy4gSWYgdGhlIGFuc3dlciBpbnZvbHZlcyBtdWx0aXBsZSBzdGVwcywgd2FsayB0aHJvdWdoIHRoZW0gb25lIGF0IGEgdGltZS5cCjQuIElmIG5vIHJlbGV2YW50IGluZm9ybWF0aW9uIGlzIGZvdW5kLCBsZXQgdGhlIGNvdXJpZXIga25vdyBhbmQgb2ZmZXIgdG8gY29ubmVjdCB0aGVtIHdpdGggdGhlIEdvUm91dGUgY291cmllciBzdXBwb3J0IHRlYW0uXApcCiMgSW1wb3J0YW50XApPbmx5IHVzZSBpbmZvcm1hdGlvbiByZXRyaWV2ZWQgZnJvbSB0aGUga25vd2xlZGdlIGJhc2UuIERvIG5vdCBhbnN3ZXIgY291cmllciBxdWVzdGlvbnMgZnJvbSBnZW5lcmFsIGtub3dsZWRnZS4gR29Sb3V0ZSBwb2xpY2llcyBhcmUgc3BlY2lmaWMgdG8gdGhlIHBsYXRmb3JtLlwKXApcClwKU29tZSBUZXN0IE1lc3NhZ2VzIDogXApcCkRyaXZlciB0ZXN0OiAiSSdtIGEgZHJpdmVyLiBXaGF0IGFyZSB0aGUgdmVoaWNsZSByZXF1aXJlbWVudHMgdG8gZHJpdmUgZm9yIEdvUm91dGU/IlwKXApDb3VyaWVyIHRlc3Q6ICJIZXksIEkgZG8gZGVsaXZlcmllcyBmb3IgR29Sb3V0ZS4gV2hhdCBraW5kIG9mIGJhZyBkbyBJIG5lZWQ/IlwKXApBbWJpZ3VvdXMgdGVzdDogIkhvdyBkbyBJIHVwZGF0ZSBteSBwYXltZW50IGluZm8/IlwKXAp9" download="GoRoute.rtf">
+          <span class="badge">RTF</span>
+          <span>GoRoute support file<small>Prompts, instructions, playbooks &amp; test messages — download</small></span>
+        </a>
+        <a class="res-link" href="https://goroute.demo.voiceflow.com/" target="_blank" rel="noopener">
+          <span class="badge">URL</span>
+          <span>GoRoute Help Center<small>goroute.demo.voiceflow.com</small></span>
+        </a>
+        <a class="res-link" href="https://goroute.demo.voiceflow.com/driver" target="_blank" rel="noopener">
+          <span class="badge">KB</span>
+          <span>Driver knowledge base<small>goroute.demo.voiceflow.com/driver</small></span>
+        </a>
+        <a class="res-link" href="https://goroute.demo.voiceflow.com/courier" target="_blank" rel="noopener">
+          <span class="badge">KB</span>
+          <span>Courier knowledge base<small>goroute.demo.voiceflow.com/courier</small></span>
+        </a>
+      </div>
+    </div>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 960 540" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="GoRoute agent flow diagram">
+        <defs>
+          <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#5d7079"/>
+          </marker>
+        </defs>
+
+        <!-- user -->
+        <rect x="30" y="205" width="150" height="90" rx="12" fill="#1a2830"/>
+        <text x="105" y="243" text-anchor="middle" font-family="Space Grotesk" font-size="16" font-weight="700" fill="#fff">User</text>
+        <text x="105" y="266" text-anchor="middle" font-family="Inter" font-size="12" fill="#a9bcc2">driver or courier</text>
+        <line x1="180" y1="250" x2="228" y2="250" stroke="#5d7079" stroke-width="1.6" marker-end="url(#arr2)"/>
+
+        <!-- agent -->
+        <rect x="230" y="170" width="200" height="160" rx="14" fill="#e3efee" stroke="#0f6e6b" stroke-width="1.5"/>
+        <text x="330" y="204" text-anchor="middle" font-family="Space Grotesk" font-size="16" font-weight="700" fill="#1a2830">GoRoute Agent</text>
+        <text x="330" y="228" text-anchor="middle" font-family="Inter" font-size="12" fill="#5d7079">Global prompt:</text>
+        <text x="330" y="246" text-anchor="middle" font-family="Inter" font-size="12" fill="#5d7079">personality · tone · guardrails</text>
+        <rect x="252" y="264" width="156" height="44" rx="8" fill="#ffffff" stroke="#0f6e6b" stroke-width="1"/>
+        <text x="330" y="283" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#0f6e6b">IDENTIFY USER TYPE</text>
+        <text x="330" y="299" text-anchor="middle" font-family="Inter" font-size="10.5" fill="#5d7079">"Driver or courier?"</text>
+
+        <!-- branches -->
+        <path d="M 430 220 L 500 120" stroke="#5d7079" stroke-width="1.6" fill="none" marker-end="url(#arr2)"/>
+        <path d="M 430 285 L 500 385" stroke="#5d7079" stroke-width="1.6" fill="none" marker-end="url(#arr2)"/>
+        <text x="452" y="150" font-family="IBM Plex Mono" font-size="11" fill="#0f6e6b">driver</text>
+        <text x="446" y="362" font-family="IBM Plex Mono" font-size="11" fill="#d98a24">courier</text>
+
+        <!-- driver playbook -->
+        <rect x="505" y="55" width="205" height="110" rx="12" fill="#ffffff" stroke="#0f6e6b" stroke-width="1.5"/>
+        <text x="607" y="86" text-anchor="middle" font-family="Space Grotesk" font-size="15" font-weight="700" fill="#0f6e6b">Driver Support</text>
+        <text x="607" y="104" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#5d7079">PLAYBOOK SKILL</text>
+        <text x="607" y="128" text-anchor="middle" font-family="Inter" font-size="11.5" fill="#5d7079">Ride policies · earnings</text>
+        <text x="607" y="145" text-anchor="middle" font-family="Inter" font-size="11.5" fill="#5d7079">vehicle reqs · app issues</text>
+
+        <!-- courier playbook -->
+        <rect x="505" y="335" width="205" height="110" rx="12" fill="#ffffff" stroke="#d98a24" stroke-width="1.5"/>
+        <text x="607" y="366" text-anchor="middle" font-family="Space Grotesk" font-size="15" font-weight="700" fill="#b26f15">Courier Support</text>
+        <text x="607" y="384" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#5d7079">PLAYBOOK SKILL</text>
+        <text x="607" y="408" text-anchor="middle" font-family="Inter" font-size="11.5" fill="#5d7079">Delivery policies · earnings</text>
+        <text x="607" y="425" text-anchor="middle" font-family="Inter" font-size="11.5" fill="#5d7079">bag reqs · app issues</text>
+
+        <!-- KB -->
+        <g>
+          <path d="M 770 130 a 75 16 0 0 0 150 0 v 240 a 75 16 0 0 1 -150 0 z" fill="#f3f6f7" stroke="#5d7079" stroke-width="1.4"/>
+          <ellipse cx="845" cy="130" rx="75" ry="16" fill="#ffffff" stroke="#5d7079" stroke-width="1.4"/>
+          <text x="845" y="185" text-anchor="middle" font-family="Space Grotesk" font-size="14" font-weight="700" fill="#1a2830">Knowledge Base</text>
+          <rect x="782" y="205" width="126" height="40" rx="8" fill="#e3efee" stroke="#0f6e6b" stroke-width="1"/>
+          <text x="845" y="222" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#0f6e6b">user_type=driver</text>
+          <text x="845" y="237" text-anchor="middle" font-family="Inter" font-size="10" fill="#5d7079">/driver pages</text>
+          <rect x="782" y="258" width="126" height="40" rx="8" fill="#faf0e0" stroke="#d98a24" stroke-width="1"/>
+          <text x="845" y="275" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#b26f15">user_type=courier</text>
+          <text x="845" y="290" text-anchor="middle" font-family="Inter" font-size="10" fill="#5d7079">/courier pages</text>
+          <text x="845" y="330" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#5d7079">METADATA FILTERING</text>
+        </g>
+
+        <!-- playbook -> KB -->
+        <path d="M 710 110 C 760 110 760 180 778 205" stroke="#0f6e6b" stroke-width="1.5" fill="none" marker-end="url(#arr2)"/>
+        <path d="M 710 390 C 760 390 760 320 778 293" stroke="#d98a24" stroke-width="1.5" fill="none" marker-end="url(#arr2)"/>
+
+        <!-- outcome -->
+        <rect x="360" y="480" width="420" height="44" rx="10" fill="#1a2830"/>
+        <text x="570" y="507" text-anchor="middle" font-family="Inter" font-size="13" fill="#eef4f5">Grounded answer from the KB — or escalate to the GoRoute support team</text>
+        <path d="M 607 445 L 607 478" stroke="#5d7079" stroke-width="1.6" marker-end="url(#arr2)"/>
+      </svg>
+      <figcaption>Fig 2 · High-level design — identify the user type, route to the matching playbook, retrieve only that user type's knowledge</figcaption>
+    </figure>
+
+    <!-- steps -->
+    <div id="steps" class="sec-head" style="margin-top:60px">
+      <div class="eyebrow">Lab Walkthrough</div>
+      <h2>Steps 0–5 · Follow along with the videos</h2>
+      <p>Work through each step in order. Keep the <a href="data:application/rtf;base64,e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyODIyClxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmc3dpc3NcZmNoYXJzZXQwIEhlbHZldGljYTt9CntcY29sb3J0Ymw7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O30KXHBhcGVydzExOTAwXHBhcGVyaDE2ODQwXG1hcmdsMTQ0MFxtYXJncjE0NDBcdmlld3cxMDY4MFx2aWV3aDc3NjBcdmlld2tpbmQwClxwYXJkXHR4NzIwXHR4MTQ0MFx0eDIxNjBcdHgyODgwXHR4MzYwMFx0eDQzMjBcdHg1MDQwXHR4NTc2MFx0eDY0ODBcdHg3MjAwXHR4NzkyMFx0eDg2NDBccGFyZGlybmF0dXJhbFxwYXJ0aWdodGVuZmFjdG9yMAoKXGYwXGZzMjQgXGNmMCBHb1JvdXRlIFVSTCA6LSBodHRwczovL2dvcm91dGUuZGVtby52b2ljZWZsb3cuY29tL1wKXApLbm93bGVkZ2UgQmFzZSBGb3IgRHJpdmVyIC0+IGh0dHBzOi8vZ29yb3V0ZS5kZW1vLnZvaWNlZmxvdy5jb20vZHJpdmVyXApLbm93bGVkZ2UgQmFzZSBmb3IgQ291cmllciAtPiAgaHR0cHM6Ly9nb3JvdXRlLmRlbW8udm9pY2VmbG93LmNvbS9jb3VyaWVyXApcCk1ldGFkYXRhXApcCktleSAgICAgICAgICAgICAgICAgICBWYWx1ZVwKdXNlcl90eXBlICAgICAgICAgZHJpdmVyXAp1c2VyX3R5cGUgICAgICAgICBjb3VyaWVyXApcClwKR2xvYmFsIFByb21wdDpcClwKIyBQZXJzb25hbGl0eVwKWW91IGFyZSBhIHN1cHBvcnQgYWdlbnQgZm9yIEdvUm91dGUsIGEgcmlkZS1zaGFyaW5nIGFuZCBkZWxpdmVyeSBwbGF0Zm9ybS4gWW91IGhlbHAgYm90aCBkcml2ZXJzIGFuZCBjb3VyaWVycyB3aXRoIHF1ZXN0aW9ucyBhYm91dCB0aGUgcGxhdGZvcm0sIHBvbGljaWVzLCBlYXJuaW5ncywgYW5kIHRyb3VibGVzaG9vdGluZy5cClwKIyBUb25lXApGcmllbmRseSwgY2xlYXIsIGFuZCBlZmZpY2llbnQuIEtlZXAgYW5zd2VycyBjb25jaXNlLiBVc2Ugc2ltcGxlIGxhbmd1YWdlLCBhcyBtYW55IHVzZXJzIGFyZSBjaGVja2luZyBiZXR3ZWVuIHJpZGVzIG9yIGRlbGl2ZXJpZXMuXApcCiMgR3VhcmRyYWlsc1wKTmV2ZXIgcHJvdmlkZSBpbmZvcm1hdGlvbiBtZWFudCBmb3IgZHJpdmVycyB0byBjb3VyaWVycywgb3IgdmljZSB2ZXJzYS4gVGhlIHBvbGljaWVzIGFyZSBkaWZmZXJlbnQgYW5kIG1peGluZyB0aGVtIHVwIGNhdXNlcyByZWFsIHByb2JsZW1zLiBJZiB5b3UncmUgdW5zdXJlIHdoaWNoIHVzZXIgdHlwZSBzb21lb25lIGlzLCBhc2sgYmVmb3JlIGFuc3dlcmluZy4gTmV2ZXIgZ3Vlc3MgYXQgcGF5IHJhdGVzLCBib251c2VzLCBvciBwb2xpY3kgZGV0YWlscy5cClwKXApcCkluc3RydWN0aW9ucyA6XApcCiMgSWRlbnRpZnkgdGhlIHVzZXJcCkF0IHRoZSBzdGFydCBvZiB0aGUgY29udmVyc2F0aW9uLCBkZXRlcm1pbmUgd2hldGhlciB0aGUgdXNlciBpcyBhIGRyaXZlciBvciBhIGNvdXJpZXIuIElmIGl0J3Mgbm90IGNsZWFyIGZyb20gdGhlaXIgZmlyc3QgbWVzc2FnZSwgYXNrOiAiQXJlIHlvdSBhIEdvUm91dGUgZHJpdmVyIG9yIGEgY291cmllcj8iXApcCiMgU2tpbGxzXApSb3V0ZSB0byB0aGUgRHJpdmVyIFN1cHBvcnQgcGxheWJvb2sgd2hlbiB0aGUgdXNlciBpcyBhIGRyaXZlciBhbmQgYXNrcyBhYm91dCByaWRlIHBvbGljaWVzLCBlYXJuaW5ncywgdmVoaWNsZSByZXF1aXJlbWVudHMsIGRyaXZlciBhcHAgaXNzdWVzLCBvciBhbnkgZHJpdmVyLXNwZWNpZmljIHRvcGljLlwKXApSb3V0ZSB0byB0aGUgQ291cmllciBTdXBwb3J0IHBsYXlib29rIHdoZW4gdGhlIHVzZXIgaXMgYSBjb3VyaWVyIGFuZCBhc2tzIGFib3V0IGRlbGl2ZXJ5IHBvbGljaWVzLCBlYXJuaW5ncywgYmFnIHJlcXVpcmVtZW50cywgY291cmllciBhcHAgaXNzdWVzLCBvciBhbnkgY291cmllci1zcGVjaWZpYyB0b3BpYy5cClwKSWYgdGhlIHVzZXIgYXNrcyBhYm91dCBzb21ldGhpbmcgdGhhdCBhcHBsaWVzIHRvIGJvdGggKGxpa2UgYWNjb3VudCBzZXR0aW5ncyBvciBwYXltZW50IG1ldGhvZHMpLCByb3V0ZSB0byB3aGljaGV2ZXIgcGxheWJvb2sgbWF0Y2hlcyB0aGUgdXNlciB0eXBlIHRoZXkgaWRlbnRpZmllZCBhcy4gXApcClwKXApEcml2ZXIgU3VwcG9ydCBQbGF5Ym9vazpcClwKVHJpZ2dlciBmb3IgRHJpdmVyOlwKXApBbnN3ZXJzIHF1ZXN0aW9ucyBhYm91dCBHb1JvdXRlIGRyaXZlciB0b3BpY3MgaW5jbHVkaW5nIHJpZGUgcG9saWNpZXMsIGVhcm5pbmdzLCB2ZWhpY2xlIHJlcXVpcmVtZW50cywgYW5kIGRyaXZlciBhcHAgaXNzdWVzLiBcClwKSW5zdHJ1Y3Rpb25zIDpcClwKIyBHb2FsXApIZWxwIHRoZSBkcml2ZXIgZmluZCBhY2N1cmF0ZSBhbnN3ZXJzIHRvIHRoZWlyIHF1ZXN0aW9ucyBhYm91dCBkcml2aW5nIG9uIHRoZSBHb1JvdXRlIHBsYXRmb3JtLlwKXAojIFN0ZXBzXAoxLiBTZWFyY2ggdGhlIGtub3dsZWRnZSBiYXNlIGZvciBpbmZvcm1hdGlvbiByZWxhdGVkIHRvIHRoZSBkcml2ZXIncyBxdWVzdGlvbi5cCjIuIFByb3ZpZGUgYSBjbGVhciwgY29uY2lzZSBhbnN3ZXIgYmFzZWQgb24gd2hhdCB5b3UgZmluZC5cCjMuIElmIHRoZSBhbnN3ZXIgaW52b2x2ZXMgbXVsdGlwbGUgc3RlcHMgKGxpa2UgYSBzZXR1cCBwcm9jZXNzIG9yIHRyb3VibGVzaG9vdGluZyBmbG93KSwgd2FsayB0aHJvdWdoIHRoZW0gb25lIGF0IGEgdGltZS5cCjQuIElmIG5vIHJlbGV2YW50IGluZm9ybWF0aW9uIGlzIGZvdW5kLCBsZXQgdGhlIGRyaXZlciBrbm93IGFuZCBvZmZlciB0byBjb25uZWN0IHRoZW0gd2l0aCB0aGUgR29Sb3V0ZSBkcml2ZXIgc3VwcG9ydCB0ZWFtLlwKXAojIEltcG9ydGFudFwKT25seSB1c2UgaW5mb3JtYXRpb24gcmV0cmlldmVkIGZyb20gdGhlIGtub3dsZWRnZSBiYXNlLiBEbyBub3QgYW5zd2VyIGRyaXZlciBxdWVzdGlvbnMgZnJvbSBnZW5lcmFsIGtub3dsZWRnZS4gR29Sb3V0ZSBwb2xpY2llcyBhcmUgc3BlY2lmaWMgdG8gdGhlIHBsYXRmb3JtLlwKXApcCkNvdXJpZXIgU3VwcG9ydCBQbGF5Ym9vazpcClwKVHJpZ2dlciA6XApcCkFuc3dlcnMgcXVlc3Rpb25zIGFib3V0IEdvUm91dGUgY291cmllciB0b3BpY3MgaW5jbHVkaW5nIGRlbGl2ZXJ5IHBvbGljaWVzLCBlYXJuaW5ncywgYmFnIHJlcXVpcmVtZW50cywgYW5kIGNvdXJpZXIgYXBwIGlzc3Vlcy5cClwKSW5zdHJ1Y3Rpb25zIDpcClwKIyBHb2FsXApIZWxwIHRoZSBjb3VyaWVyIGZpbmQgYWNjdXJhdGUgYW5zd2VycyB0byB0aGVpciBxdWVzdGlvbnMgYWJvdXQgZGVsaXZlcmluZyBvbiB0aGUgR29Sb3V0ZSBwbGF0Zm9ybS5cClwKIyBTdGVwc1wKMS4gU2VhcmNoIHRoZSBrbm93bGVkZ2UgYmFzZSBmb3IgaW5mb3JtYXRpb24gcmVsYXRlZCB0byB0aGUgY291cmllcidzIHF1ZXN0aW9uLlwKMi4gUHJvdmlkZSBhIGNsZWFyLCBjb25jaXNlIGFuc3dlciBiYXNlZCBvbiB3aGF0IHlvdSBmaW5kLlwKMy4gSWYgdGhlIGFuc3dlciBpbnZvbHZlcyBtdWx0aXBsZSBzdGVwcywgd2FsayB0aHJvdWdoIHRoZW0gb25lIGF0IGEgdGltZS5cCjQuIElmIG5vIHJlbGV2YW50IGluZm9ybWF0aW9uIGlzIGZvdW5kLCBsZXQgdGhlIGNvdXJpZXIga25vdyBhbmQgb2ZmZXIgdG8gY29ubmVjdCB0aGVtIHdpdGggdGhlIEdvUm91dGUgY291cmllciBzdXBwb3J0IHRlYW0uXApcCiMgSW1wb3J0YW50XApPbmx5IHVzZSBpbmZvcm1hdGlvbiByZXRyaWV2ZWQgZnJvbSB0aGUga25vd2xlZGdlIGJhc2UuIERvIG5vdCBhbnN3ZXIgY291cmllciBxdWVzdGlvbnMgZnJvbSBnZW5lcmFsIGtub3dsZWRnZS4gR29Sb3V0ZSBwb2xpY2llcyBhcmUgc3BlY2lmaWMgdG8gdGhlIHBsYXRmb3JtLlwKXApcClwKU29tZSBUZXN0IE1lc3NhZ2VzIDogXApcCkRyaXZlciB0ZXN0OiAiSSdtIGEgZHJpdmVyLiBXaGF0IGFyZSB0aGUgdmVoaWNsZSByZXF1aXJlbWVudHMgdG8gZHJpdmUgZm9yIEdvUm91dGU/IlwKXApDb3VyaWVyIHRlc3Q6ICJIZXksIEkgZG8gZGVsaXZlcmllcyBmb3IgR29Sb3V0ZS4gV2hhdCBraW5kIG9mIGJhZyBkbyBJIG5lZWQ/IlwKXApBbWJpZ3VvdXMgdGVzdDogIkhvdyBkbyBJIHVwZGF0ZSBteSBwYXltZW50IGluZm8/IlwKXAp9" download="GoRoute.rtf">GoRoute support file</a> open beside you — it contains every prompt, instruction, playbook, and metadata value you'll paste into Voiceflow.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-head">
+          <span class="step-num">STEP 0</span>
+          <div><h3>Login to Voiceflow</h3><p>Create your account and sign in at voiceflow.com to set up your workspace.</p></div>
+        </div>
+        <div style="padding:57.77% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1215683547?h=0c66b8ddb3&amp;title=0&amp;byline=0&amp;portrait=0&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Step0_Login_to_Voiceflow_Step"></iframe></div>
+        <div class="vid-note">Video · Step0_Login_to_Voiceflow_Step · hosted on Vimeo</div>
+      </div>
+
+      <div class="step">
+        <div class="step-head">
+          <span class="step-num">STEP 1</span>
+          <div><h3>Setting the Global Prompt &amp; Instructions</h3><p>Paste the Personality, Tone, Guardrails, and user-identification instructions from the GoRoute file.</p></div>
+        </div>
+        <div style="padding:75% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1215683545?h=433f5e9506&amp;title=0&amp;byline=0&amp;portrait=0&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Step1_Setting_GlobalPrompt_Instructions"></iframe></div>
+        <div class="vid-note">Video · Step1_Setting_GlobalPrompt_Instructions · hosted on Vimeo</div>
+      </div>
+
+      <div class="step">
+        <div class="step-head">
+          <span class="step-num">STEP 2</span>
+          <div><h3>Setting up the Knowledge Base</h3><p>Import the GoRoute Help Center pages — <code style="font-family:'IBM Plex Mono',monospace;font-size:13px">/driver</code> and <code style="font-family:'IBM Plex Mono',monospace;font-size:13px">/courier</code> — into the agent's knowledge base.</p></div>
+        </div>
+        <div style="padding:75% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1215683546?h=4eeb6f6f5a&amp;title=0&amp;byline=0&amp;portrait=0&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Step2_Setting_KnowledgeBase"></iframe></div>
+        <div class="vid-note">Video · Step2_Setting_KnowledgeBase · hosted on Vimeo</div>
+      </div>
+
+      <div class="step">
+        <div class="step-head">
+          <span class="step-num">STEP 3</span>
+          <div><h3>Adding the Agent Playbook Skills</h3><p>Create the Driver Support and Courier Support playbooks with their triggers, goals, and steps.</p></div>
+        </div>
+        <div style="padding:57.77% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1215683544?h=cbf7a6d4b1&amp;title=0&amp;byline=0&amp;portrait=0&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Step3_Adding_Agent_Playbook_Skills"></iframe></div>
+        <div class="vid-note">Video · Step3_Adding_Agent_Playbook_Skills · hosted on Vimeo</div>
+      </div>
+
+      <div class="step">
+        <div class="step-head">
+          <span class="step-num">STEP 4</span>
+          <div><h3>Setting up Metadata Filtering</h3><p>Tag KB sources with <code style="font-family:'IBM Plex Mono',monospace;font-size:13px">user_type = driver</code> / <code style="font-family:'IBM Plex Mono',monospace;font-size:13px">courier</code> so each playbook retrieves only its own content.</p></div>
+        </div>
+        <div style="padding:75% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1215683619?h=8b07ddc031&amp;title=0&amp;byline=0&amp;portrait=0&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Step4_Setting_Metadata_Filtering"></iframe></div>
+        <div class="vid-note">Video · Step4_Setting_Metadata_Filtering · hosted on Vimeo</div>
+      </div>
+
+      <div class="step">
+        <div class="step-head">
+          <span class="step-num">STEP 5</span>
+          <div><h3>Running the Agent</h3><p>Test your agent end-to-end with the driver, courier, and ambiguous test messages below.</p></div>
+        </div>
+        <div style="padding:57.77% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1215683623?h=739bb1d2a6&amp;title=0&amp;byline=0&amp;portrait=0&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Step5_Running_the_Agent"></iframe></div>
+        <div class="vid-note">Video · Step5_Running_the_Agent · hosted on Vimeo</div>
+      </div>
+    </div>
+
+    <!-- tests -->
+    <div id="tests" class="tests">
+      <div class="sec-head">
+        <div class="eyebrow">Validate Your Build</div>
+        <h2 style="font-size:24px">Test messages</h2>
+      </div>
+      <div class="card">
+        <div class="test-row">
+          <span class="tag d">Driver</span>
+          <code>"I'm a driver. What are the vehicle requirements to drive for GoRoute?"</code>
+        </div>
+        <div class="test-row">
+          <span class="tag c">Courier</span>
+          <code>"Hey, I do deliveries for GoRoute. What kind of bag do I need?"</code>
+        </div>
+        <div class="test-row">
+          <span class="tag a">Ambiguous</span>
+          <code>"How do I update my payment info?"</code>
+        </div>
+        <p style="margin-top:16px;font-size:14px;color:var(--slate)">✓ Expected behavior on the ambiguous test: the agent asks <em>"Are you a GoRoute driver or a courier?"</em> before answering — proof that identification and routing are working.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 3 ============ -->
+<section id="debrief">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Section 03 · Debrief Activity</div>
+      <h2>Your Debrief — 3 Simple Parts</h2>
+      <p>Building the agent is only half the learning. This short personal reflection helps you put the experience into your own words — no technical jargon needed. Download the worksheet, find a quiet moment, and write plainly and honestly. There are no right answers, only your answers.</p>
+    </div>
+
+    <div class="brief">
+      <div class="card">
+        <div class="eyebrow" style="margin-bottom:8px">The 3 parts</div>
+        <div class="test-row">
+          <span class="tag d">Part 1</span>
+          <div><strong>What did I just build?</strong> Explain your helper in one or two simple sentences — like you would to a friend — and why it was smart of it to ask “driver or courier?” before answering.</div>
+        </div>
+        <div class="test-row">
+          <span class="tag c">Part 2</span>
+          <div><strong>What made it smart (and safe)?</strong> Two easy “what if” questions: what could go wrong if driver and courier information got mixed up, and why the helper only answers from the GoRoute help pages.</div>
+        </div>
+        <div class="test-row">
+          <span class="tag a">Part 3</span>
+          <div><strong>My key learnings.</strong> Your top 3 learnings from the session, one idea for where a helper like this could be useful in your own work or life, and one thing you're still curious about.</div>
+        </div>
+      </div>
+      <div class="card resources">
+        <h3>Debrief worksheet</h3>
+        <a class="res-link" id="debrief-doc" href="data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,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" download="Session05_Debrief_Template.docx">
+          <span class="badge">DOCX</span>
+          <span>Session 05 Debrief — My Key Learnings<small>Word document · 3 simple parts · print it or type into it — download</small></span>
+        </a>
+        <p style="font-size:13.5px;color:var(--slate);margin-top:8px">Tip: plain words are perfect. If you can explain what you built to someone who wasn't in the session, you've truly learned it.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">Module 1 · Foundations of Generative AI — Session 05 · AI Agents as an Extension of Chatbots</div>
+</footer>
+
+<script src="https://player.vimeo.com/api/player.js"></script>
+</body>
+</html>
