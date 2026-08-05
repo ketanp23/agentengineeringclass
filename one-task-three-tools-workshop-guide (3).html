@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>One Task, Three Tools — Claude Workshop Activity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B2338; --ink-soft:#3A4360; --paper:#F6F7F3; --card:#FFFFFF;
+    --line:#DDE0D8; --gray:#6A7183;
+    --marker:#FFDE59; --marker-soft:#FFF3BF;
+    --cobalt:#2D5BFF; --cobalt-soft:#E9EEFF;
+    --green:#1E8E5A; --green-soft:#E4F4EC;
+    --violet:#7A3FD1; --violet-soft:#F1E9FC;
+    --red-soft:#FDECEC;
+    --radius:14px;
+    --display:'Space Grotesk',sans-serif; --body:'Inter',sans-serif; --mono:'IBM Plex Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.65}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 24px}
+  mark{background:linear-gradient(104deg,transparent .5%,var(--marker) 3%,var(--marker) 97%,transparent 99.5%);padding:0 .25em;border-radius:2px;color:var(--ink);font-weight:600}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--cobalt);font-weight:500}
+  h2{font-family:var(--display);font-weight:700;font-size:clamp(25px,3.2vw,34px);letter-spacing:-.01em;margin-top:8px}
+  h3{font-family:var(--display);font-weight:600;font-size:19px}
+  section{padding:60px 0}
+  .sec-head{margin-bottom:30px}
+  .sec-head p{color:var(--ink-soft);margin-top:10px;max-width:74ch}
+
+  /* header */
+  header.hero{background:var(--ink);color:#fff;padding:60px 0 48px;border-bottom:4px solid var(--marker)}
+  .hero .eyebrow{color:var(--marker);margin-bottom:14px}
+  h1{font-family:var(--display);font-weight:700;font-size:clamp(30px,4.6vw,48px);line-height:1.08;max-width:780px}
+  .hero p.sub{margin-top:16px;color:#C6CCDF;max-width:660px;font-size:17px}
+  .crumbs{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px;font-family:var(--mono);font-size:12.5px}
+  .crumbs span{border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:6px 14px;color:#E8EBF5}
+
+  /* sticky nav */
+  nav.top{position:sticky;top:0;z-index:30;background:rgba(246,247,243,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  nav.top .wrap{display:flex;gap:24px;overflow-x:auto}
+  nav.top a{display:block;padding:14px 0;white-space:nowrap;font-size:14px;font-weight:600;color:var(--gray);text-decoration:none;border-bottom:2.5px solid transparent}
+  nav.top a:hover{color:var(--cobalt);border-bottom-color:var(--cobalt)}
+  nav.top a.na{color:var(--ink)}
+  nav.top a.nb{color:var(--violet)}
+
+  /* cards */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:26px}
+  .definition{border-left:5px solid var(--cobalt);font-size:17px}
+  .definition strong{color:var(--cobalt)}
+  .definition .vs{margin-top:16px;padding-top:16px;border-top:1px dashed var(--line);font-size:15px;color:var(--ink-soft)}
+
+  .grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:16px;margin-top:22px}
+  .toolcard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
+  .toolcard .mode-tag{margin-bottom:10px}
+  .toolcard p{font-size:14.5px;color:var(--ink-soft);margin-top:6px}
+  .mode-tag{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;border-radius:6px;padding:4px 10px;font-weight:600}
+  .mode-chat{background:var(--ink);color:var(--marker)}
+  .mode-web{background:var(--cobalt-soft);color:var(--cobalt)}
+  .mode-cowork{background:var(--green-soft);color:var(--green)}
+
+  /* criteria */
+  .crit{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-top:18px;overflow:hidden}
+  .crit-head{padding:20px 26px 14px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:13px;flex-wrap:wrap}
+  .crit-letter{font-family:var(--display);font-weight:700;font-size:30px;line-height:1}
+  .crit.rec .crit-letter{color:var(--cobalt)} .crit.str .crit-letter{color:var(--violet)} .crit.del .crit-letter{color:var(--green)}
+  .crit-head h3{margin:0;font-size:20px}
+  .crit-q{font-size:14px;color:var(--gray);font-style:italic;flex-basis:100%}
+  .crit-body{padding:20px 26px 24px;display:grid;grid-template-columns:1.05fr .95fr;gap:24px}
+  .crit-body h4{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gray);margin-bottom:8px}
+  .crit-body p{font-size:14.5px;color:var(--ink-soft);margin-bottom:11px}
+  .ex{border-radius:10px;padding:11px 14px;font-size:13.5px;margin-bottom:8px;line-height:1.55}
+  .ex b{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
+  .ex.good{background:var(--green-soft);color:#175C3D} .ex.good b{color:var(--green)}
+  .ex.bad{background:var(--red-soft);color:#7C3530} .ex.bad b{color:#B4443E}
+  .scale{list-style:none;margin-top:2px}
+  .scale li{display:flex;gap:11px;align-items:flex-start;padding:6px 0;border-bottom:1px dashed var(--line);font-size:13px;color:var(--ink-soft)}
+  .scale li:last-child{border-bottom:none}
+  .scale .n{font-family:var(--mono);font-weight:600;font-size:11.5px;min-width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--paper);border:1px solid var(--line);color:var(--ink)}
+  .evidence{background:var(--marker-soft);border-radius:10px;padding:12px 15px;font-size:13px;margin-top:12px;color:var(--ink)}
+  .evidence b{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:3px}
+
+  /* engagement brief */
+  .eng-tag{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;border-radius:7px;padding:4px 11px;font-weight:600}
+  .eng-a{background:var(--marker);color:var(--ink)}
+  .eng-b{background:var(--violet-soft);color:var(--violet)}
+  .brief-wrap{display:grid;grid-template-columns:1.25fr .75fr;gap:20px;align-items:start;margin-top:20px}
+  .memo{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:0 10px 30px rgba(27,35,56,.08)}
+  .memo-head{background:#F0F1EB;border-bottom:1px solid var(--line);padding:13px 20px;font-size:13px;color:var(--ink-soft)}
+  .memo-head .row{display:flex;gap:8px;margin-bottom:3px}
+  .memo-head .k{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--gray);min-width:56px}
+  .memo-head .urgent{font-family:var(--mono);font-size:10.5px;background:var(--red-soft);color:#B4443E;border-radius:5px;padding:2px 8px;margin-left:auto}
+  .memo-body{padding:18px 22px;font-size:14.5px;color:var(--ink-soft)}
+  .memo-body p{margin-bottom:11px}
+  .memo-body .sig{font-family:var(--display);font-weight:600;color:var(--ink)}
+  .client-card{background:var(--ink);color:#DCE0EE;border-radius:var(--radius);padding:22px 24px}
+  .client-card h3{color:#fff;font-size:16px;margin-bottom:3px}
+  .client-card .cc-sub{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--marker);margin-bottom:12px}
+  .client-card.b .cc-sub{color:#C9A8F2}
+  .fact{display:flex;gap:10px;border-top:1px solid rgba(255,255,255,.12);padding:8px 0;font-size:13px}
+  .fact .fk{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#8B94AE;min-width:86px;padding-top:2px}
+  .fict-note{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#8B94AE;margin-top:12px;border-top:1px dashed rgba(255,255,255,.18);padding-top:9px}
+
+  /* step cards (sample-style) */
+  .step{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-top:26px}
+  .step-head{display:flex;align-items:center;gap:16px;padding:18px 24px;border-bottom:1px solid var(--line);background:#FBFBF7}
+  .step-no{font-family:var(--mono);font-weight:600;font-size:13px;background:var(--ink);color:var(--marker);border-radius:9px;padding:8px 13px;letter-spacing:.06em;flex-shrink:0}
+  .b-steps .step-no{background:var(--violet);color:#fff}
+  .step-head h3{font-size:18px}
+  .step-head p{font-size:13.5px;color:var(--gray);margin-top:2px}
+  .step-body{padding:22px 24px}
+  .do-list{margin:2px 0 14px;border-left:3px solid var(--marker);padding:2px 0 2px 16px}
+  .b-steps .do-list{border-left-color:var(--violet)}
+  .do-list li{list-style:none;position:relative;padding-left:24px;margin-bottom:8px;color:var(--ink-soft);font-size:15px}
+  .do-list li::before{content:"→";position:absolute;left:0;color:var(--cobalt);font-weight:700}
+  .tip{background:var(--marker-soft);border-radius:10px;padding:12px 16px;font-size:14px;color:var(--ink);margin-top:12px}
+
+  .prompt-box{background:var(--ink);color:#E9ECF6;border-radius:12px;padding:17px 19px;font-family:var(--mono);font-size:13px;line-height:1.7;margin:12px 0 6px}
+  .prompt-box .lbl{color:var(--marker);font-size:11px;letter-spacing:.14em;text-transform:uppercase;display:block;margin-bottom:7px}
+  .prompt-box.simple{background:#3A4360}
+  .prompt-box.simple .lbl{color:#C9CFE2}
+  .prompt-box .fw-k{color:var(--marker);font-weight:600}
+  .fw-grid{display:grid;grid-template-columns:1fr 1.35fr;gap:14px;align-items:stretch;margin:12px 0 4px}
+  .fw-grid .prompt-box{margin:0;height:100%}
+  .verdict{font-size:13px;color:var(--gray);margin:8px 0 2px}
+  .fw-chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px}
+  .fw-chip{font-family:var(--mono);font-size:11px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;color:var(--ink-soft)}
+  .fw-chip b{color:var(--cobalt)}
+
+  /* mockups */
+  .shot{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--card);box-shadow:0 8px 24px rgba(27,35,56,.07);margin:16px 0 6px}
+  .shot-bar{display:flex;align-items:center;gap:8px;background:#EDEFE9;padding:9px 16px;border-bottom:1px solid var(--line)}
+  .dot{width:10px;height:10px;border-radius:50%} .d1{background:#F26D6D}.d2{background:#F6C766}.d3{background:#6FCF8E}
+  .shot-url{font-family:var(--mono);font-size:12px;color:var(--gray);background:#fff;border:1px solid var(--line);border-radius:7px;padding:3px 12px;margin-left:8px}
+  .shot-body{padding:20px 22px}
+  .stage{background:linear-gradient(180deg,#F2F3EE,#EAECE4)}
+  .mock-note{display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;background:var(--red-soft);color:#B4443E;border-radius:6px;padding:3px 9px;margin-bottom:10px}
+  .co{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--cobalt);color:#fff;font-family:var(--mono);font-weight:600;font-size:11px;flex:none;box-shadow:0 0 0 3px var(--cobalt-soft)}
+  .co.abs{position:absolute;z-index:3}
+  .guide-legend{list-style:none;margin:14px 0 0;padding:0}
+  .guide-legend li{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--ink-soft);margin-bottom:7px}
+  .guide-legend li .co{margin-top:2px}
+  .input-mock{position:relative;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:14px 16px 12px;max-width:540px;margin:0 auto}
+  .input-mock .placeholder{color:#A6AAB6;font-size:14px;padding:4px 2px 12px}
+  .popover{position:relative;width:256px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 34px rgba(27,35,56,.16);padding:8px;z-index:2;margin:2px 0 16px 26px}
+  .popover::after{content:"";position:absolute;bottom:-7px;left:20px;width:12px;height:12px;background:#fff;border-right:1px solid var(--line);border-bottom:1px solid var(--line);transform:rotate(45deg)}
+  .pop-row{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;font-size:13.5px;color:var(--ink);position:relative}
+  .pop-row.hot{background:var(--cobalt-soft)}
+  .pop-row .pi{width:20px;text-align:center;color:var(--gray);font-size:14px}
+  .toggle{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:12px;border-radius:999px;padding:3px 3px;margin-left:auto}
+  .toggle .knob{width:30px;height:16px;border-radius:999px;background:#CBCFD8;position:relative;display:inline-block}
+  .toggle .knob::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff}
+  .toggle.on .knob{background:var(--cobalt)}
+  .toggle.on .knob::after{left:auto;right:2px}
+  .pop-note{font-size:11px;color:var(--gray);padding:4px 10px 6px;border-top:1px dashed var(--line);margin-top:4px}
+  .input-row{display:flex;align-items:center;gap:10px;border-top:1px solid #EEF0EA;padding-top:10px;position:relative}
+  .icon-btn{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:#F7F8F4;display:inline-flex;align-items:center;justify-content:center;font-size:15px;color:var(--ink-soft);position:relative}
+  .icon-btn.hot{border-color:var(--cobalt);box-shadow:0 0 0 3px var(--cobalt-soft)}
+  .send-btn{margin-left:auto;width:32px;height:32px;border-radius:9px;background:var(--ink);color:var(--marker);display:inline-flex;align-items:center;justify-content:center;font-size:15px;position:relative}
+  .model-chip{font-family:var(--mono);font-size:11.5px;color:var(--gray)}
+  .bubble{border-radius:12px;padding:13px 17px;font-size:13.5px;line-height:1.6;margin-bottom:13px;max-width:94%}
+  .bubble.user{background:var(--cobalt-soft);margin-left:auto;color:var(--ink)}
+  .bubble.claude{background:#F3F4EF;border:1px solid var(--line);color:var(--ink-soft)}
+  .bubble .who{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--gray);display:block;margin-bottom:5px}
+  .bubble h4{font-family:var(--display);font-size:13.5px;color:var(--ink);margin:7px 0 3px}
+  .cite{display:inline-block;font-family:var(--mono);font-size:10.5px;background:var(--cobalt-soft);color:var(--cobalt);border-radius:5px;padding:1px 7px;margin:0 3px}
+  .search-chip{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:12px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px 13px;color:var(--ink-soft);margin:0 6px 9px 0}
+  .search-chip .sicon{color:var(--cobalt);font-weight:700}
+  .app-mock{display:grid;grid-template-columns:170px 1fr;min-height:250px}
+  .app-side{background:#141B2E;color:#B9C0D6;padding:15px 12px;font-size:13px}
+  .app-side .brand{font-family:var(--display);font-weight:700;color:#fff;font-size:14px;margin:2px 6px 14px}
+  .side-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:9px;margin-bottom:4px;position:relative}
+  .side-item.hot{background:rgba(255,222,89,.16);color:#fff;font-weight:600;outline:1.5px solid var(--marker)}
+  .side-sub{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#6B7590;margin:14px 8px 6px}
+  .side-sess{padding:6px 10px;border-radius:8px;font-size:12px;color:#8C95AE}
+  .app-main{background:#FBFBF8;padding:20px 22px;position:relative}
+  .app-main h6{font-family:var(--display);font-size:16px;font-weight:700;margin:0 0 3px}
+  .app-main .sub{font-size:12.5px;color:var(--gray);margin-bottom:14px}
+  .new-sess{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:#fff;border-radius:10px;padding:8px 15px;font-size:13px;font-weight:600;position:relative;box-shadow:0 0 0 3px var(--cobalt-soft)}
+  .folder-pick{display:flex;align-items:center;gap:10px;background:#fff;border:1.5px dashed var(--line);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--ink-soft);margin-top:14px;max-width:380px;position:relative}
+  .cw-input{position:relative;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:11px 14px;font-size:13px;color:#A6AAB6;margin-top:14px;max-width:460px}
+  .file-strip{display:flex;align-items:center;gap:10px;background:var(--green-soft);border:1px solid #BFE3D0;border-radius:9px;padding:9px 13px;font-size:13px;margin-top:12px}
+  .file-strip .ficon{font-family:var(--mono);font-weight:600;font-size:10.5px;background:var(--green);color:#fff;border-radius:5px;padding:3px 7px}
+  .artifact-pane{display:grid;grid-template-columns:1fr 1.12fr}
+  .artifact-pane .chat-side{padding:18px;border-right:1px solid var(--line)}
+  .artifact-pane .doc-side{background:#FBFBF8;padding:18px}
+  .doc-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px 18px;box-shadow:0 4px 14px rgba(27,35,56,.06)}
+  .doc-card .doc-head{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--ink);padding-bottom:7px;margin-bottom:9px}
+  .doc-card .doc-title{font-family:var(--display);font-weight:700;font-size:14px}
+  .doc-card .doc-badge{font-family:var(--mono);font-size:10px;background:var(--green-soft);color:var(--green);border-radius:5px;padding:2px 8px}
+  .doc-card h5{font-family:var(--display);font-size:12px;margin:9px 0 3px;color:var(--ink)}
+  .doc-card p{font-size:11px;color:var(--gray);line-height:1.5;margin:0}
+  .skeleton{height:6px;border-radius:4px;background:#E7E9E2;margin:5px 0}
+  .sk-70{width:70%}.sk-90{width:90%}.sk-55{width:55%}
+  .slide-strip{display:flex;gap:8px;margin-top:10px}
+  .mini-slide{flex:1;background:#fff;border:1px solid var(--line);border-radius:6px;padding:7px 8px 9px}
+  .mini-slide .st{font-family:var(--display);font-weight:600;font-size:9px;color:var(--ink);line-height:1.25;margin-bottom:4px}
+  .shot-caption{font-size:13px;color:var(--gray);margin:8px 0 0}
+  .shot-caption strong{color:var(--ink)}
+  .fw-note{background:var(--cobalt-soft);border-radius:10px;padding:12px 16px;font-size:14px;color:var(--ink);margin:10px 0 4px}
+
+  /* grid table */
+  .grid-table-wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-top:22px}
+  table{width:100%;border-collapse:collapse;font-size:14px;min-width:760px}
+  thead th{background:var(--ink);color:#fff;font-family:var(--display);font-weight:600;font-size:14px;text-align:left;padding:13px 16px}
+  thead th:first-child{width:22%}
+  thead th .sub{display:block;font-family:var(--mono);font-weight:400;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--marker);margin-top:3px}
+  tbody td{padding:13px 16px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-soft)}
+  tbody tr:last-child td{border-bottom:none}
+  tbody th{padding:13px 16px;border-bottom:1px solid var(--line);text-align:left;font-family:var(--display);font-weight:600;color:var(--ink);vertical-align:top;background:#FBFBF7}
+  .score-slot{font-family:var(--mono);font-size:12px;color:var(--gray);display:block;margin-bottom:6px}
+  .fill-line{border-bottom:1.5px dotted #B9BEC9;height:15px;display:block;margin-top:4px}
+  .grid-howto{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin:20px 0 6px}
+  .grid-howto .card{padding:17px 19px}
+  .grid-howto .card b{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--cobalt);display:block;margin-bottom:5px}
+  .grid-howto .card p{font-size:14px;color:var(--ink-soft)}
+  .match-table thead th{background:var(--cobalt)}
+  .match-table thead th .sub{color:#D8E1FF}
+  .dq{counter-reset:dq;list-style:none;margin-top:8px}
+  .dq li{counter-increment:dq;position:relative;padding:15px 19px 15px 60px;background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:11px;font-size:14.5px;color:var(--ink-soft)}
+  .dq li::before{content:"Q" counter(dq);position:absolute;left:17px;top:15px;font-family:var(--mono);font-weight:600;font-size:12px;background:var(--marker);border-radius:7px;padding:4px 8px;color:var(--ink)}
+  .takeaways{background:var(--ink);color:#DFE3F0;border-radius:var(--radius);padding:28px 30px;margin-top:28px}
+  .takeaways h3{color:#fff;font-size:18px;margin-bottom:8px}
+  .takeaways .tp{font-size:13.5px;color:#B9C0D6;margin-bottom:14px}
+  .takeaways li{list-style:none;position:relative;padding-left:26px;margin-bottom:11px;font-size:14.5px}
+  .takeaways li::before{content:"✦";position:absolute;left:0;color:var(--marker)}
+  .takeaways b{color:#fff}
+
+  .opt-badge{display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;background:var(--violet-soft);color:var(--violet);border-radius:6px;padding:4px 10px;font-weight:600;margin-left:8px}
+  /* toolkit reference cards */
+  .tk{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-top:22px}
+  .tk-head{display:flex;align-items:center;gap:16px;padding:20px 26px;border-bottom:1px solid var(--line)}
+  .tk-ic{width:52px;height:52px;border-radius:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .tk-ic svg{width:30px;height:30px}
+  .tk.a1 .tk-ic{background:var(--cobalt-soft)} .tk.a2 .tk-ic{background:var(--green-soft)} .tk.a3 .tk-ic{background:var(--violet-soft)}
+  .tk-head h3{font-size:21px;margin:0}
+  .tk-head .tk-tl{font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--gray);margin-top:2px}
+  .tk-body{padding:22px 26px 24px}
+  .tk-body > p{font-size:15.5px;color:var(--ink-soft);max-width:78ch;margin-bottom:16px}
+  .tk-diagram{background:#FBFBF7;border:1px solid var(--line);border-radius:12px;padding:16px;margin:6px 0 18px}
+  .tk-diagram figcaption{font-family:var(--mono);font-size:11.5px;color:var(--gray);text-align:center;margin-top:8px}
+  .tk-two{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:6px}
+  .tk-two .box{border-radius:10px;padding:14px 16px;font-size:14px;line-height:1.55}
+  .tk-two .good{background:var(--green-soft);color:#175C3D}
+  .tk-two .plain{background:#EEF0EA;color:var(--ink-soft)}
+  .tk-two .box b{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px}
+  .tk-two .plain b{color:var(--gray)} .tk-two .good b{color:var(--green)}
+  .tk-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+  .tk-pill{font-family:var(--mono);font-size:11.5px;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:6px 13px;color:var(--ink-soft)}
+  .tk-pill b{color:var(--ink)}
+  .tk-when{background:var(--marker-soft);border-radius:10px;padding:12px 16px;font-size:14.5px;color:var(--ink);margin-top:14px}
+  .tk-when b{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:3px}
+  @media(max-width:820px){.tk-two{grid-template-columns:1fr}}
+  .seg-wrap{display:flex;justify-content:center;position:relative;margin:2px 0 14px}
+  .seg{display:inline-flex;background:#EDEFE9;border:1px solid var(--line);border-radius:999px;padding:3px;position:relative}
+  .seg-opt{padding:6px 18px;border-radius:999px;font-size:13px;color:var(--gray);font-weight:600}
+  .seg-opt.on{background:var(--ink);color:var(--marker)}
+  .dl-btn{display:inline-flex;gap:9px;align-items:center;background:var(--green);color:#fff;border-radius:10px;padding:11px 18px;font-size:14.5px;font-weight:600;text-decoration:none;margin:14px 0 4px;box-shadow:0 4px 14px rgba(30,142,90,.25)}
+  .dl-btn:hover{background:#177449}
+  .dl-btn .fico{font-family:var(--mono);font-size:10.5px;background:rgba(255,255,255,.22);border-radius:5px;padding:3px 7px}
+  .rules-strip{background:var(--marker-soft);border:1px solid #EDD98A;border-radius:12px;padding:13px 18px;font-size:14.5px;color:var(--ink);margin-bottom:6px}
+  .writedown{background:var(--cobalt-soft);border-radius:10px;padding:11px 15px;font-size:14px;color:var(--ink);margin-top:14px}
+  .b-zone .writedown{background:var(--violet-soft)}
+  details.opt{margin:10px 0 4px;border:1px dashed var(--line);border-radius:10px;background:#FBFBF7}
+  details.opt summary{cursor:pointer;padding:10px 15px;font-size:13.5px;color:var(--gray);font-family:var(--mono)}
+  details.opt .inner{padding:0 15px 14px}
+  footer{padding:38px 0 54px;color:var(--gray);font-size:13px;font-family:var(--mono)}
+  footer .wrap{border-top:1px solid var(--line);padding-top:20px}
+
+  .b-zone{background:#F3EFF9}
+  .b-zone .eyebrow{color:var(--violet)}
+  .b-zone .co{background:var(--violet);box-shadow:0 0 0 3px var(--violet-soft)}
+  .b-zone .pop-row.hot{background:var(--violet-soft)}
+  .b-zone .icon-btn.hot{border-color:var(--violet);box-shadow:0 0 0 3px var(--violet-soft)}
+  .b-zone .toggle.on .knob{background:var(--violet)}
+  .b-zone .bubble.user{background:var(--violet-soft)}
+  .b-zone .cite{background:var(--violet-soft);color:var(--violet)}
+  .b-zone .search-chip .sicon{color:var(--violet)}
+  .b-zone .fw-note{background:var(--violet-soft)}
+  .b-zone .new-sess{box-shadow:0 0 0 3px var(--violet-soft)}
+
+  @media(max-width:820px){
+    .crit-body{grid-template-columns:1fr}
+    .brief-wrap{grid-template-columns:1fr}
+    .fw-grid{grid-template-columns:1fr}
+    .artifact-pane{grid-template-columns:1fr}
+    .artifact-pane .chat-side{border-right:none;border-bottom:1px solid var(--line)}
+    .app-mock{grid-template-columns:1fr}
+    .popover{margin-left:6px;max-width:100%}
+  }
+  @media print{header.hero{background:#fff;color:#000}nav.top{display:none}.shot{box-shadow:none}}
+</style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Module 2: Agent Fundamentals · Session 06: Agent Tools</div>
+    <h1>One Task, Three Tools — Build a Client One-Pager an an IC Teaser Deck with Claude</h1>
+    <p class="sub">Two overnight engagements at Altura Advisory, one experiment. <strong style="color:#fff;">Activity A:</strong> a board pre-read one-pager on India's top 3 fintech trends for Suvarna Bank (.docx). <strong style="color:#fff;">Activity B:</strong> a 5-slide investment-committee teaser on India's EV two-wheeler market for Torque Capital (.pptx). You'll build both deliverables, each three ways — plain Claude chat, Claude with Web Search, and Claude creating a downloadable Artifact/file — then document exactly what each tool added: recency, structure, deliverable quality. An optional Step 4 showcases <strong style="color:#fff;">Claude Cowork</strong> — delegating the morning-after follow-up as a multi-file workstream.</p>
+    <div class="crumbs">
+      <span>Concept · Three tools, three criteria</span>
+      <span>Activity A · Suvarna Bank fintech one-pager (.docx)</span>
+      <span>Activity B · Torque Capital EV teaser deck (.pptx)</span>
+      <span>Tool · claude.ai (web)</span>
+      <span>Optional Step 4 · Claude Cowork (desktop app)</span>
+    </div>
+  </div>
+</header>
+
+<!-- ============ STICKY NAV ============ -->
+<nav class="top">
+  <div class="wrap">
+    <a href="#toolkit">1 · Meet the Tools</a>
+    <a href="#concept">2 · Concept</a>
+    <a href="#eng-a" class="na">3 · Engagement A</a>
+    <a href="#eng-b" class="nb">4 · Engagement B</a>
+  </div>
+</nav>
+
+<!-- ============ SECTION 1 · MEET THE TOOLS ============ -->
+<section id="toolkit">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Section 01 · Meet the tools</div>
+      <h2>The three things Claude can do in this activity</h2>
+      <p>Before you start, a one-screen briefing on each capability you'll use — what it is, how it changes Claude's answer, and when to reach for it. You'll see all three in action across the steps.</p>
+    </div>
+
+    <!-- WEB SEARCH -->
+    <div class="tk a1">
+      <div class="tk-head">
+        <div class="tk-ic"><svg viewBox="0 0 24 24" fill="none" stroke="#2D5BFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="M4 11h14M11 4a11 11 0 0 1 0 14M11 4a11 11 0 0 0 0 14"/></svg></div>
+        <div><h3>Claude Web Search</h3><div class="tk-tl">Live, cited facts · in the claude.ai chat</div></div>
+      </div>
+      <div class="tk-body">
+        <p>By default, Claude answers from what it learned during training, so it can't know what happened after its cutoff. Turn <strong>Web Search on</strong> (the ＋ menu in the message box) and Claude can look things up on the web <em>mid-answer</em>, then weave the findings in with <strong>clickable citations</strong> you can verify. It decides when to search based on your question.</p>
+
+        <figure class="tk-diagram">
+          <svg viewBox="0 0 720 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Web search flow">
+            <defs><marker id="arrb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8aa6a4"/></marker></defs>
+            <g font-family="Inter, sans-serif" font-size="12.5" text-anchor="middle">
+              <rect x="14" y="52" width="120" height="46" rx="10" fill="#E9EEFF" stroke="#2D5BFF" stroke-width="1.2"/><text x="74" y="72" fill="#1B2338" font-weight="600">Your question</text><text x="74" y="88" fill="#5d7079" font-size="11">"…trends right now"</text>
+              <rect x="184" y="52" width="120" height="46" rx="10" fill="#fff" stroke="#5d7079" stroke-width="1.1"/><text x="244" y="72" fill="#1B2338" font-weight="600">Claude decides</text><text x="244" y="88" fill="#5d7079" font-size="11">needs fresh data?</text>
+              <rect x="354" y="52" width="120" height="46" rx="10" fill="#E9EEFF" stroke="#2D5BFF" stroke-width="1.2"/><text x="414" y="72" fill="#1B2338" font-weight="600">Searches web</text><text x="414" y="88" fill="#5d7079" font-size="11">runs 1–several queries</text>
+              <rect x="524" y="42" width="182" height="66" rx="10" fill="#1B2338"/><text x="615" y="68" fill="#fff" font-weight="600">Cited answer</text><text x="615" y="86" fill="#7fc4c0" font-size="11">dated facts + source links</text>
+            </g>
+            <g stroke="#8aa6a4" stroke-width="1.6" fill="none">
+              <line x1="134" y1="75" x2="180" y2="75" marker-end="url(#arrb)"/>
+              <line x1="304" y1="75" x2="350" y2="75" marker-end="url(#arrb)"/>
+              <line x1="474" y1="75" x2="520" y2="75" marker-end="url(#arrb)"/>
+            </g>
+          </svg>
+          <figcaption>Web Search: question → Claude looks it up live → answer with citations</figcaption>
+        </figure>
+
+        <div class="tk-two">
+          <div class="box plain"><b>Without web search</b>"UPI processes billions of transactions a month." Fluent, but undated — could be a year old.</div>
+          <div class="box good"><b>With web search</b>"UPI hit a record ~20bn transactions in July 2026 <span style="font-family:var(--mono);font-size:11px;">[npci.org.in]</span>." Dated, sourced, checkable.</div>
+        </div>
+
+        <div class="tk-when"><b>Reach for it when</b>anything with a date on it — current trends, competitor moves, regulation, latest figures. In this activity: <strong>Step 2</strong> of each engagement.</div>
+      </div>
+    </div>
+
+    <!-- ARTIFACTS -->
+    <div class="tk a2">
+      <div class="tk-head">
+        <div class="tk-ic"><svg viewBox="0 0 24 24" fill="none" stroke="#1E8E5A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg></div>
+        <div><h3>Claude Artifacts / File creation</h3><div class="tk-tl">A finished, downloadable deliverable · in the claude.ai chat</div></div>
+      </div>
+      <div class="tk-body">
+        <p>Normally Claude's reply lives as text in the chat window — you still have to copy it into Word or PowerPoint and format it. When your prompt asks for a <strong>document, one-pager, deck or spreadsheet</strong>, Claude instead builds it as an <strong>Artifact</strong>: a finished file that opens in a side panel next to the chat, with a <strong>Download</strong> button (.docx, .pptx, .xlsx, and more). Same chat, but the output is a deliverable, not just an answer.</p>
+
+        <figure class="tk-diagram">
+          <svg viewBox="0 0 720 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Artifact flow">
+            <g font-family="Inter, sans-serif" font-size="12.5" text-anchor="middle">
+              <rect x="14" y="52" width="150" height="46" rx="10" fill="#E4F4EC" stroke="#1E8E5A" stroke-width="1.2"/><text x="89" y="72" fill="#1B2338" font-weight="600">Prompt asks</text><text x="89" y="88" fill="#5d7079" font-size="11">"…as a downloadable .docx"</text>
+              <rect x="214" y="52" width="140" height="46" rx="10" fill="#fff" stroke="#5d7079" stroke-width="1.1"/><text x="284" y="72" fill="#1B2338" font-weight="600">Claude builds</text><text x="284" y="88" fill="#5d7079" font-size="11">a formatted file</text>
+              <rect x="404" y="34" width="150" height="82" rx="10" fill="#fff" stroke="#1E8E5A" stroke-width="1.2"/><text x="479" y="58" fill="#1B2338" font-weight="600" font-size="12">Side panel</text>
+              <rect x="424" y="66" width="110" height="8" rx="3" fill="#E7E9E2"/><rect x="424" y="80" width="86" height="8" rx="3" fill="#E7E9E2"/>
+              <rect x="424" y="94" width="110" height="14" rx="4" fill="#E4F4EC" stroke="#1E8E5A" stroke-width="0.8"/><text x="479" y="104" fill="#1E8E5A" font-size="9" font-weight="600">⭳ Download</text>
+              <rect x="594" y="52" width="112" height="46" rx="10" fill="#1B2338"/><text x="650" y="72" fill="#fff" font-weight="600">Send-ready</text><text x="650" y="88" fill="#7fc4c0" font-size="11">.docx / .pptx</text>
+            </g>
+            <g stroke="#8aa6a4" stroke-width="1.6" fill="none">
+              <line x1="164" y1="75" x2="210" y2="75" marker-end="url(#arrb)"/>
+              <line x1="354" y1="75" x2="400" y2="75" marker-end="url(#arrb)"/>
+              <line x1="554" y1="75" x2="590" y2="75" marker-end="url(#arrb)"/>
+            </g>
+          </svg>
+          <figcaption>Artifacts: ask for a file → Claude builds it → download the finished deliverable</figcaption>
+        </figure>
+
+        <div class="tk-two">
+          <div class="box plain"><b>Plain chat answer</b>Three trends written as text — you reformat into a one-pager yourself (~30 min).</div>
+          <div class="box good"><b>As an Artifact</b>A downloadable one-page .docx with title, sections and a sources footer — minutes from sendable.</div>
+        </div>
+
+        <div class="tk-when"><b>Reach for it when</b>you need an actual client deliverable — a one-pager, briefing note, deck or model. In this activity: <strong>Step 3</strong> of each engagement (kept on Web Search so the file uses current data).</div>
+      </div>
+    </div>
+
+    <!-- COWORK -->
+    <div class="tk a3">
+      <div class="tk-head">
+        <div class="tk-ic"><svg viewBox="0 0 24 24" fill="none" stroke="#7A3FD1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><path d="M10 6.5h4M6.5 10v4M17.5 10v4M10 17.5h4"/></svg></div>
+        <div><h3>Claude Cowork <span class="opt-badge">Optional · desktop / web / mobile</span></h3><div class="tk-tl">An agent you delegate a whole workstream to</div></div>
+      </div>
+      <div class="tk-body">
+        <p>Chat and Artifacts answer one message at a time. <strong>Cowork</strong> is Claude's agent for knowledge work: you hand it a whole task and it <strong>plans, breaks the work into steps, and produces several finished files</strong> — working directly with a folder of your files and connected apps, and pausing to ask before anything material. You start it from the same message box: pick <strong>Cowork</strong> instead of <strong>Chat</strong>, point it at a folder, describe the outcome, and step away. <cite index="17-1">Claude Chat helps you think and respond; Claude Cowork helps you delegate and produce a finished deliverable.</cite></p>
+
+        <figure class="tk-diagram">
+          <svg viewBox="0 0 720 172" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cowork flow">
+            <g font-family="Inter, sans-serif" font-size="12.5" text-anchor="middle">
+              <rect x="14" y="62" width="150" height="48" rx="10" fill="#F1E9FC" stroke="#7A3FD1" stroke-width="1.2"/><text x="89" y="82" fill="#1B2338" font-weight="600">One instruction</text><text x="89" y="98" fill="#5d7079" font-size="11">"build the follow-up pack"</text>
+              <rect x="214" y="62" width="150" height="48" rx="10" fill="#fff" stroke="#7A3FD1" stroke-width="1.2"/><text x="289" y="82" fill="#1B2338" font-weight="600">Cowork plans</text><text x="289" y="98" fill="#5d7079" font-size="11">reads your folder, splits steps</text>
+              <rect x="414" y="16" width="150" height="30" rx="8" fill="#F1E9FC" stroke="#7A3FD1" stroke-width="0.9"/><text x="489" y="35" fill="#1B2338" font-size="11" font-weight="600">revise the file</text>
+              <rect x="414" y="70" width="150" height="30" rx="8" fill="#F1E9FC" stroke="#7A3FD1" stroke-width="0.9"/><text x="489" y="89" fill="#1B2338" font-size="11" font-weight="600">build a new deck</text>
+              <rect x="414" y="124" width="150" height="30" rx="8" fill="#F1E9FC" stroke="#7A3FD1" stroke-width="0.9"/><text x="489" y="143" fill="#1B2338" font-size="11" font-weight="600">draft the tracker</text>
+              <rect x="600" y="62" width="106" height="48" rx="10" fill="#1B2338"/><text x="653" y="82" fill="#fff" font-weight="600">Files saved</text><text x="653" y="98" fill="#C9A8F2" font-size="11">to your folder</text>
+            </g>
+            <g stroke="#b39ad6" stroke-width="1.6" fill="none">
+              <line x1="164" y1="86" x2="210" y2="86" marker-end="url(#arrb)"/>
+              <path d="M364 82 L390 82 L390 31 L410 31" marker-end="url(#arrb)"/>
+              <line x1="364" y1="86" x2="410" y2="85" marker-end="url(#arrb)"/>
+              <path d="M364 90 L390 90 L390 139 L410 139" marker-end="url(#arrb)"/>
+              <path d="M564 31 L584 31 L584 82 L598 82" marker-end="url(#arrb)"/>
+              <line x1="564" y1="85" x2="598" y2="85" marker-end="url(#arrb)"/>
+              <path d="M564 139 L584 139 L584 90 L598 90" marker-end="url(#arrb)"/>
+            </g>
+          </svg>
+          <figcaption>Cowork: one instruction → plans &amp; splits into steps → several finished files in your folder</figcaption>
+        </figure>
+
+        <div class="tk-two">
+          <div class="box plain"><b>Chat / Artifacts</b>One deliverable per prompt; you drive each step and each file yourself.</div>
+          <div class="box good"><b>Cowork</b>One instruction → it reads your existing file, works across formats, and returns several files — like leaving work for a capable colleague.</div>
+        </div>
+
+        <div class="tk-meta">
+          <span class="tk-pill"><b>Where:</b> ＋/mode selector → choose <b>Cowork</b></span>
+          <span class="tk-pill"><b>Plans:</b> paid (Pro, Max, Team, Enterprise)</span>
+          <span class="tk-pill"><b>Not:</b> free, and not unsupervised — you review its work</span>
+        </div>
+        <div class="tk-when"><b>Reach for it when</b>a task spans multiple files or steps built on things you already have. In this activity: the <strong>optional Step 4</strong> of each engagement — the morning-after follow-up pack.</div>
+      </div>
+    </div>
+
+    <div class="tip" style="margin-top:24px;">🧭 <strong>The ladder in one line:</strong> plain chat (think) → Web Search (verify with current facts) → Artifact (produce a file) → Cowork (delegate a whole workstream). The activity walks you up it.</div>
+  </div>
+</section>
+
+<!-- ============ SECTION 2 · CONCEPT ============ -->
+<section id="concept">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Section 02 · Concept</div>
+      <h2>What you're testing, and how you'll judge it</h2>
+    </div>
+
+    <div class="card definition">
+      <p>This activity is a controlled experiment: <strong>one consulting task, run three ways</strong>. The same base prompt goes into plain Claude chat, then Claude with Web Search, and finally the task is upgraded to make Claude produce a real downloadable Artifact/file. Because the task never changes, any difference in the outputs comes from the <strong>tool</strong> — and you'll capture those differences in a comparison grid.</p>
+      <p class="vs"><strong>You run BOTH engagements:</strong> Engagement A (Suvarna Bank → Word one-pager) and Engagement B (Torque Capital → 5-slide deck). Each has its own complete step-by-step walkthrough below. Work through Engagement A first, then Engagement B — the second run is faster because the clicks are identical; only the prompt and the artifact change.</p>
+    </div>
+
+    <div class="grid-3">
+      <div class="toolcard">
+        <span class="mode-tag mode-chat">Step 1 · Plain chat</span>
+        <h3>Claude, knowledge only</h3>
+        <p>No internet, no files. Claude answers from what it learned in training. Fast and fluent — but it can't know what happened last month.</p>
+      </div>
+      <div class="toolcard">
+        <span class="mode-tag mode-web">Step 2 · + Web Search</span>
+        <h3>Claude, looking things up live</h3>
+        <p>Same Claude, but it can now search the web mid-answer and cite where facts came from — dates, sources, clickable citations.</p>
+      </div>
+      <div class="toolcard">
+        <span class="mode-tag mode-cowork">Step 3 · Artifact/file</span>
+        <h3>Claude, producing a deliverable</h3>
+        <p>Same claude.ai chat — but the prompt asks for a finished file. Claude researches, structures, and hands you a downloadable .docx or .pptx your partner could forward.</p>
+      </div>
+      <div class="toolcard">
+        <span class="mode-tag" style="background:var(--violet-soft);color:var(--violet);">Step 4 · Cowork (optional)</span>
+        <h3>Claude, running a workstream</h3>
+        <p>In the Claude desktop app, Cowork works in a folder: it reads your existing file, plans multi-step work, and produces several files (.docx, .pptx, .xlsx) from one instruction.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top:44px;">The three judging criteria</h3>
+    <p style="color:var(--ink-soft);max-width:74ch;margin-top:8px;">After each step you'll score the output 1–5 on three criteria, each backed by a line of written evidence — never a bare number. Plain-language definitions first, so you know exactly what you're scoring.</p>
+
+    <div class="crit rec">
+      <div class="crit-head"><span class="crit-letter">R</span><h3>Recency</h3>
+        <span class="crit-q">"How fresh is this? Would it survive a well-read client fact-checking it against this week's papers?"</span></div>
+      <div class="crit-body">
+        <div>
+          <h4>In plain language</h4>
+          <p>Recency is simply <strong>how up-to-date the information is</strong>. Think of milk in the fridge: some facts stay good for years (what UPI is), others expire in weeks (this month's transaction volume, last week's regulator circular). A recent answer talks about what's happening <em>now</em>, gives dates, and reflects events after Claude's training data was collected.</p>
+          <div class="ex bad"><b>Low recency</b>"UPI processes around 8 billion transactions a month" — plausible, but an old figure with no date attached. Quote it to a board and you may be a year out of date.</div>
+          <div class="ex good"><b>High recency</b>"UPI hit a record ~20 billion transactions in July 2026 (NPCI data, cited)" — dated, sourced, checkable.</div>
+        </div>
+        <div>
+          <h4>Scoring anchors (1–5)</h4>
+          <ul class="scale">
+            <li><span class="n">1</span>Undated, generic claims; likely stale; no way to check.</li>
+            <li><span class="n">2</span>Mostly evergreen facts; freshest reference over a year old.</li>
+            <li><span class="n">3</span>Some dated facts, but nothing from the last quarter.</li>
+            <li><span class="n">4</span>Multiple facts from the last 3 months, with sources.</li>
+            <li><span class="n">5</span>Reflects the last few weeks, with dates + citations you clicked and verified.</li>
+          </ul>
+          <div class="evidence"><b>Evidence to write down</b>The single newest dated fact in the output, and one thing you know happened recently that the output <em>missed</em>.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="crit str">
+      <div class="crit-head"><span class="crit-letter">S</span><h3>Structure</h3>
+        <span class="crit-q">"Could your partner — skimming at the airport gate — absorb this in 30 seconds?"</span></div>
+      <div class="crit-body">
+        <div>
+          <h4>In plain language</h4>
+          <p>Structure is <strong>how well the answer is organized</strong> — a clear skeleton versus a wall of words. Think of a well-packed suitcase versus clothes dumped in a bag: same contents, very different usability. Good structure means clear headings, a consistent pattern per section (what it is → proof → so what), the most important point first, nothing repeated.</p>
+          <div class="ex bad"><b>Weak structure</b>Long tangled paragraphs where the point, the data, and the implication are mixed together — the reader hunts for the "so what," and section 2 quietly repeats half of section 1.</div>
+          <div class="ex good"><b>Strong structure</b>Every section follows the identical mini-framework: bold headline → one-line definition → one data point → "So what for the client." Skim only the bold lines and you still get the story.</div>
+        </div>
+        <div>
+          <h4>Scoring anchors (1–5)</h4>
+          <ul class="scale">
+            <li><span class="n">1</span>Wall of text; no headings; ideas overlap.</li>
+            <li><span class="n">2</span>Some ordering, but inconsistent depth and buried implications.</li>
+            <li><span class="n">3</span>Clear headings; mostly parallel sections; "so what" uneven.</li>
+            <li><span class="n">4</span>Fully parallel framework; skimmable; prioritized.</li>
+            <li><span class="n">5</span>Consulting-grade: MECE sections, pyramid ordering, every section answers "so what" — matches the exact structure the prompt asked for.</li>
+          </ul>
+          <div class="evidence"><b>Evidence to write down</b>Give yourself exactly 30 seconds to skim, then look away: what did you retain? Note one structural strength and one gap.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="crit del">
+      <div class="crit-head"><span class="crit-letter">D</span><h3>Deliverable quality</h3>
+        <span class="crit-q">"How many minutes of work stand between this output and your partner forwarding it to the client at 9:00 am?"</span></div>
+      <div class="crit-body">
+        <div>
+          <h4>In plain language</h4>
+          <p>Deliverable quality is <strong>how close the output is to a finished, sendable client product</strong> — not just good ideas, but ideas in the right <em>container</em>. Think of a chef handing you plated food versus a bag of excellent groceries: both valuable, only one goes on the table. It covers format (a real file vs chat text), polish, client-appropriate tone, completeness (title, sections, sources), and how much rework remains.</p>
+          <div class="ex bad"><b>Low deliverable quality</b>Great content, but it lives in a chat window: copy into Word or PowerPoint, rebuild headings, fix fonts, add a title and sources — 30–40 minutes of formatting before it's client-safe.</div>
+          <div class="ex good"><b>High deliverable quality</b>A downloadable file matching the brief exactly — you'd change two sentences, drop in the Altura header, and your partner hits forward at 9:00.</div>
+        </div>
+        <div>
+          <h4>Scoring anchors (1–5)</h4>
+          <ul class="scale">
+            <li><span class="n">1</span>Raw chat text; substantial rewriting and full reformatting needed.</li>
+            <li><span class="n">2</span>Good raw material; heavy lifting (30+ min) to make it client-facing.</li>
+            <li><span class="n">3</span>Well-written and correctly toned, but still copy-paste + formatting work.</li>
+            <li><span class="n">4</span>Actual formatted file; minor edits (≈10 min) before sending.</li>
+            <li><span class="n">5</span>Attach-and-send: polished file matching the brief, sources included, ≤5 min of tweaks.</li>
+          </ul>
+          <div class="evidence"><b>Evidence to write down</b>Your honest "minutes to client-ready" estimate for each step, and the specific rework items (e.g., "no sources," "needs template styling").</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tip" style="margin-top:24px;">📏 <strong>Golden rules for a fair test:</strong> paste the base prompt <mark>verbatim</mark> in Steps 1 and 2 · start a <strong>fresh chat</strong> for every step · no follow-up prompting in Steps 1–2 (one shot each) · screenshot every final output · Step 3 uses the framework-engineered prompt shown in its step — that upgrade is deliberately part of the experiment.</div>
+  </div>
+</section>
+
+<!-- ============ SECTION · ENGAGEMENT A ============ -->
+<section id="eng-a" style="background:#EFF1EA;">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Section 03 · Engagement A · Hands-on Activity</div>
+      <h2>Engagement A — the Suvarna Bank one-pager</h2>
+      <p><span class="eng-tag eng-a">Artifact: Word one-pager (.docx)</span> &nbsp; Framework rows exercised: <strong>market &amp; competitive intelligence</strong> (fintech trends move weekly) → <strong>client-facing deliverable</strong> (a board pre-read document).</p>
+    </div>
+
+    <div class="brief-wrap">
+      <div class="memo">
+        <div class="memo-head">
+          <div class="row"><span class="k">From</span> Rohan Deshpande — Partner, Financial Services <span class="urgent">⚑ Urgent</span></div>
+          <div class="row"><span class="k">To</span> You</div>
+          <div class="row"><span class="k">Time</span> Tonight, 9:40 pm</div>
+          <div class="row"><span class="k">Subject</span> Suvarna board pre-read — need by 9:00 am</div>
+        </div>
+        <div class="memo-body">
+          <p>Quick one before I board. Meera (Suvarna's CEO) called — the board strategy offsite got pulled forward to <strong>tomorrow morning</strong>. A director has been pushing the "fintechs are eating our lunch" line and she wants to walk in ahead of it, not behind it.</p>
+          <p>She's asked for a crisp <strong>one-pager: the top 3 fintech trends in India right now, and what each one means for a bank like Suvarna</strong>. Not a market report — three trends, one proof point each, and a clear "so what" she can say out loud to the board.</p>
+          <p>Two things matter: it has to be <strong>current</strong> (this board reads the papers — a stale number will get spotted), and it has to be <strong>sendable as-is</strong>. I land at 8:30 and will forward whatever you give me straight to her at 9:00. No time to reformat.</p>
+          <p class="sig">— R.</p>
+        </div>
+      </div>
+      <div class="client-card">
+        <div class="cc-sub">Client snapshot · Engagement A</div>
+        <h3>Suvarna Bank Ltd.</h3>
+        <div class="fact"><span class="fk">Who</span><span>Mid-size private-sector bank, HQ Mumbai; 480 branches, strong in Gujarat &amp; Maharashtra.</span></div>
+        <div class="fact"><span class="fk">Strength</span><span>Loyal deposit base, trusted brand with SMEs and salaried professionals.</span></div>
+        <div class="fact"><span class="fk">Worry</span><span>Average customer age is 46 and rising; under-30s open their first account on a fintech app, not at a branch.</span></div>
+        <div class="fact"><span class="fk">Audience</span><span>CEO Meera Nair + a sceptical, well-read board. Tomorrow, 10:00 am.</span></div>
+        <div class="fact"><span class="fk">Your job</span><span>One page. Current. Sendable.</span></div>
+        <div class="fict-note">All names &amp; details fictional — for workshop use</div>
+      </div>
+    </div>
+
+    <div class="sec-head" style="margin-top:52px;">
+      <div class="eyebrow">Engagement A Walkthrough</div>
+      <h2>5 steps, in order — Step 4 is optional</h2>
+    </div>
+    <div class="rules-strip">📏 <strong>Three rules:</strong> a <strong>fresh chat</strong> for every step · the same <strong>base prompt, verbatim</strong>, in Steps 1–2 · <strong>screenshot</strong> every result before moving on.</div>
+
+    <!-- STEP A1 -->
+    <div class="step">
+      <div class="step-head"><span class="step-no">STEP 1</span><div><h3>Plain chat <span class="mode-tag mode-chat" style="margin-left:6px;">Web search OFF</span></h3><p>Claude's built-in knowledge only</p></div></div>
+      <div class="step-body">
+        <ul class="do-list">
+          <li><strong>New chat</strong> on claude.ai → click <strong>＋</strong> → make sure <strong>Web search is OFF</strong>.</li>
+          <li>Paste the base prompt below → <strong>send</strong>. No follow-ups.</li>
+          <li>Screenshot the answer.</li>
+        </ul>
+        <div class="shot">
+          <div class="shot-bar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="shot-url">Where to click</span></div>
+          <div class="shot-body stage">
+            <span class="mock-note">Guided mock-up</span>
+            <div class="input-mock">
+              <div class="placeholder">How can I help you today?</div>
+              <div class="popover">
+                <div class="pop-row"><span class="pi">📎</span> Add files &amp; photos</div>
+                <div class="pop-row hot"><span class="pi">🌐</span> Web search <span class="co abs" style="top:-10px;right:-10px;">2</span><span class="toggle"><span class="knob"></span></span></div>
+                <div class="pop-row"><span class="pi">🔬</span> Research</div>
+                <div class="pop-note">Grey / no tick = off. Leave it off for this step.</div>
+              </div>
+              <div class="input-row">
+                <span class="icon-btn hot">＋<span class="co abs" style="top:-10px;left:-10px;">1</span></span>
+                <span class="model-chip">Claude</span>
+                <span class="send-btn">↑<span class="co abs" style="top:-10px;right:-10px;">3</span></span>
+              </div>
+            </div>
+            <ul class="guide-legend">
+              <li><span class="co">1</span>New chat → click the <strong>＋ button</strong> at the bottom-left of the message box.</li>
+              <li><span class="co">2</span>Make sure <strong>Web search is OFF</strong> (grey, no tick).</li>
+              <li><span class="co">3</span>Paste the base prompt below and hit <strong>send</strong>.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="prompt-box"><span class="lbl">Engagement A · base prompt (Steps 1 &amp; 2)</span>"You are supporting a consulting engagement for Suvarna Bank, a mid-size Indian private-sector bank whose customer base is ageing while younger customers start on fintech apps. The CEO needs a board pre-read tomorrow morning. Identify the top 3 fintech trends in India right now for a client one-pager. For each trend: what it is, one supporting data point, and the 'so what' for Suvarna Bank. Keep it concise and client-ready."</div>
+        <div class="shot">
+          <div class="shot-bar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="shot-url">claude.ai — what you'll see</span></div>
+          <div class="shot-body">
+            <span class="mock-note">Illustrative mock-up</span>
+            <div class="bubble user"><span class="who">You</span>You are supporting a consulting engagement for Suvarna Bank… top 3 fintech trends in India…</div>
+            <div class="bubble claude"><span class="who">Claude</span>
+              <h4>1. UPI's continued dominance and expansion</h4>
+              UPI has become the backbone of Indian digital payments, processing billions of transactions monthly…
+              <h4>2. Digital lending under a tightening regulatory lens</h4>
+              The RBI's guidelines have reshaped how fintechs partner with banks like Suvarna…
+            </div>
+            <div class="tip">⚠ Fluent — but <strong>no dates, no sources</strong>. This board reads the papers.</div>
+          </div>
+        </div>
+        <div class="writedown">📝 <strong>Write down:</strong> the newest date Claude mentions · could you send this to the client as-is?</div>
+      </div>
+    </div>
+
+    <!-- STEP A2 -->
+    <div class="step">
+      <div class="step-head"><span class="step-no">STEP 2</span><div><h3>Web Search on <span class="mode-tag mode-web" style="margin-left:6px;">Web search ON</span></h3><p>Same prompt, now with live lookup and citations</p></div></div>
+      <div class="step-body">
+        <ul class="do-list">
+          <li><strong>New chat</strong> → click <strong>＋</strong> → flip <strong>Web search ON</strong>. Nothing else changes.</li>
+          <li>Paste the <strong>same base prompt</strong> from Step 1 → send. No follow-ups.</li>
+          <li>Screenshot the answer, including its citations.</li>
+        </ul>
+        <div class="shot">
+          <div class="shot-bar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="shot-url">Where to click</span></div>
+          <div class="shot-body stage">
+            <span class="mock-note">Guided mock-up</span>
+            <div class="input-mock">
+              <div class="placeholder">How can I help you today?</div>
+              <div class="popover">
+                <div class="pop-row"><span class="pi">📎</span> Add files &amp; photos</div>
+                <div class="pop-row hot"><span class="pi">🌐</span> Web search <span class="co abs" style="top:-10px;right:-10px;">2</span><span class="toggle on"><span class="knob"></span></span></div>
+                <div class="pop-row"><span class="pi">🔬</span> Research</div>
+                <div class="pop-note">Tick ✓ = on. Web search is the only thing that changes from Step 1.</div>
+              </div>
+              <div class="input-row">
+                <span class="icon-btn hot">＋<span class="co abs" style="top:-10px;left:-10px;">1</span></span>
+                <span class="model-chip">Claude</span>
+                <span class="send-btn">↑<span class="co abs" style="top:-10px;right:-10px;">3</span></span>
+              </div>
+            </div>
+            <ul class="guide-legend">
+              <li><span class="co">1</span>New chat → click the <strong>＋ button</strong> at the bottom-left of the message box.</li>
+              <li><span class="co">2</span>Flip <strong>Web search ON</strong> (tick appears). Skip <em>Research</em> — different mode.</li>
+              <li><span class="co">3</span>Paste the <strong>same base prompt</strong> and hit <strong>send</strong>. Watch for "Searching the web…".</li>
+            </ul>
+          </div>
+        </div>
+        <div class="shot">
+          <div class="shot-bar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="shot-url">claude.ai — what you'll see</span></div>
+          <div class="shot-body">
+            <span class="mock-note">Illustrative mock-up</span>
+            <div style="margin-bottom:10px;">
+              <span class="search-chip"><span class="sicon">⌕</span> India fintech trends 2026</span>
+              <span class="search-chip"><span class="sicon">⌕</span> UPI transaction volume latest</span>
+            </div>
+            <div class="bubble claude"><span class="who">Claude · searched the web</span>
+              <h4>1. UPI credit lines going mainstream</h4>
+              Record monthly volumes this quarter <span class="cite">npci.org.in</span>, credit-on-UPI accelerating <span class="cite">economictimes</span>…
+              <h4>2. New RBI framework tightens digital lending</h4>
+              Guidance issued last month <span class="cite">rbi.org.in</span>…
+            </div>
+            <div class="tip">✔ Now: <strong>dated facts, named sources, clickable citations</strong>.</div>
+          </div>
+        </div>
+        <div class="writedown">📝 <strong>Write down:</strong> the newest dated fact · the sources cited · did the fresh data change the answer?</div>
+      </div>
+    </div>
+
+    <!-- STEP A3 -->
+    <div class="step">
+      <div class="step-head"><span class="step-no">STEP 3</span><div><h3>Ask for the file <span class="mode-tag mode-cowork" style="margin-left:6px;">Artifact/file</span></h3><p>The COSTAR framework prompt makes Claude build the one-pager (.docx)</p></div></div>
+      <div class="step-body">
+        <ul class="do-list">
+          <li><strong>New chat</strong> → click <strong>＋</strong> → keep <strong>Web search ON</strong>.</li>
+          <li>Paste the <strong>COSTAR framework prompt</strong> below → send. It asks for a downloadable Word file, so Claude builds the file in a side panel.</li>
+          <li>Click <strong>Download</strong>, open the .docx, screenshot it. One small fix-up request allowed (e.g., "tighten to one page").</li>
+        </ul>
+        <div class="shot">
+          <div class="shot-bar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="shot-url">Where to click</span></div>
+          <div class="shot-body stage">
+            <span class="mock-note">Guided mock-up</span>
+            <div class="input-mock">
+              <div class="placeholder">How can I help you today?</div>
+              <div class="popover">
+                <div class="pop-row"><span class="pi">📎</span> Add files &amp; photos</div>
+                <div class="pop-row hot"><span class="pi">🌐</span> Web search <span class="co abs" style="top:-10px;right:-10px;">2</span><span class="toggle on"><span class="knob"></span></span></div>
+                <div class="pop-row"><span class="pi">🔬</span> Research</div>
+                <div class="pop-note">Keep Web search on so the one-pager uses current, cited data.</div>
+              </div>
+              <div class="input-row">
+                <span class="icon-btn hot">＋<span class="co abs" style="top:-10px;left:-10px;">1</span></span>
+                <span class="model-chip">Claude</span>
+                <span class="send-btn">↑<span class="co abs" style="top:-10px;right:-10px;">3</span></span>
+              </div>
+            </div>
+            <ul class="guide-legend">
+              <li><span class="co">1</span>New chat → click the <strong>＋ button</strong> at the bottom-left of the message box.</li>
+              <li><span class="co">2</span>Flip <strong>Web search ON</strong> (tick appears). Skip <em>Research</em> — different mode.</li>
+              <li><span class="co">3</span>Paste the <strong>COSTAR framework prompt</strong> below and hit <strong>send</strong>.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="fw-note">💡 A file needs the format, audience, structure and constraints spelled out — that's what the <strong>COSTAR</strong> framework does. (Other prompt frameworks that work the same way: RISEN, CREATE, TRACE, PARA.)</div>
+        <div class="prompt-box"><span class="lbl">Paste this — COSTAR framework prompt (Step 3 only)</span>
+            <span class="fw-k">[C] Context:</span> You are Altura Advisory, supporting Suvarna Bank — a mid-size Indian private-sector bank (480 branches, strong Gujarat–Maharashtra deposit base) whose average customer age is 46 and rising while under-30s start banking on fintech apps. The CEO presents to the board tomorrow at 10 am.<br>
+            <span class="fw-k">[O] Objective:</span> Produce her board pre-read: the top 3 fintech trends in India right now and what each means for Suvarna.<br>
+            <span class="fw-k">[S] Style:</span> Management-consulting: assertive headline per trend, then what it is (2 lines), one verified data point with source + date, and a one-line "So what for Suvarna."<br>
+            <span class="fw-k">[T] Tone:</span> Confident, board-appropriate, jargon-light, zero hype.<br>
+            <span class="fw-k">[A] Audience:</span> CEO Meera Nair and a sceptical, well-read board that will fact-check numbers.<br>
+            <span class="fw-k">[R] Response format:</span> A downloadable one-page Word document: title, three trend sections as specified, dated sources footer. Nothing spills past one page; flag any figure you could not verify rather than guessing.</div>
+        <details class="opt">
+          <summary>Optional · compare with a simple prompt (extra credit)</summary>
+          <div class="inner">
+            <div class="prompt-box simple"><span class="lbl">Simple prompt (what most people type)</span>"Make me a one-page document on the top 3 fintech trends in India for our banking client Suvarna Bank. Make it look professional and downloadable."</div>
+            <p class="verdict">Run it in a separate chat and compare the two files — the gap is the whole argument for prompt frameworks.</p>
+          </div>
+        </details>
+        <div class="shot">
+          <div class="shot-bar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="shot-url">claude.ai — Claude creating your file</span></div>
+          <div class="artifact-pane">
+            <div class="chat-side">
+              <span class="mock-note">Illustrative mock-up</span>
+              <div class="bubble user" style="max-width:100%;"><span class="who">You</span>…[R] Response format: a downloadable one-page Word document…</div>
+              <div class="bubble claude" style="max-width:100%;"><span class="who">Claude · working</span>✓ Researched (6 sources)<br>✓ Structured<br>✓ Formatting…<div class="file-strip"><span class="ficon">DOCX</span> Suvarna_Board-PreRead_One-Pager.docx <span style="margin-left:auto;color:var(--green);font-weight:600;">Download</span></div></div>
+            </div>
+            <div class="doc-side">
+              <div class="doc-card">
+                <div class="doc-head"><span class="doc-title">Suvarna Bank · Top 3 Fintech Trends</span><span class="doc-badge">1 page</span></div>
+                <h5>1 · Credit moves onto UPI rails</h5>
+                <p><em>So what:</em> deposit relationships alone no longer defend share…</p>
+                <div class="skeleton sk-90"></div><div class="skeleton sk-70"></div>
+                <h5>2 · Digital lending rules tighten</h5>
+                <div class="skeleton sk-90"></div><div class="skeleton sk-55"></div>
+                <h5>3 · Embedded finance everywhere</h5>
+                <div class="skeleton sk-70"></div>
+                <p style="margin-top:9px;border-top:1px solid var(--line);padding-top:6px;">Sources: NPCI (Jul 2026), RBI circular…</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="writedown">📝 <strong>Write down:</strong> does the file match the brief exactly? · did sources + dates carry through? · minutes of editing before Rohan could forward it?</div>
+      </div>
+    </div>
+
+    <!-- STEP A4 · COWORK -->
+    <div class="step">
+      <div class="step-head"><span class="step-no">STEP 4</span><div><h3>The morning after — hand the follow-up to Cowork <span class="opt-badge">Optional · Claude Cowork</span></h3><p>Delegate a multi-file workstream built on your Step 3 file</p></div></div>
+      <div class="step-body">
+        <div class="tip" style="margin-top:0;">✉ <strong>8:02 am — Rohan:</strong> "Meera loved it. The board wants a follow-up pack by Friday — don't start from scratch, build on what you sent."</div>
+        <ul class="do-list">
+          <li>Save your Step 3 file into a folder named <em>Suvarna-Board-Prep</em>.</li>
+          <li>In the message box, switch the <strong>Chat / Cowork toggle</strong> to <strong>Cowork</strong> → point it at that folder — guided mock-up below.</li>
+          <li>Paste the follow-up task below → let Claude work. Watch it read your file, plan, and produce <strong>three files from one instruction</strong>.</li>
+          <li>Open each file, screenshot the session.</li>
+        </ul>
+
+        <div class="shot">
+          <div class="shot-bar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="shot-url">Where to click — Cowork mode</span></div>
+          <div class="shot-body stage">
+            <span class="mock-note">Guided mock-up</span>
+            <div class="input-mock" style="max-width:560px;">
+              <div class="seg-wrap"><span class="seg"><span class="seg-opt">💬 Chat</span><span class="seg-opt on">🗂 Cowork<span class="co abs" style="top:-12px;right:-12px;">1</span></span></span></div>
+              <div class="placeholder">What would you like to work on?</div>
+              <div class="folder-pick" style="margin:0 0 14px;">📁 Suvarna-Board-Prep — contains Suvarna_Board-PreRead_One-Pager.docx <span class="co abs" style="top:-10px;right:-10px;">2</span></div>
+              <div class="input-row">
+                <span class="icon-btn">＋</span>
+                <span class="model-chip">Claude</span>
+                <span class="send-btn">↑<span class="co abs" style="top:-10px;right:-10px;">3</span></span>
+              </div>
+            </div>
+            <ul class="guide-legend">
+              <li><span class="co">1</span>Start a <strong>new chat</strong>, then switch the toggle from <strong>Chat</strong> to <strong>Cowork</strong>.</li>
+              <li><span class="co">2</span>Point the session at the <strong>folder holding your Step 3 file</strong> — Cowork reads it and saves new files there.</li>
+              <li><span class="co">3</span>Paste the <strong>follow-up task</strong> below and hit <strong>send</strong>.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="prompt-box"><span class="lbl">Paste this — Cowork follow-up task</span>"In this folder is Suvarna_Board-PreRead_One-Pager.docx — the pre-read the client CEO received this morning. The board wants a follow-up pack by Friday. Build on the file, don't start over: (1) revise the one-pager — add an 'Altura Advisory' header line and re-verify every figure with web research, updating any that changed; (2) create a 3-slide summary deck of the same three trends for the boardroom screen, action titles only; (3) create a one-page FAQ document anticipating the 5 toughest questions a sceptical director could ask, with short evidence-backed answers. Save all three files to this folder and list what you changed."</div>
+
+        <div class="shot">
+          <div class="shot-bar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="shot-url">Cowork — what you'll see</span></div>
+          <div class="shot-body">
+            <span class="mock-note">Illustrative mock-up</span>
+            <div class="bubble claude" style="max-width:100%;"><span class="who">Claude · working in Suvarna-Board-Prep</span>✓ Read the existing one-pager<br>✓ Re-verified figures (web)<br>✓ Built summary deck<br>✓ Drafted board FAQ<div class="file-strip"><span class="ficon">DOCX</span> Suvarna_One-Pager_v2.docx</div><div class="file-strip"><span class="ficon">PPTX</span> Suvarna_Board-Summary_3-Slides.pptx</div><div class="file-strip"><span class="ficon">DOCX</span> Suvarna_Board-FAQ.docx</div></div>
+            <div class="tip">✔ This is the Cowork difference: it <strong>read your existing file</strong>, planned the workstream, worked across formats, and saved everything to the folder — one instruction, three deliverables.</div>
+          </div>
+        </div>
+
+        <div class="writedown">📝 <strong>Write down:</strong> did Claude reuse your file's content correctly? · how many files from one instruction? · what did you still have to correct?</div>
+        <div class="tip">🖥 <strong>On a plan without Cowork?</strong> Watch the facilitator's demo, and note in your grid what Cowork did that Step 3's chat couldn't.</div>
+      </div>
+    </div>
+
+    <!-- STEP A5 -->
+    <div class="step">
+            <div class="step-head"><span class="step-no">STEP 5</span><div><h3>Debrief — compare the three outputs</h3><p>Score Steps 1, 2 &amp; 3 in the grid, then answer the debrief questions</p></div></div>
+      <div class="step-body">
+        <p style="font-size:15px;color:var(--ink-soft);margin-bottom:12px;">Put the three outputs side by side and fill the <strong>comparison grid</strong> — one row per criterion (Recency, Structure, Deliverable quality), one column per step, an evidence line behind every score. Then work through the short <strong>debrief</strong> to turn the scores into a rule of thumb. Both are ready-to-print Word worksheets:</p>
+        <a class="dl-btn" download="Comparison-Grid-Worksheet.docx" href="data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,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"><span class="fico">DOCX</span> Download the Comparison Grid worksheet (Word)</a>
+        &nbsp;
+        <a class="dl-btn" download="Debrief-Worksheet.docx" href="data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,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"><span class="fico">DOCX</span> Download the Debrief worksheet (Word)</a>
+        <div class="fw-note" style="margin-top:16px;">📊 <strong>In the grid, score each of Steps 1–3 on:</strong> <strong>Recency</strong> (newest dated fact? what did it miss?) · <strong>Structure</strong> (30-second skim test) · <strong>Deliverable quality</strong> (minutes to client-ready + rework). Rule: <mark>every score needs a line of evidence</mark> — a quote, a date, a missing item, or a time estimate.</div>
+        <ul class="do-list">
+          <li>Gut-score all three steps from memory first, then verify: re-open each output, click 1–2 citations from Step 2, re-check dates and headings, adjust any score you can't back with evidence.</li>
+          <li>Did Step 4? Add one line: <em>"What Cowork added beyond Step 3 — and what I had to correct."</em></li>
+          <li>Answer the debrief worksheet — build the tool-matching map, then the questions and discussion points — from what actually differed between the three outputs. Star the finding that surprised you most.</li>
+          <li>Submit: your comparison grid + debrief notes + the 3 screenshots + the .docx. Then move on to Engagement B and repeat all five steps.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION · ENGAGEMENT B ============ -->
+<section id="eng-b" class="b-zone b-steps">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Section 04 · Engagement B · Hands-on Activity</div>
+      <h2>Engagement B — the Torque Capital teaser deck</h2>
+      <p><span class="eng-tag eng-b">Artifact: 5-slide deck (.pptx)</span> &nbsp; Framework rows exercised: <strong>structuring &amp; thinking</strong> (an investment storyline must hang together) → <strong>market intelligence</strong> (EV data and policy shift monthly) → <strong>client-facing deliverable</strong> (an IC-ready deck).</p>
+    </div>
+
+    <div class="brief-wrap">
+      <div class="memo">
+        <div class="memo-head">
+          <div class="row"><span class="k">From</span> Anika Rao — Partner, Private Capital <span class="urgent">⚑ Urgent</span></div>
+          <div class="row"><span class="k">To</span> You</div>
+          <div class="row"><span class="k">Time</span> Tonight, 9:40 pm</div>
+          <div class="row"><span class="k">Subject</span> Torque IC pre-read — 5 slides by 9:00 am</div>
+        </div>
+        <div class="memo-body">
+          <p>Torque Capital's investment committee moved to <strong>tomorrow 11 am</strong>. They're deciding whether to open formal diligence on an electric two-wheeler opportunity in India, and the deal partner wants a <strong>teaser deck, exactly 5 slides</strong>: market snapshot, competitive landscape, top 3 risks, an entry thesis, and sources.</p>
+          <p>This IC kills decks that ramble. <strong>Action titles only</strong> — every slide headline must state a finding, not a topic. And the numbers must be <strong>current</strong>: subsidies and market shares in this space moved again recently, and one committee member tracks it obsessively.</p>
+          <p>Send me the deck by 9:00 — I'll review in the cab and forward it straight in. If a number can't be verified, flag it on the slide rather than guessing.</p>
+          <p class="sig">— A.</p>
+        </div>
+      </div>
+      <div class="client-card b">
+        <div class="cc-sub">Client snapshot · Engagement B</div>
+        <h3>Torque Capital Partners</h3>
+        <div class="fact"><span class="fk">Who</span><span>Mid-market PE fund, ~₹4,000 cr AUM; industrials &amp; mobility focus.</span></div>
+        <div class="fact"><span class="fk">Deal</span><span>Evaluating whether to open diligence on an Indian EV two-wheeler play (OEM or components).</span></div>
+        <div class="fact"><span class="fk">Worry</span><span>Subsidy policy keeps shifting and market-share tables go stale in months — a wrong number sinks credibility with this IC.</span></div>
+        <div class="fact"><span class="fk">Audience</span><span>Five-member investment committee; data-obsessed, allergic to topic-titled slides. Tomorrow, 11:00 am.</span></div>
+        <div class="fact"><span class="fk">Your job</span><span>Exactly 5 slides. Action titles. Current numbers.</span></div>
+        <div class="fict-note">All names &amp; details fictional — for workshop use</div>
+      </div>
+    </div>
+
+    <div class="sec-head" style="margin-top:52px;">
+      <div class="eyebrow">Engagement B Walkthrough</div>
+      <h2>5 steps, in order — Step 4 is optional</h2>
+    </div>
+    <div class="rules-strip">📏 <strong>Three rules:</strong> a <strong>fresh chat</strong> for every step · the same <strong>base prompt, verbatim</strong>, in Steps 1–2 · <strong>screenshot</strong> every result before moving on.</div>
+
+    <!-- STEP B1 -->
+    <div class="step">
+      <div class="step-head"><span class="step-no">STEP 1</span><div><h3>Plain chat <span class="mode-tag mode-chat" style="margin-left:6px;">Web search OFF</span></h3><p>Claude's built-in knowledge only</p></div></div>
+      <div class="step-body">
+        <ul class="do-list">
+          <li><strong>New chat</strong> on claude.ai → click <strong>＋</strong> → make sure <strong>Web search is OFF</strong>.</li>
+          <li>Paste the base prompt below → <strong>send</strong>. No follow-ups.</li>
+          <li>Screenshot the answer.</li>
+        </ul>
+        <div class="shot">
+          <div class="shot-bar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="shot-url">Where to click</span></div>
+          <div class="shot-body stage">
+            <span class="mock-note">Guided mock-up</span>
+            <div class="input-mock">
+              <div class="placeholder">How can I help you today?</div>
+              <div class="popover">
+                <div class="pop-row"><span class="pi">📎</span> Add files &amp; photos</div>
+                <div class="pop-row hot"><span class="pi">🌐</span> Web search <span class="co abs" style="top:-10px;right:-10px;">2</span><span class="toggle"><span class="knob"></span></span></div>
+                <div class="pop-row"><span class="pi">🔬</span> Research</div>
+                <div class="pop-note">Grey / no tick = off. Leave it off for this step.</div>
+              </div>
+              <div class="input-row">
+                <span class="icon-btn hot">＋<span class="co abs" style="top:-10px;left:-10px;">1</span></span>
+                <span class="model-chip">Claude</span>
+                <span class="send-btn">↑<span class="co abs" style="top:-10px;right:-10px;">3</span></span>
+              </div>
+            </div>
+            <ul class="guide-legend">
+              <li><span class="co">1</span>New chat → click the <strong>＋ button</strong> at the bottom-left of the message box.</li>
+              <li><span class="co">2</span>Make sure <strong>Web search is OFF</strong> (grey, no tick).</li>
+              <li><span class="co">3</span>Paste the base prompt below and hit <strong>send</strong>.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="prompt-box"><span class="lbl">Engagement B · base prompt (Steps 1 &amp; 2)</span>"You are supporting a consulting engagement for Torque Capital, a mid-market Indian PE fund deciding whether to open diligence on an electric two-wheeler opportunity in India. The investment committee meets tomorrow. Summarise the current state of India's EV two-wheeler market: market snapshot, competitive landscape, top 3 risks, and a possible entry thesis. Keep it concise and IC-ready."</div>
+        <div class="shot">
+          <div class="shot-bar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="shot-url">claude.ai — what you'll see</span></div>
+          <div class="shot-body">
+            <span class="mock-note">Illustrative mock-up</span>
+            <div class="bubble user"><span class="who">You</span>You are supporting a consulting engagement for Torque Capital… India's EV two-wheeler market…</div>
+            <div class="bubble claude"><span class="who">Claude</span>
+              <h4>Market snapshot</h4>
+              India's electric two-wheeler market has grown rapidly, with penetration rising on subsidies and falling battery costs…
+              <h4>Competitive landscape</h4>
+              Established OEMs alongside EV-first players competing on range, price and network…
+            </div>
+            <div class="tip">⚠ Sensible — but <strong>no dates, no share numbers with sources</strong>. One IC member tracks this space obsessively.</div>
+          </div>
+        </div>
+        <div class="writedown">📝 <strong>Write down:</strong> the newest date Claude mentions · could you send this to the client as-is?</div>
+      </div>
+    </div>
+
+    <!-- STEP B2 -->
+    <div class="step">
+      <div class="step-head"><span class="step-no">STEP 2</span><div><h3>Web Search on <span class="mode-tag mode-web" style="margin-left:6px;">Web search ON</span></h3><p>Same prompt, now with live lookup and citations</p></div></div>
+      <div class="step-body">
+        <ul class="do-list">
+          <li><strong>New chat</strong> → click <strong>＋</strong> → flip <strong>Web search ON</strong>. Nothing else changes.</li>
+          <li>Paste the <strong>same base prompt</strong> from Step 1 → send. No follow-ups.</li>
+          <li>Screenshot the answer, including its citations.</li>
+        </ul>
+        <div class="shot">
+          <div class="shot-bar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="shot-url">Where to click</span></div>
+          <div class="shot-body stage">
+            <span class="mock-note">Guided mock-up</span>
+            <div class="input-mock">
+              <div class="placeholder">How can I help you today?</div>
+              <div class="popover">
+                <div class="pop-row"><span class="pi">📎</span> Add files &amp; photos</div>
+                <div class="pop-row hot"><span class="pi">🌐</span> Web search <span class="co abs" style="top:-10px;right:-10px;">2</span><span class="toggle on"><span class="knob"></span></span></div>
+                <div class="pop-row"><span class="pi">🔬</span> Research</div>
+                <div class="pop-note">Tick ✓ = on. Web search is the only thing that changes from Step 1.</div>
+              </div>
+              <div class="input-row">
+                <span class="icon-btn hot">＋<span class="co abs" style="top:-10px;left:-10px;">1</span></span>
+                <span class="model-chip">Claude</span>
+                <span class="send-btn">↑<span class="co abs" style="top:-10px;right:-10px;">3</span></span>
+              </div>
+            </div>
+            <ul class="guide-legend">
+              <li><span class="co">1</span>New chat → click the <strong>＋ button</strong> at the bottom-left of the message box.</li>
+              <li><span class="co">2</span>Flip <strong>Web search ON</strong> (tick appears). Skip <em>Research</em> — different mode.</li>
+              <li><span class="co">3</span>Paste the <strong>same base prompt</strong> and hit <strong>send</strong>. Watch for "Searching the web…".</li>
+            </ul>
+          </div>
+        </div>
+        <div class="shot">
+          <div class="shot-bar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="shot-url">claude.ai — what you'll see</span></div>
+          <div class="shot-body">
+            <span class="mock-note">Illustrative mock-up</span>
+            <div style="margin-bottom:10px;">
+              <span class="search-chip"><span class="sicon">⌕</span> India EV two-wheeler sales latest</span>
+              <span class="search-chip"><span class="sicon">⌕</span> EV subsidy scheme update India</span>
+            </div>
+            <div class="bubble claude"><span class="who">Claude · searched the web</span>
+              <h4>Market snapshot</h4>
+              Registrations hit a monthly record this quarter <span class="cite">vahan data</span>, penetration at new highs <span class="cite">economictimes</span>…
+              <h4>Competitive landscape</h4>
+              Share shifted again last month as legacy OEM launches undercut on price <span class="cite">autocar pro</span>…
+            </div>
+            <div class="tip">✔ Now: <strong>dated registrations data, sources, current subsidy status</strong>.</div>
+          </div>
+        </div>
+        <div class="writedown">📝 <strong>Write down:</strong> the newest dated fact · the sources cited · did the fresh data change the answer?</div>
+      </div>
+    </div>
+
+    <!-- STEP B3 -->
+    <div class="step">
+      <div class="step-head"><span class="step-no">STEP 3</span><div><h3>Ask for the file <span class="mode-tag mode-cowork" style="margin-left:6px;">Artifact/file</span></h3><p>The RISEN framework prompt makes Claude build the deck (.pptx)</p></div></div>
+      <div class="step-body">
+        <ul class="do-list">
+          <li><strong>New chat</strong> → click <strong>＋</strong> → keep <strong>Web search ON</strong>.</li>
+          <li>Paste the <strong>RISEN framework prompt</strong> below → send. It asks for a downloadable PowerPoint, so Claude builds the file in a side panel.</li>
+          <li>Click <strong>Download</strong>, open the .pptx, screenshot it. One small fix-up request allowed (e.g., "make every title an action title").</li>
+        </ul>
+        <div class="shot">
+          <div class="shot-bar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="shot-url">Where to click</span></div>
+          <div class="shot-body stage">
+            <span class="mock-note">Guided mock-up</span>
+            <div class="input-mock">
+              <div class="placeholder">How can I help you today?</div>
+              <div class="popover">
+                <div class="pop-row"><span class="pi">📎</span> Add files &amp; photos</div>
+                <div class="pop-row hot"><span class="pi">🌐</span> Web search <span class="co abs" style="top:-10px;right:-10px;">2</span><span class="toggle on"><span class="knob"></span></span></div>
+                <div class="pop-row"><span class="pi">🔬</span> Research</div>
+                <div class="pop-note">Keep Web search on so the deck uses current, cited data.</div>
+              </div>
+              <div class="input-row">
+                <span class="icon-btn hot">＋<span class="co abs" style="top:-10px;left:-10px;">1</span></span>
+                <span class="model-chip">Claude</span>
+                <span class="send-btn">↑<span class="co abs" style="top:-10px;right:-10px;">3</span></span>
+              </div>
+            </div>
+            <ul class="guide-legend">
+              <li><span class="co">1</span>New chat → click the <strong>＋ button</strong> at the bottom-left of the message box.</li>
+              <li><span class="co">2</span>Flip <strong>Web search ON</strong> (tick appears). Skip <em>Research</em> — different mode.</li>
+              <li><span class="co">3</span>Paste the <strong>RISEN framework prompt</strong> below and hit <strong>send</strong>.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="fw-note">💡 A file needs the format, audience, structure and constraints spelled out — that's what the <strong>RISEN</strong> framework does. (Other prompt frameworks that work the same way: COSTAR, CREATE, TRACE, PARA.)</div>
+        <div class="prompt-box"><span class="lbl">Paste this — RISEN framework prompt (Step 3 only)</span>
+            <span class="fw-k">[R] Role:</span> Act as a private-markets strategy consultant at Altura Advisory preparing an investment-committee pre-read for Torque Capital, a mid-market Indian PE fund.<br>
+            <span class="fw-k">[I] Instructions:</span> Build a teaser deck on India's EV two-wheeler market to help the IC decide tomorrow whether to open formal diligence.<br>
+            <span class="fw-k">[S] Steps:</span> (1) Research current market size, growth and subsidy/policy status; (2) map the competitive landscape — leading OEMs, share shifts, notable entrants; (3) identify the top 3 risks; (4) draft an entry thesis with 2–3 plausible angles; (5) assemble into slides.<br>
+            <span class="fw-k">[E] End goal:</span> A downloadable 5-slide PowerPoint the partner forwards without edits: ① market snapshot ② competitive landscape ③ top 3 risks ④ entry thesis ⑤ sources &amp; dates.<br>
+            <span class="fw-k">[N] Narrowing:</span> India only; prefer data from the last 12 months, each figure with source + date; every slide title is an action title stating a finding, not a topic; ≤40 words of body text per slide; flag any unverified figure on the slide itself.</div>
+        <details class="opt">
+          <summary>Optional · compare with a simple prompt (extra credit)</summary>
+          <div class="inner">
+            <div class="prompt-box simple"><span class="lbl">Simple prompt (what most people type)</span>"Create a short PowerPoint on India's electric two-wheeler market for a PE client deciding on an investment. Around 5 slides."</div>
+            <p class="verdict">Run it in a separate chat and compare the two files — the gap is the whole argument for prompt frameworks.</p>
+          </div>
+        </details>
+        <div class="shot">
+          <div class="shot-bar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="shot-url">claude.ai — Claude creating your file</span></div>
+          <div class="artifact-pane">
+            <div class="chat-side">
+              <span class="mock-note">Illustrative mock-up</span>
+              <div class="bubble user" style="max-width:100%;"><span class="who">You</span>…[E] End goal: a downloadable 5-slide PowerPoint — snapshot, landscape, risks, thesis, sources.</div>
+              <div class="bubble claude" style="max-width:100%;"><span class="who">Claude · working</span>✓ Researched (7 sources)<br>✓ Structured storyline<br>✓ Building slides…<div class="file-strip"><span class="ficon">PPTX</span> Torque_IC-Teaser_5-Slides.pptx <span style="margin-left:auto;color:var(--green);font-weight:600;">Download</span></div></div>
+            </div>
+            <div class="doc-side">
+              <div class="doc-card">
+                <div class="doc-head"><span class="doc-title">India EV 2W · IC Teaser</span><span class="doc-badge">5 slides</span></div>
+                <div class="slide-strip">
+                  <div class="mini-slide"><div class="st">EV 2W penetration hits a new high</div><div class="skeleton"></div><div class="skeleton sk-70"></div></div>
+                  <div class="mini-slide"><div class="st">Share shifts as legacy OEMs undercut on price</div><div class="skeleton"></div><div class="skeleton sk-55"></div></div>
+                  <div class="mini-slide"><div class="st">Three risks: policy, cells, price war</div><div class="skeleton"></div><div class="skeleton sk-70"></div></div>
+                </div>
+                <div class="slide-strip">
+                  <div class="mini-slide"><div class="st">Entry thesis: components over OEMs</div><div class="skeleton"></div><div class="skeleton sk-55"></div></div>
+                  <div class="mini-slide"><div class="st">Sources &amp; dates</div><div class="skeleton sk-70"></div><div class="skeleton sk-55"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="writedown">📝 <strong>Write down:</strong> does the file match the brief exactly? · did sources + dates carry through? · minutes of editing before Anika could forward it?</div>
+      </div>
+    </div>
+
+    <!-- STEP B4 · COWORK -->
+    <div class="step">
+      <div class="step-head"><span class="step-no">STEP 4</span><div><h3>The morning after — hand the follow-up to Cowork <span class="opt-badge">Optional · Claude Cowork</span></h3><p>Delegate a multi-file workstream built on your Step 3 file</p></div></div>
+      <div class="step-body">
+        <div class="tip" style="margin-top:0;">✉ <strong>8:14 am — Anika:</strong> "IC voted to open preliminary diligence. Same folder, keep going — build on the deck."</div>
+        <ul class="do-list">
+          <li>Save your Step 3 file into a folder named <em>Torque-IC-Prep</em>.</li>
+          <li>In the message box, switch the <strong>Chat / Cowork toggle</strong> to <strong>Cowork</strong> → point it at that folder — guided mock-up below.</li>
+          <li>Paste the follow-up task below → let Claude work. Watch it read your file, plan, and produce <strong>three files from one instruction</strong>.</li>
+          <li>Open each file, screenshot the session.</li>
+        </ul>
+
+        <div class="shot">
+          <div class="shot-bar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="shot-url">Where to click — Cowork mode</span></div>
+          <div class="shot-body stage">
+            <span class="mock-note">Guided mock-up</span>
+            <div class="input-mock" style="max-width:560px;">
+              <div class="seg-wrap"><span class="seg"><span class="seg-opt">💬 Chat</span><span class="seg-opt on">🗂 Cowork<span class="co abs" style="top:-12px;right:-12px;">1</span></span></span></div>
+              <div class="placeholder">What would you like to work on?</div>
+              <div class="folder-pick" style="margin:0 0 14px;">📁 Torque-IC-Prep — contains Torque_IC-Teaser_5-Slides.pptx <span class="co abs" style="top:-10px;right:-10px;">2</span></div>
+              <div class="input-row">
+                <span class="icon-btn">＋</span>
+                <span class="model-chip">Claude</span>
+                <span class="send-btn">↑<span class="co abs" style="top:-10px;right:-10px;">3</span></span>
+              </div>
+            </div>
+            <ul class="guide-legend">
+              <li><span class="co">1</span>Start a <strong>new chat</strong>, then switch the toggle from <strong>Chat</strong> to <strong>Cowork</strong>.</li>
+              <li><span class="co">2</span>Point the session at the <strong>folder holding your Step 3 file</strong> — Cowork reads it and saves new files there.</li>
+              <li><span class="co">3</span>Paste the <strong>follow-up task</strong> below and hit <strong>send</strong>.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="prompt-box"><span class="lbl">Paste this — Cowork follow-up task</span>"In this folder is Torque_IC-Teaser_5-Slides.pptx — the teaser the IC saw this morning. They voted to open preliminary diligence. Build on the deck, don't start over: (1) revise it with a data-appendix slide showing every figure, source and date; (2) create a one-tab Excel competitor tracker — players, estimated share, latest funding round, one-line strategy, each with source + date; (3) create a Word diligence question list organised under the deck's three risks, 5 questions per risk. Save all three files to this folder and list what you changed."</div>
+
+        <div class="shot">
+          <div class="shot-bar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span><span class="shot-url">Cowork — what you'll see</span></div>
+          <div class="shot-body">
+            <span class="mock-note">Illustrative mock-up</span>
+            <div class="bubble claude" style="max-width:100%;"><span class="who">Claude · working in Torque-IC-Prep</span>✓ Read the existing deck<br>✓ Added data appendix<br>✓ Built competitor tracker<br>✓ Drafted diligence questions<div class="file-strip"><span class="ficon">PPTX</span> Torque_IC-Teaser_v2_with-Appendix.pptx</div><div class="file-strip"><span class="ficon">XLSX</span> Torque_Competitor-Tracker.xlsx</div><div class="file-strip"><span class="ficon">DOCX</span> Torque_Diligence-Questions.docx</div></div>
+            <div class="tip">✔ This is the Cowork difference: it <strong>read your existing file</strong>, planned the workstream, worked across formats, and saved everything to the folder — one instruction, three deliverables.</div>
+          </div>
+        </div>
+
+        <div class="writedown">📝 <strong>Write down:</strong> did Claude reuse your file's content correctly? · how many files from one instruction? · what did you still have to correct?</div>
+        <div class="tip">🖥 <strong>On a plan without Cowork?</strong> Watch the facilitator's demo, and note in your grid what Cowork did that Step 3's chat couldn't.</div>
+      </div>
+    </div>
+
+    <!-- STEP B5 -->
+    <div class="step">
+            <div class="step-head"><span class="step-no">STEP 5</span><div><h3>Debrief — compare the three outputs</h3><p>Score Steps 1, 2 &amp; 3 in the grid, then answer the debrief questions</p></div></div>
+      <div class="step-body">
+        <p style="font-size:15px;color:var(--ink-soft);margin-bottom:12px;">Put the three outputs side by side and fill the <strong>comparison grid</strong> — one row per criterion (Recency, Structure, Deliverable quality), one column per step, an evidence line behind every score. Then work through the short <strong>debrief</strong> to turn the scores into a rule of thumb. Both are ready-to-print Word worksheets:</p>
+        <a class="dl-btn" download="Comparison-Grid-Worksheet.docx" href="data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,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"><span class="fico">DOCX</span> Download the Comparison Grid worksheet (Word)</a>
+        &nbsp;
+        <a class="dl-btn" download="Debrief-Worksheet.docx" href="data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,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"><span class="fico">DOCX</span> Download the Debrief worksheet (Word)</a>
+        <div class="fw-note" style="margin-top:16px;">📊 <strong>In the grid, score each of Steps 1–3 on:</strong> <strong>Recency</strong> (newest dated fact? what did it miss?) · <strong>Structure</strong> (30-second skim test) · <strong>Deliverable quality</strong> (minutes to client-ready + rework). Rule: <mark>every score needs a line of evidence</mark> — a quote, a date, a missing item, or a time estimate.</div>
+        <ul class="do-list">
+          <li>Gut-score all three steps from memory first, then verify: re-open each output, click 1–2 citations from Step 2, re-check dates and headings, adjust any score you can't back with evidence.</li>
+          <li>Did Step 4? Add one line: <em>"What Cowork added beyond Step 3 — and what I had to correct."</em></li>
+          <li>Answer the debrief worksheet — build the tool-matching map, then the questions and discussion points — from what actually differed between the three outputs. Star the finding that surprised you most.</li>
+          <li>Submit: your comparison grid + debrief notes + the 3 screenshots + the .pptx.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p><strong>Note on screenshots:</strong> the interface panels in this guide are guided, real-looking mock-ups drawn to match the typical layout of Claude chat, the ＋ menu with its Web Search toggle, and Artifact/file creation — the numbered callouts show where to click. Product interfaces evolve, so exact icon positions on your screen may shift slightly; the ＋ menu always lives in the message box, and created files appear in a side panel with a Download button. Steps 1–3 run entirely on claude.ai in the browser; only the optional Step 4 (Cowork) uses the Claude desktop app. Facilitators can replace these panels with fresh screenshots from their own tenant before running the session. All client names and details are fictional.</p>
+  </div>
+</footer>
+
+</body>
+</html>
