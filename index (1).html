@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Session 05 · AI Agents as an Extension of Chatbots</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1a2830;
+  --surface:#f3f6f7;
+  --panel:#ffffff;
+  --teal:#0f6e6b;
+  --teal-soft:#e3efee;
+  --amber:#d98a24;
+  --amber-soft:#faf0e0;
+  --slate:#5d7079;
+  --line:#d9e1e4;
+  --radius:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--surface);
+  color:var(--ink);
+  line-height:1.65;
+  font-size:16px;
+}
+.wrap{max-width:1040px;margin:0 auto;padding:0 24px}
+.eyebrow{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--teal);font-weight:500;
+}
+h1,h2,h3{font-family:'Space Grotesk',sans-serif;line-height:1.2}
+a{color:var(--teal)}
+
+/* header */
+header{
+  background:var(--ink);color:#eef4f5;
+  padding:64px 0 56px;
+  border-bottom:4px solid var(--teal);
+}
+header .eyebrow{color:#7fc4c0;margin-bottom:14px}
+header h1{font-size:clamp(30px,4.4vw,46px);font-weight:700;max-width:760px}
+header p.sub{margin-top:16px;color:#a9bcc2;max-width:640px;font-size:17px}
+.crumbs{
+  display:flex;gap:10px;flex-wrap:wrap;margin-top:26px;
+  font-family:'IBM Plex Mono',monospace;font-size:12.5px;
+}
+.crumbs span{
+  border:1px solid #34474f;border-radius:999px;padding:6px 14px;color:#cfe0e2;
+}
+
+/* nav */
+nav{
+  position:sticky;top:0;z-index:20;
+  background:rgba(243,246,247,.92);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);
+}
+nav .wrap{display:flex;gap:26px;overflow-x:auto}
+nav a{
+  display:block;padding:14px 0;white-space:nowrap;
+  font-size:14px;font-weight:600;color:var(--slate);text-decoration:none;
+  border-bottom:2px solid transparent;
+}
+nav a:hover,nav a:focus-visible{color:var(--teal);border-bottom-color:var(--teal)}
+
+section{padding:64px 0}
+.sec-head{margin-bottom:34px}
+.sec-head h2{font-size:clamp(24px,3vw,32px);margin-top:8px}
+.sec-head p{color:var(--slate);margin-top:10px;max-width:720px}
+
+.card{
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);padding:28px;
+}
+
+/* definition */
+.definition{
+  border-left:5px solid var(--teal);
+  font-size:18px;
+}
+.definition strong{color:var(--teal)}
+.definition .vs{
+  margin-top:18px;padding-top:18px;border-top:1px dashed var(--line);
+  font-size:15px;color:var(--slate);
+}
+
+/* diagram frame */
+.diagram{
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);padding:20px;margin-top:28px;
+}
+.diagram figcaption{
+  margin-top:12px;font-family:'IBM Plex Mono',monospace;
+  font-size:12.5px;color:var(--slate);text-align:center;
+}
+.diagram svg{width:100%;height:auto;display:block}
+
+/* characteristics grid */
+.grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:16px;margin-top:28px;
+}
+.trait{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:20px 20px 18px;
+}
+.trait .t-ico{
+  width:34px;height:34px;border-radius:9px;background:var(--teal-soft);
+  display:flex;align-items:center;justify-content:center;margin-bottom:12px;
+  font-size:16px;
+}
+.trait h3{font-size:16.5px;margin-bottom:6px}
+.trait p{font-size:14px;color:var(--slate);line-height:1.55}
+
+/* section 2 */
+#activity{background:#e9eff0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.brief{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}
+@media(max-width:800px){.brief{grid-template-columns:1fr}}
+.brief ul{margin:12px 0 0 18px}
+.brief li{margin-bottom:8px}
+.resources h3{font-size:17px;margin-bottom:12px}
+.res-link{
+  display:flex;align-items:center;gap:12px;
+  border:1px solid var(--line);border-radius:10px;padding:12px 14px;
+  text-decoration:none;color:var(--ink);font-weight:600;font-size:14.5px;
+  margin-bottom:10px;background:var(--surface);
+}
+.res-link:hover{border-color:var(--teal)}
+.res-link .badge{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;
+  background:var(--amber-soft);color:var(--amber);border-radius:6px;padding:4px 8px;
+  flex-shrink:0;
+}
+.res-link small{display:block;font-weight:400;color:var(--slate)}
+
+/* steps */
+.steps{margin-top:44px;display:flex;flex-direction:column;gap:26px}
+.step{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  overflow:hidden;
+}
+.step-head{
+  display:flex;align-items:center;gap:16px;
+  padding:20px 26px;border-bottom:1px solid var(--line);
+}
+.step-num{
+  font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:13px;
+  background:var(--ink);color:#fff;border-radius:8px;padding:8px 12px;
+  letter-spacing:.06em;flex-shrink:0;
+}
+.step-head h3{font-size:18px}
+.step-head p{font-size:14px;color:var(--slate);margin-top:2px}
+.step video{
+  width:100%;display:block;background:#0b1216;aspect-ratio:16/9;
+}
+.step .vid-note{
+  padding:12px 26px;font-family:'IBM Plex Mono',monospace;
+  font-size:12px;color:var(--slate);border-top:1px solid var(--line);
+}
+
+/* test messages */
+.tests{margin-top:44px}
+.tests .card{padding:26px}
+.test-row{
+  display:flex;gap:14px;align-items:flex-start;
+  padding:14px 0;border-bottom:1px dashed var(--line);
+}
+.test-row:last-child{border-bottom:none}
+.test-row .tag{
+  font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.08em;
+  text-transform:uppercase;border-radius:6px;padding:5px 10px;flex-shrink:0;margin-top:2px;
+}
+.tag.d{background:var(--teal-soft);color:var(--teal)}
+.tag.c{background:var(--amber-soft);color:var(--amber)}
+.tag.a{background:#e7e9ef;color:#5b6280}
+.test-row code{
+  font-family:'IBM Plex Mono',monospace;font-size:14px;background:var(--surface);
+  border:1px solid var(--line);border-radius:8px;padding:8px 12px;display:inline-block;
+}
+
+footer{
+  padding:40px 0 56px;color:var(--slate);font-size:13.5px;
+  font-family:'IBM Plex Mono',monospace;
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="eyebrow">Module 1 · Foundations of Generative AI</div>
+    <h1>Session 05 — AI Agents as an Extension of Chatbots</h1>
+    <p class="sub">From answering messages to getting work done: what turns a chatbot into an agent, and a hands-on lab where you build one for GoRoute using Voiceflow.</p>
+    <div class="crumbs">
+      <span>Concept · What is an AI Agent</span>
+      <span>Lab · Build the GoRoute Support Agent</span>
+      <span>Tool · voiceflow.com</span>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <div class="wrap">
+    <a href="#concept">1 · What is an AI Agent</a>
+    <a href="#activity">2 · Hands-on Activity</a>
+    <a href="#steps">Lab Steps 0–5</a>
+    <a href="#tests">Test Messages</a>
+  </div>
+</nav>
+
+<!-- ============ SECTION 1 ============ -->
+<section id="concept">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Section 01 · Concept</div>
+      <h2>What is an AI Agent?</h2>
+    </div>
+
+    <div class="card definition">
+      <p>An <strong>AI Agent</strong> is an AI system that goes beyond generating replies: it uses a large language model as its reasoning engine to <strong>pursue a goal autonomously</strong> — perceiving its context, planning multi-step actions, using tools and knowledge sources, and adapting based on the results — all while operating within defined instructions and guardrails.</p>
+      <p class="vs"><strong>Chatbot vs. Agent:</strong> a chatbot answers one message at a time from what it already knows. An agent decides <em>what to do next</em> — it can identify who it's talking to, choose the right skill, search a knowledge base, filter what it retrieves, and escalate when it can't help. Same conversation surface, fundamentally more capable behavior.</p>
+    </div>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 960 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Anatomy of an AI Agent diagram">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#5d7079"/>
+          </marker>
+        </defs>
+
+        <!-- loop ring -->
+        <circle cx="480" cy="280" r="150" fill="none" stroke="#d9e1e4" stroke-width="1.5" stroke-dasharray="4 5"/>
+        <!-- loop labels -->
+        <g font-family="IBM Plex Mono, monospace" font-size="12" fill="#0f6e6b" text-anchor="middle" font-weight="500">
+          <text x="480" y="118">PERCEIVE</text>
+          <text x="652" y="285">REASON &amp; PLAN</text>
+          <text x="480" y="452">ACT</text>
+          <text x="310" y="285">OBSERVE &amp; ADAPT</text>
+        </g>
+        <g stroke="#8aa6a4" stroke-width="1.5" fill="none">
+          <path d="M 552 152 A 150 150 0 0 1 604 218" marker-end="url(#arr)"/>
+          <path d="M 604 342 A 150 150 0 0 1 552 408" marker-end="url(#arr)"/>
+          <path d="M 408 408 A 150 150 0 0 1 356 342" marker-end="url(#arr)"/>
+          <path d="M 356 218 A 150 150 0 0 1 408 152" marker-end="url(#arr)"/>
+        </g>
+
+        <!-- core -->
+        <rect x="390" y="230" width="180" height="100" rx="16" fill="#1a2830"/>
+        <text x="480" y="272" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="20" font-weight="700" fill="#ffffff">AI AGENT</text>
+        <text x="480" y="298" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11.5" fill="#7fc4c0">LLM reasoning core</text>
+
+        <!-- attribute nodes -->
+        <g font-family="Inter, sans-serif">
+          <!-- Instructions -->
+          <rect x="40" y="60" width="220" height="86" rx="12" fill="#e3efee" stroke="#0f6e6b" stroke-width="1.2"/>
+          <text x="150" y="92" text-anchor="middle" font-size="15" font-weight="600" fill="#1a2830">Instructions &amp; Persona</text>
+          <text x="150" y="113" text-anchor="middle" font-size="12" fill="#5d7079">Global prompt: personality,</text>
+          <text x="150" y="130" text-anchor="middle" font-size="12" fill="#5d7079">tone, goals of the agent</text>
+
+          <!-- Knowledge -->
+          <rect x="700" y="60" width="220" height="86" rx="12" fill="#e3efee" stroke="#0f6e6b" stroke-width="1.2"/>
+          <text x="810" y="92" text-anchor="middle" font-size="15" font-weight="600" fill="#1a2830">Knowledge &amp; Memory</text>
+          <text x="810" y="113" text-anchor="middle" font-size="12" fill="#5d7079">Knowledge base, documents,</text>
+          <text x="810" y="130" text-anchor="middle" font-size="12" fill="#5d7079">conversation context</text>
+
+          <!-- Skills -->
+          <rect x="700" y="414" width="220" height="86" rx="12" fill="#faf0e0" stroke="#d98a24" stroke-width="1.2"/>
+          <text x="810" y="446" text-anchor="middle" font-size="15" font-weight="600" fill="#1a2830">Skills &amp; Tools</text>
+          <text x="810" y="467" text-anchor="middle" font-size="12" fill="#5d7079">Playbooks, search, actions</text>
+          <text x="810" y="484" text-anchor="middle" font-size="12" fill="#5d7079">the agent can invoke</text>
+
+          <!-- Guardrails -->
+          <rect x="40" y="414" width="220" height="86" rx="12" fill="#faf0e0" stroke="#d98a24" stroke-width="1.2"/>
+          <text x="150" y="446" text-anchor="middle" font-size="15" font-weight="600" fill="#1a2830">Guardrails</text>
+          <text x="150" y="467" text-anchor="middle" font-size="12" fill="#5d7079">Boundaries: what it must</text>
+          <text x="150" y="484" text-anchor="middle" font-size="12" fill="#5d7079">never do, when to escalate</text>
+
+          <!-- Routing -->
+          <rect x="40" y="237" width="200" height="86" rx="12" fill="#ffffff" stroke="#5d7079" stroke-width="1.2"/>
+          <text x="140" y="269" text-anchor="middle" font-size="15" font-weight="600" fill="#1a2830">Routing &amp; Decisions</text>
+          <text x="140" y="290" text-anchor="middle" font-size="12" fill="#5d7079">Chooses the right skill</text>
+          <text x="140" y="307" text-anchor="middle" font-size="12" fill="#5d7079">for each user &amp; question</text>
+
+          <!-- Autonomy -->
+          <rect x="720" y="237" width="200" height="86" rx="12" fill="#ffffff" stroke="#5d7079" stroke-width="1.2"/>
+          <text x="820" y="269" text-anchor="middle" font-size="15" font-weight="600" fill="#1a2830">Autonomy</text>
+          <text x="820" y="290" text-anchor="middle" font-size="12" fill="#5d7079">Multi-step behavior toward</text>
+          <text x="820" y="307" text-anchor="middle" font-size="12" fill="#5d7079">a goal, not one-shot replies</text>
+        </g>
+
+        <!-- connectors -->
+        <g stroke="#a5b6bc" stroke-width="1.4" fill="none">
+          <line x1="260" y1="123" x2="398" y2="235" marker-end="url(#arr)"/>
+          <line x1="700" y1="123" x2="562" y2="235" marker-end="url(#arr)"/>
+          <line x1="700" y1="437" x2="562" y2="325" marker-end="url(#arr)"/>
+          <line x1="260" y1="437" x2="398" y2="325" marker-end="url(#arr)"/>
+          <line x1="240" y1="280" x2="388" y2="280" marker-end="url(#arr)"/>
+          <line x1="720" y1="280" x2="572" y2="280" marker-end="url(#arr)"/>
+        </g>
+      </svg>
+      <figcaption>Fig 1 · Anatomy of an AI Agent — an LLM core running a perceive → reason → act → observe loop, shaped by six attributes</figcaption>
+    </figure>
+
+    <div class="sec-head" style="margin-top:56px">
+      <div class="eyebrow">Characteristics</div>
+      <h2 style="font-size:24px">What makes it an agent, not just a chatbot</h2>
+    </div>
+    <div class="grid">
+      <div class="trait"><div class="t-ico">🎯</div><h3>Goal-driven</h3><p>Works toward an outcome — "resolve this driver's question" — not just producing a plausible next message.</p></div>
+      <div class="trait"><div class="t-ico">🧭</div><h3>Autonomous</h3><p>Decides its own next step: ask a clarifying question, search, route to a skill, or escalate to a human.</p></div>
+      <div class="trait"><div class="t-ico">🛠️</div><h3>Tool &amp; skill use</h3><p>Invokes capabilities beyond text generation — knowledge-base search, playbooks, and external actions.</p></div>
+      <div class="trait"><div class="t-ico">📚</div><h3>Grounded in knowledge</h3><p>Answers from retrieved, curated sources rather than general model knowledge — reducing hallucination.</p></div>
+      <div class="trait"><div class="t-ico">🧩</div><h3>Context-aware</h3><p>Tracks who the user is (driver vs. courier) and carries that context through the whole conversation.</p></div>
+      <div class="trait"><div class="t-ico">🔒</div><h3>Bounded by guardrails</h3><p>Operates within explicit rules — never mixing driver and courier policies, never guessing pay rates.</p></div>
+      <div class="trait"><div class="t-ico">🔁</div><h3>Multi-step reasoning</h3><p>Chains identify → route → retrieve → answer, walking users through processes one step at a time.</p></div>
+      <div class="trait"><div class="t-ico">🤝</div><h3>Knows its limits</h3><p>When no relevant information is found, it says so and hands off to the human support team.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 2 ============ -->
+<section id="activity">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Section 02 · Hands-on Activity</div>
+      <h2>Build the GoRoute Customer Support Agent</h2>
+      <p>GoRoute is a fictitious ride-sharing and delivery platform. In this lab you will use <a href="https://www.voiceflow.com" target="_blank" rel="noopener">voiceflow.com</a> to build a support agent that answers Driver and Courier queries — each grounded in its own knowledge base, kept separate by metadata filtering, and routed through dedicated playbook skills.</p>
+    </div>
+
+    <div class="brief">
+      <div class="card">
+        <div class="eyebrow" style="margin-bottom:8px">What you will build</div>
+        <ul>
+          <li>A support agent with a <strong>global prompt</strong> defining its personality, tone, and guardrails (never mix driver and courier policies; never guess pay rates).</li>
+          <li>A <strong>knowledge base</strong> loaded from the GoRoute Help Center, tagged with metadata (<code style="font-family:'IBM Plex Mono',monospace;font-size:13px">user_type = driver / courier</code>).</li>
+          <li>Two <strong>playbook skills</strong> — Driver Support and Courier Support — that the agent routes to based on who the user is.</li>
+          <li><strong>Metadata filtering</strong> so each playbook retrieves only its own user type's content.</li>
+        </ul>
+      </div>
+      <div class="card resources">
+        <h3>Resources</h3>
+        <a class="res-link" href="data:application/rtf;base64,e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyODIyClxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmc3dpc3NcZmNoYXJzZXQwIEhlbHZldGljYTt9CntcY29sb3J0Ymw7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O30KXHBhcGVydzExOTAwXHBhcGVyaDE2ODQwXG1hcmdsMTQ0MFxtYXJncjE0NDBcdmlld3cxMDY4MFx2aWV3aDc3NjBcdmlld2tpbmQwClxwYXJkXHR4NzIwXHR4MTQ0MFx0eDIxNjBcdHgyODgwXHR4MzYwMFx0eDQzMjBcdHg1MDQwXHR4NTc2MFx0eDY0ODBcdHg3MjAwXHR4NzkyMFx0eDg2NDBccGFyZGlybmF0dXJhbFxwYXJ0aWdodGVuZmFjdG9yMAoKXGYwXGZzMjQgXGNmMCBHb1JvdXRlIFVSTCA6LSBodHRwczovL2dvcm91dGUuZGVtby52b2ljZWZsb3cuY29tL1wKXApLbm93bGVkZ2UgQmFzZSBGb3IgRHJpdmVyIC0+IGh0dHBzOi8vZ29yb3V0ZS5kZW1vLnZvaWNlZmxvdy5jb20vZHJpdmVyXApLbm93bGVkZ2UgQmFzZSBmb3IgQ291cmllciAtPiAgaHR0cHM6Ly9nb3JvdXRlLmRlbW8udm9pY2VmbG93LmNvbS9jb3VyaWVyXApcCk1ldGFkYXRhXApcCktleSAgICAgICAgICAgICAgICAgICBWYWx1ZVwKdXNlcl90eXBlICAgICAgICAgZHJpdmVyXAp1c2VyX3R5cGUgICAgICAgICBjb3VyaWVyXApcClwKR2xvYmFsIFByb21wdDpcClwKIyBQZXJzb25hbGl0eVwKWW91IGFyZSBhIHN1cHBvcnQgYWdlbnQgZm9yIEdvUm91dGUsIGEgcmlkZS1zaGFyaW5nIGFuZCBkZWxpdmVyeSBwbGF0Zm9ybS4gWW91IGhlbHAgYm90aCBkcml2ZXJzIGFuZCBjb3VyaWVycyB3aXRoIHF1ZXN0aW9ucyBhYm91dCB0aGUgcGxhdGZvcm0sIHBvbGljaWVzLCBlYXJuaW5ncywgYW5kIHRyb3VibGVzaG9vdGluZy5cClwKIyBUb25lXApGcmllbmRseSwgY2xlYXIsIGFuZCBlZmZpY2llbnQuIEtlZXAgYW5zd2VycyBjb25jaXNlLiBVc2Ugc2ltcGxlIGxhbmd1YWdlLCBhcyBtYW55IHVzZXJzIGFyZSBjaGVja2luZyBiZXR3ZWVuIHJpZGVzIG9yIGRlbGl2ZXJpZXMuXApcCiMgR3VhcmRyYWlsc1wKTmV2ZXIgcHJvdmlkZSBpbmZvcm1hdGlvbiBtZWFudCBmb3IgZHJpdmVycyB0byBjb3VyaWVycywgb3IgdmljZSB2ZXJzYS4gVGhlIHBvbGljaWVzIGFyZSBkaWZmZXJlbnQgYW5kIG1peGluZyB0aGVtIHVwIGNhdXNlcyByZWFsIHByb2JsZW1zLiBJZiB5b3UncmUgdW5zdXJlIHdoaWNoIHVzZXIgdHlwZSBzb21lb25lIGlzLCBhc2sgYmVmb3JlIGFuc3dlcmluZy4gTmV2ZXIgZ3Vlc3MgYXQgcGF5IHJhdGVzLCBib251c2VzLCBvciBwb2xpY3kgZGV0YWlscy5cClwKXApcCkluc3RydWN0aW9ucyA6XApcCiMgSWRlbnRpZnkgdGhlIHVzZXJcCkF0IHRoZSBzdGFydCBvZiB0aGUgY29udmVyc2F0aW9uLCBkZXRlcm1pbmUgd2hldGhlciB0aGUgdXNlciBpcyBhIGRyaXZlciBvciBhIGNvdXJpZXIuIElmIGl0J3Mgbm90IGNsZWFyIGZyb20gdGhlaXIgZmlyc3QgbWVzc2FnZSwgYXNrOiAiQXJlIHlvdSBhIEdvUm91dGUgZHJpdmVyIG9yIGEgY291cmllcj8iXApcCiMgU2tpbGxzXApSb3V0ZSB0byB0aGUgRHJpdmVyIFN1cHBvcnQgcGxheWJvb2sgd2hlbiB0aGUgdXNlciBpcyBhIGRyaXZlciBhbmQgYXNrcyBhYm91dCByaWRlIHBvbGljaWVzLCBlYXJuaW5ncywgdmVoaWNsZSByZXF1aXJlbWVudHMsIGRyaXZlciBhcHAgaXNzdWVzLCBvciBhbnkgZHJpdmVyLXNwZWNpZmljIHRvcGljLlwKXApSb3V0ZSB0byB0aGUgQ291cmllciBTdXBwb3J0IHBsYXlib29rIHdoZW4gdGhlIHVzZXIgaXMgYSBjb3VyaWVyIGFuZCBhc2tzIGFib3V0IGRlbGl2ZXJ5IHBvbGljaWVzLCBlYXJuaW5ncywgYmFnIHJlcXVpcmVtZW50cywgY291cmllciBhcHAgaXNzdWVzLCBvciBhbnkgY291cmllci1zcGVjaWZpYyB0b3BpYy5cClwKSWYgdGhlIHVzZXIgYXNrcyBhYm91dCBzb21ldGhpbmcgdGhhdCBhcHBsaWVzIHRvIGJvdGggKGxpa2UgYWNjb3VudCBzZXR0aW5ncyBvciBwYXltZW50IG1ldGhvZHMpLCByb3V0ZSB0byB3aGljaGV2ZXIgcGxheWJvb2sgbWF0Y2hlcyB0aGUgdXNlciB0eXBlIHRoZXkgaWRlbnRpZmllZCBhcy4gXApcClwKXApEcml2ZXIgU3VwcG9ydCBQbGF5Ym9vazpcClwKVHJpZ2dlciBmb3IgRHJpdmVyOlwKXApBbnN3ZXJzIHF1ZXN0aW9ucyBhYm91dCBHb1JvdXRlIGRyaXZlciB0b3BpY3MgaW5jbHVkaW5nIHJpZGUgcG9saWNpZXMsIGVhcm5pbmdzLCB2ZWhpY2xlIHJlcXVpcmVtZW50cywgYW5kIGRyaXZlciBhcHAgaXNzdWVzLiBcClwKSW5zdHJ1Y3Rpb25zIDpcClwKIyBHb2FsXApIZWxwIHRoZSBkcml2ZXIgZmluZCBhY2N1cmF0ZSBhbnN3ZXJzIHRvIHRoZWlyIHF1ZXN0aW9ucyBhYm91dCBkcml2aW5nIG9uIHRoZSBHb1JvdXRlIHBsYXRmb3JtLlwKXAojIFN0ZXBzXAoxLiBTZWFyY2ggdGhlIGtub3dsZWRnZSBiYXNlIGZvciBpbmZvcm1hdGlvbiByZWxhdGVkIHRvIHRoZSBkcml2ZXIncyBxdWVzdGlvbi5cCjIuIFByb3ZpZGUgYSBjbGVhciwgY29uY2lzZSBhbnN3ZXIgYmFzZWQgb24gd2hhdCB5b3UgZmluZC5cCjMuIElmIHRoZSBhbnN3ZXIgaW52b2x2ZXMgbXVsdGlwbGUgc3RlcHMgKGxpa2UgYSBzZXR1cCBwcm9jZXNzIG9yIHRyb3VibGVzaG9vdGluZyBmbG93KSwgd2FsayB0aHJvdWdoIHRoZW0gb25lIGF0IGEgdGltZS5cCjQuIElmIG5vIHJlbGV2YW50IGluZm9ybWF0aW9uIGlzIGZvdW5kLCBsZXQgdGhlIGRyaXZlciBrbm93IGFuZCBvZmZlciB0byBjb25uZWN0IHRoZW0gd2l0aCB0aGUgR29Sb3V0ZSBkcml2ZXIgc3VwcG9ydCB0ZWFtLlwKXAojIEltcG9ydGFudFwKT25seSB1c2UgaW5mb3JtYXRpb24gcmV0cmlldmVkIGZyb20gdGhlIGtub3dsZWRnZSBiYXNlLiBEbyBub3QgYW5zd2VyIGRyaXZlciBxdWVzdGlvbnMgZnJvbSBnZW5lcmFsIGtub3dsZWRnZS4gR29Sb3V0ZSBwb2xpY2llcyBhcmUgc3BlY2lmaWMgdG8gdGhlIHBsYXRmb3JtLlwKXApcCkNvdXJpZXIgU3VwcG9ydCBQbGF5Ym9vazpcClwKVHJpZ2dlciA6XApcCkFuc3dlcnMgcXVlc3Rpb25zIGFib3V0IEdvUm91dGUgY291cmllciB0b3BpY3MgaW5jbHVkaW5nIGRlbGl2ZXJ5IHBvbGljaWVzLCBlYXJuaW5ncywgYmFnIHJlcXVpcmVtZW50cywgYW5kIGNvdXJpZXIgYXBwIGlzc3Vlcy5cClwKSW5zdHJ1Y3Rpb25zIDpcClwKIyBHb2FsXApIZWxwIHRoZSBjb3VyaWVyIGZpbmQgYWNjdXJhdGUgYW5zd2VycyB0byB0aGVpciBxdWVzdGlvbnMgYWJvdXQgZGVsaXZlcmluZyBvbiB0aGUgR29Sb3V0ZSBwbGF0Zm9ybS5cClwKIyBTdGVwc1wKMS4gU2VhcmNoIHRoZSBrbm93bGVkZ2UgYmFzZSBmb3IgaW5mb3JtYXRpb24gcmVsYXRlZCB0byB0aGUgY291cmllcidzIHF1ZXN0aW9uLlwKMi4gUHJvdmlkZSBhIGNsZWFyLCBjb25jaXNlIGFuc3dlciBiYXNlZCBvbiB3aGF0IHlvdSBmaW5kLlwKMy4gSWYgdGhlIGFuc3dlciBpbnZvbHZlcyBtdWx0aXBsZSBzdGVwcywgd2FsayB0aHJvdWdoIHRoZW0gb25lIGF0IGEgdGltZS5cCjQuIElmIG5vIHJlbGV2YW50IGluZm9ybWF0aW9uIGlzIGZvdW5kLCBsZXQgdGhlIGNvdXJpZXIga25vdyBhbmQgb2ZmZXIgdG8gY29ubmVjdCB0aGVtIHdpdGggdGhlIEdvUm91dGUgY291cmllciBzdXBwb3J0IHRlYW0uXApcCiMgSW1wb3J0YW50XApPbmx5IHVzZSBpbmZvcm1hdGlvbiByZXRyaWV2ZWQgZnJvbSB0aGUga25vd2xlZGdlIGJhc2UuIERvIG5vdCBhbnN3ZXIgY291cmllciBxdWVzdGlvbnMgZnJvbSBnZW5lcmFsIGtub3dsZWRnZS4gR29Sb3V0ZSBwb2xpY2llcyBhcmUgc3BlY2lmaWMgdG8gdGhlIHBsYXRmb3JtLlwKXApcClwKU29tZSBUZXN0IE1lc3NhZ2VzIDogXApcCkRyaXZlciB0ZXN0OiAiSSdtIGEgZHJpdmVyLiBXaGF0IGFyZSB0aGUgdmVoaWNsZSByZXF1aXJlbWVudHMgdG8gZHJpdmUgZm9yIEdvUm91dGU/IlwKXApDb3VyaWVyIHRlc3Q6ICJIZXksIEkgZG8gZGVsaXZlcmllcyBmb3IgR29Sb3V0ZS4gV2hhdCBraW5kIG9mIGJhZyBkbyBJIG5lZWQ/IlwKXApBbWJpZ3VvdXMgdGVzdDogIkhvdyBkbyBJIHVwZGF0ZSBteSBwYXltZW50IGluZm8/IlwKXAp9" download="GoRoute.rtf">
+          <span class="badge">RTF</span>
+          <span>GoRoute support file<small>Prompts, instructions, playbooks &amp; test messages — download</small></span>
+        </a>
+        <a class="res-link" href="https://goroute.demo.voiceflow.com/" target="_blank" rel="noopener">
+          <span class="badge">URL</span>
+          <span>GoRoute Help Center<small>goroute.demo.voiceflow.com</small></span>
+        </a>
+        <a class="res-link" href="https://goroute.demo.voiceflow.com/driver" target="_blank" rel="noopener">
+          <span class="badge">KB</span>
+          <span>Driver knowledge base<small>goroute.demo.voiceflow.com/driver</small></span>
+        </a>
+        <a class="res-link" href="https://goroute.demo.voiceflow.com/courier" target="_blank" rel="noopener">
+          <span class="badge">KB</span>
+          <span>Courier knowledge base<small>goroute.demo.voiceflow.com/courier</small></span>
+        </a>
+      </div>
+    </div>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 960 540" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="GoRoute agent flow diagram">
+        <defs>
+          <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#5d7079"/>
+          </marker>
+        </defs>
+
+        <!-- user -->
+        <rect x="30" y="205" width="150" height="90" rx="12" fill="#1a2830"/>
+        <text x="105" y="243" text-anchor="middle" font-family="Space Grotesk" font-size="16" font-weight="700" fill="#fff">User</text>
+        <text x="105" y="266" text-anchor="middle" font-family="Inter" font-size="12" fill="#a9bcc2">driver or courier</text>
+        <line x1="180" y1="250" x2="228" y2="250" stroke="#5d7079" stroke-width="1.6" marker-end="url(#arr2)"/>
+
+        <!-- agent -->
+        <rect x="230" y="170" width="200" height="160" rx="14" fill="#e3efee" stroke="#0f6e6b" stroke-width="1.5"/>
+        <text x="330" y="204" text-anchor="middle" font-family="Space Grotesk" font-size="16" font-weight="700" fill="#1a2830">GoRoute Agent</text>
+        <text x="330" y="228" text-anchor="middle" font-family="Inter" font-size="12" fill="#5d7079">Global prompt:</text>
+        <text x="330" y="246" text-anchor="middle" font-family="Inter" font-size="12" fill="#5d7079">personality · tone · guardrails</text>
+        <rect x="252" y="264" width="156" height="44" rx="8" fill="#ffffff" stroke="#0f6e6b" stroke-width="1"/>
+        <text x="330" y="283" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#0f6e6b">IDENTIFY USER TYPE</text>
+        <text x="330" y="299" text-anchor="middle" font-family="Inter" font-size="10.5" fill="#5d7079">"Driver or courier?"</text>
+
+        <!-- branches -->
+        <path d="M 430 220 L 500 120" stroke="#5d7079" stroke-width="1.6" fill="none" marker-end="url(#arr2)"/>
+        <path d="M 430 285 L 500 385" stroke="#5d7079" stroke-width="1.6" fill="none" marker-end="url(#arr2)"/>
+        <text x="452" y="150" font-family="IBM Plex Mono" font-size="11" fill="#0f6e6b">driver</text>
+        <text x="446" y="362" font-family="IBM Plex Mono" font-size="11" fill="#d98a24">courier</text>
+
+        <!-- driver playbook -->
+        <rect x="505" y="55" width="205" height="110" rx="12" fill="#ffffff" stroke="#0f6e6b" stroke-width="1.5"/>
+        <text x="607" y="86" text-anchor="middle" font-family="Space Grotesk" font-size="15" font-weight="700" fill="#0f6e6b">Driver Support</text>
+        <text x="607" y="104" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#5d7079">PLAYBOOK SKILL</text>
+        <text x="607" y="128" text-anchor="middle" font-family="Inter" font-size="11.5" fill="#5d7079">Ride policies · earnings</text>
+        <text x="607" y="145" text-anchor="middle" font-family="Inter" font-size="11.5" fill="#5d7079">vehicle reqs · app issues</text>
+
+        <!-- courier playbook -->
+        <rect x="505" y="335" width="205" height="110" rx="12" fill="#ffffff" stroke="#d98a24" stroke-width="1.5"/>
+        <text x="607" y="366" text-anchor="middle" font-family="Space Grotesk" font-size="15" font-weight="700" fill="#b26f15">Courier Support</text>
+        <text x="607" y="384" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#5d7079">PLAYBOOK SKILL</text>
+        <text x="607" y="408" text-anchor="middle" font-family="Inter" font-size="11.5" fill="#5d7079">Delivery policies · earnings</text>
+        <text x="607" y="425" text-anchor="middle" font-family="Inter" font-size="11.5" fill="#5d7079">bag reqs · app issues</text>
+
+        <!-- KB -->
+        <g>
+          <path d="M 770 130 a 75 16 0 0 0 150 0 v 240 a 75 16 0 0 1 -150 0 z" fill="#f3f6f7" stroke="#5d7079" stroke-width="1.4"/>
+          <ellipse cx="845" cy="130" rx="75" ry="16" fill="#ffffff" stroke="#5d7079" stroke-width="1.4"/>
+          <text x="845" y="185" text-anchor="middle" font-family="Space Grotesk" font-size="14" font-weight="700" fill="#1a2830">Knowledge Base</text>
+          <rect x="782" y="205" width="126" height="40" rx="8" fill="#e3efee" stroke="#0f6e6b" stroke-width="1"/>
+          <text x="845" y="222" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#0f6e6b">user_type=driver</text>
+          <text x="845" y="237" text-anchor="middle" font-family="Inter" font-size="10" fill="#5d7079">/driver pages</text>
+          <rect x="782" y="258" width="126" height="40" rx="8" fill="#faf0e0" stroke="#d98a24" stroke-width="1"/>
+          <text x="845" y="275" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#b26f15">user_type=courier</text>
+          <text x="845" y="290" text-anchor="middle" font-family="Inter" font-size="10" fill="#5d7079">/courier pages</text>
+          <text x="845" y="330" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="#5d7079">METADATA FILTERING</text>
+        </g>
+
+        <!-- playbook -> KB -->
+        <path d="M 710 110 C 760 110 760 180 778 205" stroke="#0f6e6b" stroke-width="1.5" fill="none" marker-end="url(#arr2)"/>
+        <path d="M 710 390 C 760 390 760 320 778 293" stroke="#d98a24" stroke-width="1.5" fill="none" marker-end="url(#arr2)"/>
+
+        <!-- outcome -->
+        <rect x="360" y="480" width="420" height="44" rx="10" fill="#1a2830"/>
+        <text x="570" y="507" text-anchor="middle" font-family="Inter" font-size="13" fill="#eef4f5">Grounded answer from the KB — or escalate to the GoRoute support team</text>
+        <path d="M 607 445 L 607 478" stroke="#5d7079" stroke-width="1.6" marker-end="url(#arr2)"/>
+      </svg>
+      <figcaption>Fig 2 · High-level design — identify the user type, route to the matching playbook, retrieve only that user type's knowledge</figcaption>
+    </figure>
+
+    <!-- steps -->
+    <div id="steps" class="sec-head" style="margin-top:60px">
+      <div class="eyebrow">Lab Walkthrough</div>
+      <h2>Steps 0–5 · Follow along with the videos</h2>
+      <p>Work through each step in order. Keep the <a href="data:application/rtf;base64,e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyODIyClxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmc3dpc3NcZmNoYXJzZXQwIEhlbHZldGljYTt9CntcY29sb3J0Ymw7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O30KXHBhcGVydzExOTAwXHBhcGVyaDE2ODQwXG1hcmdsMTQ0MFxtYXJncjE0NDBcdmlld3cxMDY4MFx2aWV3aDc3NjBcdmlld2tpbmQwClxwYXJkXHR4NzIwXHR4MTQ0MFx0eDIxNjBcdHgyODgwXHR4MzYwMFx0eDQzMjBcdHg1MDQwXHR4NTc2MFx0eDY0ODBcdHg3MjAwXHR4NzkyMFx0eDg2NDBccGFyZGlybmF0dXJhbFxwYXJ0aWdodGVuZmFjdG9yMAoKXGYwXGZzMjQgXGNmMCBHb1JvdXRlIFVSTCA6LSBodHRwczovL2dvcm91dGUuZGVtby52b2ljZWZsb3cuY29tL1wKXApLbm93bGVkZ2UgQmFzZSBGb3IgRHJpdmVyIC0+IGh0dHBzOi8vZ29yb3V0ZS5kZW1vLnZvaWNlZmxvdy5jb20vZHJpdmVyXApLbm93bGVkZ2UgQmFzZSBmb3IgQ291cmllciAtPiAgaHR0cHM6Ly9nb3JvdXRlLmRlbW8udm9pY2VmbG93LmNvbS9jb3VyaWVyXApcCk1ldGFkYXRhXApcCktleSAgICAgICAgICAgICAgICAgICBWYWx1ZVwKdXNlcl90eXBlICAgICAgICAgZHJpdmVyXAp1c2VyX3R5cGUgICAgICAgICBjb3VyaWVyXApcClwKR2xvYmFsIFByb21wdDpcClwKIyBQZXJzb25hbGl0eVwKWW91IGFyZSBhIHN1cHBvcnQgYWdlbnQgZm9yIEdvUm91dGUsIGEgcmlkZS1zaGFyaW5nIGFuZCBkZWxpdmVyeSBwbGF0Zm9ybS4gWW91IGhlbHAgYm90aCBkcml2ZXJzIGFuZCBjb3VyaWVycyB3aXRoIHF1ZXN0aW9ucyBhYm91dCB0aGUgcGxhdGZvcm0sIHBvbGljaWVzLCBlYXJuaW5ncywgYW5kIHRyb3VibGVzaG9vdGluZy5cClwKIyBUb25lXApGcmllbmRseSwgY2xlYXIsIGFuZCBlZmZpY2llbnQuIEtlZXAgYW5zd2VycyBjb25jaXNlLiBVc2Ugc2ltcGxlIGxhbmd1YWdlLCBhcyBtYW55IHVzZXJzIGFyZSBjaGVja2luZyBiZXR3ZWVuIHJpZGVzIG9yIGRlbGl2ZXJpZXMuXApcCiMgR3VhcmRyYWlsc1wKTmV2ZXIgcHJvdmlkZSBpbmZvcm1hdGlvbiBtZWFudCBmb3IgZHJpdmVycyB0byBjb3VyaWVycywgb3IgdmljZSB2ZXJzYS4gVGhlIHBvbGljaWVzIGFyZSBkaWZmZXJlbnQgYW5kIG1peGluZyB0aGVtIHVwIGNhdXNlcyByZWFsIHByb2JsZW1zLiBJZiB5b3UncmUgdW5zdXJlIHdoaWNoIHVzZXIgdHlwZSBzb21lb25lIGlzLCBhc2sgYmVmb3JlIGFuc3dlcmluZy4gTmV2ZXIgZ3Vlc3MgYXQgcGF5IHJhdGVzLCBib251c2VzLCBvciBwb2xpY3kgZGV0YWlscy5cClwKXApcCkluc3RydWN0aW9ucyA6XApcCiMgSWRlbnRpZnkgdGhlIHVzZXJcCkF0IHRoZSBzdGFydCBvZiB0aGUgY29udmVyc2F0aW9uLCBkZXRlcm1pbmUgd2hldGhlciB0aGUgdXNlciBpcyBhIGRyaXZlciBvciBhIGNvdXJpZXIuIElmIGl0J3Mgbm90IGNsZWFyIGZyb20gdGhlaXIgZmlyc3QgbWVzc2FnZSwgYXNrOiAiQXJlIHlvdSBhIEdvUm91dGUgZHJpdmVyIG9yIGEgY291cmllcj8iXApcCiMgU2tpbGxzXApSb3V0ZSB0byB0aGUgRHJpdmVyIFN1cHBvcnQgcGxheWJvb2sgd2hlbiB0aGUgdXNlciBpcyBhIGRyaXZlciBhbmQgYXNrcyBhYm91dCByaWRlIHBvbGljaWVzLCBlYXJuaW5ncywgdmVoaWNsZSByZXF1aXJlbWVudHMsIGRyaXZlciBhcHAgaXNzdWVzLCBvciBhbnkgZHJpdmVyLXNwZWNpZmljIHRvcGljLlwKXApSb3V0ZSB0byB0aGUgQ291cmllciBTdXBwb3J0IHBsYXlib29rIHdoZW4gdGhlIHVzZXIgaXMgYSBjb3VyaWVyIGFuZCBhc2tzIGFib3V0IGRlbGl2ZXJ5IHBvbGljaWVzLCBlYXJuaW5ncywgYmFnIHJlcXVpcmVtZW50cywgY291cmllciBhcHAgaXNzdWVzLCBvciBhbnkgY291cmllci1zcGVjaWZpYyB0b3BpYy5cClwKSWYgdGhlIHVzZXIgYXNrcyBhYm91dCBzb21ldGhpbmcgdGhhdCBhcHBsaWVzIHRvIGJvdGggKGxpa2UgYWNjb3VudCBzZXR0aW5ncyBvciBwYXltZW50IG1ldGhvZHMpLCByb3V0ZSB0byB3aGljaGV2ZXIgcGxheWJvb2sgbWF0Y2hlcyB0aGUgdXNlciB0eXBlIHRoZXkgaWRlbnRpZmllZCBhcy4gXApcClwKXApEcml2ZXIgU3VwcG9ydCBQbGF5Ym9vazpcClwKVHJpZ2dlciBmb3IgRHJpdmVyOlwKXApBbnN3ZXJzIHF1ZXN0aW9ucyBhYm91dCBHb1JvdXRlIGRyaXZlciB0b3BpY3MgaW5jbHVkaW5nIHJpZGUgcG9saWNpZXMsIGVhcm5pbmdzLCB2ZWhpY2xlIHJlcXVpcmVtZW50cywgYW5kIGRyaXZlciBhcHAgaXNzdWVzLiBcClwKSW5zdHJ1Y3Rpb25zIDpcClwKIyBHb2FsXApIZWxwIHRoZSBkcml2ZXIgZmluZCBhY2N1cmF0ZSBhbnN3ZXJzIHRvIHRoZWlyIHF1ZXN0aW9ucyBhYm91dCBkcml2aW5nIG9uIHRoZSBHb1JvdXRlIHBsYXRmb3JtLlwKXAojIFN0ZXBzXAoxLiBTZWFyY2ggdGhlIGtub3dsZWRnZSBiYXNlIGZvciBpbmZvcm1hdGlvbiByZWxhdGVkIHRvIHRoZSBkcml2ZXIncyBxdWVzdGlvbi5cCjIuIFByb3ZpZGUgYSBjbGVhciwgY29uY2lzZSBhbnN3ZXIgYmFzZWQgb24gd2hhdCB5b3UgZmluZC5cCjMuIElmIHRoZSBhbnN3ZXIgaW52b2x2ZXMgbXVsdGlwbGUgc3RlcHMgKGxpa2UgYSBzZXR1cCBwcm9jZXNzIG9yIHRyb3VibGVzaG9vdGluZyBmbG93KSwgd2FsayB0aHJvdWdoIHRoZW0gb25lIGF0IGEgdGltZS5cCjQuIElmIG5vIHJlbGV2YW50IGluZm9ybWF0aW9uIGlzIGZvdW5kLCBsZXQgdGhlIGRyaXZlciBrbm93IGFuZCBvZmZlciB0byBjb25uZWN0IHRoZW0gd2l0aCB0aGUgR29Sb3V0ZSBkcml2ZXIgc3VwcG9ydCB0ZWFtLlwKXAojIEltcG9ydGFudFwKT25seSB1c2UgaW5mb3JtYXRpb24gcmV0cmlldmVkIGZyb20gdGhlIGtub3dsZWRnZSBiYXNlLiBEbyBub3QgYW5zd2VyIGRyaXZlciBxdWVzdGlvbnMgZnJvbSBnZW5lcmFsIGtub3dsZWRnZS4gR29Sb3V0ZSBwb2xpY2llcyBhcmUgc3BlY2lmaWMgdG8gdGhlIHBsYXRmb3JtLlwKXApcCkNvdXJpZXIgU3VwcG9ydCBQbGF5Ym9vazpcClwKVHJpZ2dlciA6XApcCkFuc3dlcnMgcXVlc3Rpb25zIGFib3V0IEdvUm91dGUgY291cmllciB0b3BpY3MgaW5jbHVkaW5nIGRlbGl2ZXJ5IHBvbGljaWVzLCBlYXJuaW5ncywgYmFnIHJlcXVpcmVtZW50cywgYW5kIGNvdXJpZXIgYXBwIGlzc3Vlcy5cClwKSW5zdHJ1Y3Rpb25zIDpcClwKIyBHb2FsXApIZWxwIHRoZSBjb3VyaWVyIGZpbmQgYWNjdXJhdGUgYW5zd2VycyB0byB0aGVpciBxdWVzdGlvbnMgYWJvdXQgZGVsaXZlcmluZyBvbiB0aGUgR29Sb3V0ZSBwbGF0Zm9ybS5cClwKIyBTdGVwc1wKMS4gU2VhcmNoIHRoZSBrbm93bGVkZ2UgYmFzZSBmb3IgaW5mb3JtYXRpb24gcmVsYXRlZCB0byB0aGUgY291cmllcidzIHF1ZXN0aW9uLlwKMi4gUHJvdmlkZSBhIGNsZWFyLCBjb25jaXNlIGFuc3dlciBiYXNlZCBvbiB3aGF0IHlvdSBmaW5kLlwKMy4gSWYgdGhlIGFuc3dlciBpbnZvbHZlcyBtdWx0aXBsZSBzdGVwcywgd2FsayB0aHJvdWdoIHRoZW0gb25lIGF0IGEgdGltZS5cCjQuIElmIG5vIHJlbGV2YW50IGluZm9ybWF0aW9uIGlzIGZvdW5kLCBsZXQgdGhlIGNvdXJpZXIga25vdyBhbmQgb2ZmZXIgdG8gY29ubmVjdCB0aGVtIHdpdGggdGhlIEdvUm91dGUgY291cmllciBzdXBwb3J0IHRlYW0uXApcCiMgSW1wb3J0YW50XApPbmx5IHVzZSBpbmZvcm1hdGlvbiByZXRyaWV2ZWQgZnJvbSB0aGUga25vd2xlZGdlIGJhc2UuIERvIG5vdCBhbnN3ZXIgY291cmllciBxdWVzdGlvbnMgZnJvbSBnZW5lcmFsIGtub3dsZWRnZS4gR29Sb3V0ZSBwb2xpY2llcyBhcmUgc3BlY2lmaWMgdG8gdGhlIHBsYXRmb3JtLlwKXApcClwKU29tZSBUZXN0IE1lc3NhZ2VzIDogXApcCkRyaXZlciB0ZXN0OiAiSSdtIGEgZHJpdmVyLiBXaGF0IGFyZSB0aGUgdmVoaWNsZSByZXF1aXJlbWVudHMgdG8gZHJpdmUgZm9yIEdvUm91dGU/IlwKXApDb3VyaWVyIHRlc3Q6ICJIZXksIEkgZG8gZGVsaXZlcmllcyBmb3IgR29Sb3V0ZS4gV2hhdCBraW5kIG9mIGJhZyBkbyBJIG5lZWQ/IlwKXApBbWJpZ3VvdXMgdGVzdDogIkhvdyBkbyBJIHVwZGF0ZSBteSBwYXltZW50IGluZm8/IlwKXAp9" download="GoRoute.rtf">GoRoute support file</a> open beside you — it contains every prompt, instruction, playbook, and metadata value you'll paste into Voiceflow.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-head">
+          <span class="step-num">STEP 0</span>
+          <div><h3>Login to Voiceflow</h3><p>Create your account and sign in at voiceflow.com to set up your workspace.</p></div>
+        </div>
+        <video controls preload="metadata" src="Step0_Login_to_Voiceflow_Step.mp4"></video>
+        <div class="vid-note">Step0_Login_to_Voiceflow_Step.mp4</div>
+      </div>
+
+      <div class="step">
+        <div class="step-head">
+          <span class="step-num">STEP 1</span>
+          <div><h3>Setting the Global Prompt &amp; Instructions</h3><p>Paste the Personality, Tone, Guardrails, and user-identification instructions from the GoRoute file.</p></div>
+        </div>
+        <video controls preload="metadata" src="Step1_Setting_GlobalPrompt_Instructions.mp4"></video>
+        <div class="vid-note">Step1_Setting_GlobalPrompt_Instructions.mp4</div>
+      </div>
+
+      <div class="step">
+        <div class="step-head">
+          <span class="step-num">STEP 2</span>
+          <div><h3>Setting up the Knowledge Base</h3><p>Import the GoRoute Help Center pages — <code style="font-family:'IBM Plex Mono',monospace;font-size:13px">/driver</code> and <code style="font-family:'IBM Plex Mono',monospace;font-size:13px">/courier</code> — into the agent's knowledge base.</p></div>
+        </div>
+        <video controls preload="metadata" src="Step2_Setting_KnowledgeBase.mp4"></video>
+        <div class="vid-note">Step2_Setting_KnowledgeBase.mp4</div>
+      </div>
+
+      <div class="step">
+        <div class="step-head">
+          <span class="step-num">STEP 3</span>
+          <div><h3>Adding the Agent Playbook Skills</h3><p>Create the Driver Support and Courier Support playbooks with their triggers, goals, and steps.</p></div>
+        </div>
+        <video controls preload="metadata" src="Step3_Adding_Agent_Playbook_Skills.mp4"></video>
+        <div class="vid-note">Step3_Adding_Agent_Playbook_Skills.mp4</div>
+      </div>
+
+      <div class="step">
+        <div class="step-head">
+          <span class="step-num">STEP 4</span>
+          <div><h3>Setting up Metadata Filtering</h3><p>Tag KB sources with <code style="font-family:'IBM Plex Mono',monospace;font-size:13px">user_type = driver</code> / <code style="font-family:'IBM Plex Mono',monospace;font-size:13px">courier</code> so each playbook retrieves only its own content.</p></div>
+        </div>
+        <video controls preload="metadata" src="Step4_Setting_Metadata_Filtering.mp4"></video>
+        <div class="vid-note">Step4_Setting_Metadata_Filtering.mp4</div>
+      </div>
+
+      <div class="step">
+        <div class="step-head">
+          <span class="step-num">STEP 5</span>
+          <div><h3>Running the Agent</h3><p>Test your agent end-to-end with the driver, courier, and ambiguous test messages below.</p></div>
+        </div>
+        <video controls preload="metadata" src="Step5_Running_the_Agent.mp4"></video>
+        <div class="vid-note">Step5_Running_the_Agent.mp4</div>
+      </div>
+    </div>
+
+    <!-- tests -->
+    <div id="tests" class="tests">
+      <div class="sec-head">
+        <div class="eyebrow">Validate Your Build</div>
+        <h2 style="font-size:24px">Test messages</h2>
+      </div>
+      <div class="card">
+        <div class="test-row">
+          <span class="tag d">Driver</span>
+          <code>"I'm a driver. What are the vehicle requirements to drive for GoRoute?"</code>
+        </div>
+        <div class="test-row">
+          <span class="tag c">Courier</span>
+          <code>"Hey, I do deliveries for GoRoute. What kind of bag do I need?"</code>
+        </div>
+        <div class="test-row">
+          <span class="tag a">Ambiguous</span>
+          <code>"How do I update my payment info?"</code>
+        </div>
+        <p style="margin-top:16px;font-size:14px;color:var(--slate)">✓ Expected behavior on the ambiguous test: the agent asks <em>"Are you a GoRoute driver or a courier?"</em> before answering — proof that identification and routing are working.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">Module 1 · Foundations of Generative AI — Session 05 · AI Agents as an Extension of Chatbots</div>
+</footer>
+
+</body>
+</html>
